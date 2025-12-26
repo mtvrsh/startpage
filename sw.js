@@ -1,9 +1,8 @@
-const APP = '770556c';
-const API = 'api'
+const VERSION = '2b676d3';
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(APP)
+    caches.open(VERSION)
     .then(cache => cache.addAll([
       '.',
       '404.html',
@@ -19,7 +18,7 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
     .then(keys => Promise.all(
-      keys.map(cache => [APP, API].includes(cache) ? undefined : caches.delete(cache))
+      keys.map(cache => cache == VERSION ? undefined : caches.delete(cache))
     ))
   );
 });
@@ -27,25 +26,6 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request)
-    .then(cached => cached || fetch(e.request)
-      .then(response => {
-        if (response.ok && isUrlInApiWhitelist(response.url))
-            caches.open(API).then(cache => cache.put(e.request, response));
-
-        return response.clone();
-      })
-    )
+    .then(cached => cached || fetch(e.request))
   );
 });
-
-function isUrlInApiWhitelist(url) {
-  const whitelist = [
-    '/channel/',
-    '/channels/',
-    '/playlists/',
-    '/search?q=',
-    'piped'
-  ]
-
-  return whitelist.filter(item => url.includes(item)).length > 0
-}
