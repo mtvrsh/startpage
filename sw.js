@@ -1,16 +1,19 @@
-const VERSION = 'e598da7';
+const VERSION = 'e6a3f41';
 
 self.addEventListener('install', e => {
+  console.log('[Service Worker]: Install ${VERSION}');
   e.waitUntil(
     caches.open(VERSION)
-    .then(cache => cache.addAll([
+    .then(cache => Promise.all([
       '.',
       '404.html',
       'index.html',
       'favicon.svg',
       'assets/index.js',
       'assets/index.css'
-    ]))
+    ].map(url => fetch(new Request(url, {cache: 'no-cache'}))
+      .then(resp => cache.put(url, resp.clone()))
+    )))
     .then(() => self.skipWaiting())
   );
 });
