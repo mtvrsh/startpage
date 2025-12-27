@@ -1,7 +1,6 @@
-const VERSION = '9000e01';
+const VERSION = 'e1d4a02';
 
 self.addEventListener('install', e => {
-  console.log('[Service Worker]: Install ${VERSION}');
   e.waitUntil(
     caches.open(VERSION)
     .then(cache => Promise.all([
