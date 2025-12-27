@@ -1,4 +1,4 @@
-const VERSION = '43eef19';
+const VERSION = 'b52d783';
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -11,6 +11,7 @@ self.addEventListener('install', e => {
       'assets/index.js',
       'assets/index.css'
     ]))
+    .then(() => self.skipWaiting())
   );
 });
 
