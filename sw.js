@@ -1,4 +1,4 @@
-const VERSION = '24e733b';
+const VERSION = '4bb650b';
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -17,10 +17,12 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys()
-    .then(keys => Promise.all(
-      keys.map(cache => cache == VERSION ? undefined : caches.delete(cache))
-    ))
+    Promise.all([
+      caches.keys().then(keys => Promise.all(
+        keys.filter(cache => cache !== VERSION).map(cache => caches.delete(cache))
+      )),
+      self.clients.claim()
+    ])
   );
 });
 
