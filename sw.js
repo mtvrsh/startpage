@@ -1,53 +1,34 @@
-const VERSION = '021b109';
-const FILES = [
-  '/',
-  '404.html',
-  'index.html',
-  'favicon.svg',
-  'assets/index.js',
-  'assets/index.css',
-];
+const VERSION = 'e598da7';
 
-self.addEventListener('install', event => {
-  event.waitUntil(
+self.addEventListener('install', e => {
+  e.waitUntil(
     caches.open(VERSION)
-      .then(cache => cache.addAll(FILES))
-      .then(() => self.skipWaiting())
+    .then(cache => cache.addAll([
+      '.',
+      '404.html',
+      'index.html',
+      'favicon.svg',
+      'assets/index.js',
+      'assets/index.css'
+    ]))
+    .then(() => self.skipWaiting())
   );
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== VERSION) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    Promise.all([
+      caches.keys().then(keys => Promise.all(
+        keys.filter(cache => cache !== VERSION).map(cache => caches.delete(cache))
+      )),
+      self.clients.claim()
+    ])
   );
 });
 
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request)
-        .then(networkResponse => {
-          if (networkResponse.ok) {
-            const responseClone = networkResponse.clone();
-            caches.open(VERSION).then(cache => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          return caches.match('/');
-        });
-    })
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request)
+    .then(cached => cached || fetch(e.request))
   );
 });
