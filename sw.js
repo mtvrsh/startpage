@@ -1,4 +1,4 @@
-const VERSION = 'e6a3f41';
+const VERSION = '9000e01';
 
 self.addEventListener('install', e => {
   console.log('[Service Worker]: Install ${VERSION}');
