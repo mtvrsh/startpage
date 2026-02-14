@@ -118,15 +118,11 @@
               tabindex="-1"
             >
               <div class="search__output-thumbnail">
-                {#if i == 0}
-                  <Image
-                    src={thumbnail}
-                    alt={strings.thumbnail}
-                    crossorigin="anonymous"
-                  />
-                {:else}
-                  <IconSearch />
-                {/if}
+                <Image
+                  src={thumbnail}
+                  alt={strings.thumbnail}
+                  crossorigin="anonymous"
+                />
               </div>
               <p
                 class="search__output-name"
