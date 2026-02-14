@@ -32,6 +32,7 @@ export const config = writable(merge({
   feedProtocolEnabledForVideosInTitles: true,
   feedLimit: 100,
   feedThumbnailThemed: true,
+  feedFetchAll: false,
   timeoutInSeconds: 5,
   cacheLifetimeInMinutes: 10
 }, Config.get()))
