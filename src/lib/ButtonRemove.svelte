@@ -34,8 +34,7 @@
     cursor: pointer;
   }
 
-  input:hover,
-  input:focus {
+  input:hover {
     color: var(--color-fg);
     background-color: var(--color-accent);
   }
@@ -44,8 +43,7 @@
     color: var(--color-warrning);
   }
 
-  input.removed:hover,
-  input.removed:focus {
+  input.removed:hover {
     color: var(--color-warrning-fg);
     background-color: var(--color-warrning);
   }
