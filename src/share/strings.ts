@@ -33,6 +33,7 @@ export default {
   piped: 'Piped',
   feed: 'Feed',
   feedThumbnailThemed: 'Themed thumbnails',
+  feedFetchAll: 'Fetch all videos (shorts, streams)',
   always: 'Always',
   minute: 'minute',
   minutes: 'minutes',

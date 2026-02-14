@@ -39,6 +39,13 @@
         </label>
       </li>
 
+      <li>
+        <label class="general__group-list-item">
+          {strings.feedFetchAll}
+          <ToggleSwitch bind:checked={$config.feedFetchAll} />
+        </label>
+      </li>
+
       <li class="general__group-list-item">
         <InputNumber
           id={strings.feedCacheKebabCase}
