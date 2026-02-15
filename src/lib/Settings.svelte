@@ -60,7 +60,7 @@
       }
 
       &-button {
-        padding: $gap-3;
+        padding: .75rem;
         color: inherit;
         text-align: center;
         text-decoration: none;
@@ -97,7 +97,7 @@
         overflow-y: scroll;
 
         &-button {
-          padding: 2 * $gap-3 + .51rem;
+          padding: .75rem;
         }
       }
     }
