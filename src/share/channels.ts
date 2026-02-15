@@ -1,8 +1,7 @@
 import { writable, get } from 'svelte/store';
-import { Piped } from '../util/piped'
-import { LocalStorage } from '../util/storage'
-import { config } from './config'
-import { status } from './status'
+import { LocalStorage } from '../util/storage.ts'
+import { config } from './config.ts'
+import { status } from './status.ts'
 import humanizeDuration from 'humanize-duration'
 
 export type URL = string
@@ -36,7 +35,7 @@ export class Channels extends LocalStorage {
     channels.subscribe(s => super.set([...s]))
   }
 
-  static async add(url: string | URL, partial = false, reload = false): Promise<void> {
+  static add(url: string | URL, partial = false, reload = false): Promise<void> {
     let id = this.#parseId(url)
 
     if (id === undefined)
@@ -88,7 +87,7 @@ export class Channels extends LocalStorage {
   }
 
   static #toArray(selected: Array<[URL, Channel]>): ChannelVideo[] {
-    return selected.flatMap(([url, channel]) => channel.videos.map(video => ({
+    return selected.flatMap(([_url, channel]) => channel.videos.map(video => ({
       ...video,
       channelUrl: channel.url,
       channelName : channel.name,
@@ -105,7 +104,7 @@ export class Channels extends LocalStorage {
   static BY_NAME = ([, a]: [URL, Channel], [, b]: [URL, Channel]) =>
     (a.displayName || a.name).localeCompare(b.displayName || b.name)
 
-  static async refetch({reload = false} = {}) {
+  static refetch({reload = false} = {}) {
     const r = reload || !this.#isFeedFresh()
 
     channels.update(v => {
@@ -148,7 +147,7 @@ export class Channels extends LocalStorage {
     }))
   }
 
-  static async #fetchChannel(id: URL, reload: boolean): Promise<Channel> {
+  static #fetchChannel(id: URL, reload: boolean): Promise<Channel> {
     const endpoint = get(config).feedFetchAll
       ? `/playlists/UU${id.toString().slice(2)}`
       : `/channels/tabs?data=${encodeURIComponent(JSON.stringify({ id: `${id}`, contentFilters: ["videos"] }))}`
@@ -166,7 +165,7 @@ export class Channels extends LocalStorage {
       })
   }
 
-  static async #fetchPlaylist(id: URL, reload: boolean): Promise<Channel> {
+  static #fetchPlaylist(id: URL, reload: boolean): Promise<Channel> {
     return fetch(`${get(config).instance.value}/playlists/${id}`, {cache: reload ? 'reload' : 'default'})
       .then(response => response.json())
       .then(response => ({
