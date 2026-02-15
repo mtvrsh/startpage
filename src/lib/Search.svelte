@@ -1,7 +1,7 @@
 <script lang="ts">
   import global from '../config'
   import strings from '../share/strings'
-  import { Channels } from '../share/channels'
+  import { Channels, type URL } from '../share/channels'
   import { Config, config } from '../share/config'
   import { Piped } from '../util/piped';
   import { rejectIfResponseIsNotOk } from '../util/fetch';
@@ -20,6 +20,10 @@
   let timeout = 0
   let query = $state('')
   let placeholder = `${strings.searchForChannel} (ctrl+${focusKeybind})`
+
+  let isUrl = $derived(
+    query.includes('youtube.com') || query.includes('youtu.be')
+  )
 
   let suggestionsSortedBySubscribers = $derived(
     [...suggestions].sort((a,b) => b.subscribers - a.subscribers)
@@ -52,12 +56,38 @@
     if (timeout)
       clearTimeout(timeout)
 
-    timeout = setTimeout(search, global.search.delayInMs)
+    if (!isUrl)
+      timeout = setTimeout(search, global.search.delayInMs)
+  }
+
+  let addChannel = (url: string) => {
+    Channels.add(url as URL)
+      .then(() => {
+        query = ''
+        clearSuggestions()
+        closeOutput()
+      })
+      .catch(e => error = e)
+  }
+
+  let handleSubmit = (e: Event) => {
+    e.preventDefault()
+
+    if (!query) {
+      clearSuggestions()
+      return
+    }
+
+    if (isUrl) {
+      addChannel(query)
+      return
+    }
+
+    search()
   }
 
   let AddChannelAndClose = (e: MouseEvent) => {
-    Channels.add((e.currentTarget as HTMLAnchorElement).href)
-    closeOutput()
+    addChannel((e.currentTarget as HTMLAnchorElement).href)
   }
 
   let handleGlobalKeybinds = (e: KeyboardEvent) => {
@@ -92,46 +122,67 @@
 
 <search class="search" role="presentation" onkeydown={handleLocalKeybinds}>
   <Closeable bind:open={isOutputOpen}>
-    <form>
-      <input
-        class="search__input nav__item nav__item--input"
-        type="search"
-        placeholder={placeholder}
-        oninput={searchDelayed}
-        onfocus={openOutput}
-        bind:value={query}
-        bind:this={focus.items[0]}
-      >
+    <form onsubmit={handleSubmit}>
+      <div class="search__field">
+        <span class="search__icon">
+          <IconSearch />
+        </span>
+        <input
+          class="search__input nav__item nav__item--input"
+          type="search"
+          placeholder={placeholder}
+          oninput={searchDelayed}
+          onfocus={openOutput}
+          bind:value={query}
+          bind:this={focus.items[0]}
+        >
+      </div>
     </form>
 
     {#if isOutputOpen}
-      <ul class="search__output" tabindex="-1">
-        {#each suggestionsSortedBySubscribers.slice(0, 5) as {
-          url, name, thumbnail
-        }, i }
+      {#if isUrl}
+        <ul class="search__output" tabindex="-1">
           <li>
             <a
               class="search__output-link"
-              href={url}
-              onclick={preventDefault(AddChannelAndClose)}
-              bind:this={focus.items[i+1]}
+              href={query}
+              onclick={preventDefault(() => addChannel(query))}
+              bind:this={focus.items[1]}
               tabindex="-1"
             >
-              <div class="search__output-thumbnail">
-                <Image
-                  src={thumbnail}
-                  alt={strings.thumbnail}
-                  crossorigin="anonymous"
-                />
-              </div>
-              <p
-                class="search__output-name"
-                title={name}
-              >{name}</p>
+              <p class="search__output-name">Add {query}</p>
             </a>
           </li>
-        {/each}
-      </ul>
+        </ul>
+      {:else if suggestionsSortedBySubscribers.length}
+        <ul class="search__output" tabindex="-1">
+          {#each suggestionsSortedBySubscribers.slice(0, 5) as {
+            url, name, thumbnail
+          }, i }
+            <li>
+              <a
+                class="search__output-link"
+                href={url}
+                onclick={preventDefault(AddChannelAndClose)}
+                bind:this={focus.items[i+1]}
+                tabindex="-1"
+              >
+                <div class="search__output-thumbnail">
+                  <Image
+                    src={thumbnail}
+                    alt={strings.thumbnail}
+                    crossorigin="anonymous"
+                  />
+                </div>
+                <p
+                  class="search__output-name"
+                  title={name}
+                >{name}</p>
+              </a>
+            </li>
+          {/each}
+        </ul>
+      {/if}
     {/if}
   </Closeable>
 </search>
@@ -142,12 +193,32 @@
   .search {
     position: relative;
 
+    &__field {
+      position: relative;
+    }
+
+    &__icon {
+      position: absolute;
+      top: 50%;
+      left: $gap-1;
+      transform: translateY(-50%);
+      z-index: 2;
+      color: var(--color-fg-inactive);
+      pointer-events: none;
+    }
+
     &__input {
       position: relative;
       z-index: 1;
       width: 100%;
+      padding-left: calc($gap-1 + 2rem);
       color: var(--color-surface-fg);
       background: var(--color-surface);
+
+      &::placeholder {
+        color: var(--color-fg-inactive);
+        opacity: 1;
+      }
 
       &:hover {
         background: var(--color-surface-light);
