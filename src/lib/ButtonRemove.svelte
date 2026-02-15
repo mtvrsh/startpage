@@ -34,19 +34,15 @@
     cursor: pointer;
   }
 
-  input:hover,
-  input:focus {
-    color: var(--color-fg);
-    background-color: var(--color-accent);
+  input:hover {
+    background-color: var(--color-surface);
   }
 
   input.removed {
     color: var(--color-warrning);
   }
 
-  input.removed:hover,
-  input.removed:focus {
-    color: var(--color-warrning-fg);
-    background-color: var(--color-warrning);
+  input.removed:hover {
+    background-color: var(--color-surface-light);
   }
 </style>

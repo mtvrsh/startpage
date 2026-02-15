@@ -9,6 +9,7 @@
   import Closeable from './Closeable.svelte';
   import Dropdown from './Dropdown.svelte';
   import IconArrowLeft from './icons/ArrowLeft.svelte';
+  import IconCog from './icons/Cog.svelte';
   import IconMenu from './icons/Menu.svelte';
   import Search from './Search.svelte';
 
@@ -20,15 +21,6 @@
   let close = () =>
     isRightMenuOpen = false
 </script>
-
-{#snippet link(path: string, name: string)}
-  <a
-    href={config.base + path}
-    class="nav__menu-right-list-link"
-    class:active={app.route.path == path}
-    onclick={preventDefault(() => { app.route.path = path; close() })}
-  >{name}</a>
-{/snippet}
 
 <nav class="nav">
   <div class="nav__menu-left">
@@ -67,7 +59,14 @@
         </li>
 
         <li>
-          {@render link(strings.paths.settings, strings.settings)}
+          <button
+            type="button"
+            class="nav__item nav__item--icon"
+            onclick={preventDefault(() => { app.route.path = strings.paths.settings; close() })}
+            aria-label={strings.settings}
+          >
+            <IconCog />
+          </button>
         </li>
       </ul>
     </Closeable>
@@ -115,18 +114,6 @@
           &.expand {
             display: initial;
           }
-
-          &-link {
-            display: block;
-            padding: $gap-2;
-            text-decoration: none;
-
-            &:focus,
-            &:hover {
-              background: var(--color-surface-light);
-              cursor: pointer;
-            }
-          }
         }
       }
     }
@@ -149,13 +136,6 @@
             &.expand {
               display: flex;
             }
-
-            &-link {
-              &:focus,
-              &:hover {
-                background: var(--color-bg-light);
-              }
-            }
           }
         }
       }
@@ -175,7 +155,7 @@
   :global(.nav__item.focus),
   :global(.nav__item:focus),
   :global(.nav__item:hover) {
-    background: var(--color-bg-light);
+    background: var(--color-surface);
     cursor: pointer;
   }
 

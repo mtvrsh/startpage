@@ -62,7 +62,7 @@
         
         &:hover,
         &:focus {
-          background: var(--color-surface-light);
+          background: var(--color-surface);
         }
       }
     }

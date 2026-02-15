@@ -67,7 +67,7 @@
 
         &:hover,
         &:focus {
-          background-color: var(--color-surface-light);
+          background-color: var(--color-surface);
           outline: none;
         }
 

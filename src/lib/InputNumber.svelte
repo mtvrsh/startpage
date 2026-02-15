@@ -25,9 +25,7 @@
     outline: none;
   }
 
-  input:hover,
-  input:focus {
-    color: var(--color-fg);
-    background-color: var(--color-accent);
+  input:hover {
+    background-color: var(--color-surface);
   }
 </style>

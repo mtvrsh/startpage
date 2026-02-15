@@ -22,7 +22,7 @@
   input.focus,
   input:focus,
   input:hover {
-    background-color: var(--color-bg-light) !important;
+    background-color: var(--color-surface);
     outline: none;
   }
 </style>

@@ -15,10 +15,9 @@
     color: var(--color-fg);
     background: var(--color-surface);
     border: none;
-    border-bottom: $border transparent;
 
-    &:focus {
-      outline: $outline var(--color-accent);
+    &:hover {
+      background: var(--color-surface-light);
     }
 
     &:disabled {
@@ -26,12 +25,7 @@
     }
 
     &:required {
-      border-color: var(--color-error);
-
-      &:focus {
-        border-color: transparent;
-        outline-color: var(--color-error);
-      }
+      color: var(--color-error);
     }
   }
 </style>

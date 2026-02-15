@@ -73,7 +73,7 @@
 
   .home__navigation-button:hover,
   .home__navigation-button:focus {
-    background: var(--color-surface-light);
+    background: var(--color-surface);
     outline: none;
     cursor: pointer;
   }

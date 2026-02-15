@@ -6,9 +6,10 @@
     options = $bindable()
   } = $props()
 
-  let setUse = e => {
-    use.value = e.target.options[e.target.selectedIndex].value
-    use.label = e.target.options[e.target.selectedIndex].label
+  let setUse = (e: Event) => {
+    const target = e.target as HTMLSelectElement
+    use.value = target.options[target.selectedIndex].value
+    use.label = target.options[target.selectedIndex].label
   }
 </script>
 
@@ -42,10 +43,8 @@
     outline: none;
   }
 
-  select:hover,
-  select:focus {
-    color: var(--color-fg);
-    background-color: var(--color-accent);
+  select:hover {
+    background-color: var(--color-surface);
     cursor: pointer;
   }
 </style>

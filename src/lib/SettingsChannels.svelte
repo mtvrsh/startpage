@@ -66,7 +66,7 @@
         grid-template-columns: 1fr auto;
 
         &:hover {
-          background-color: var(--color-surface-light);
+          background-color: var(--color-surface);
         }
       }
     }
