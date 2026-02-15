@@ -137,14 +137,13 @@ export class Channels extends LocalStorage {
     status.update(s => { s.feed.fetchedAt = Date.now(); return s })
   }
 
-  static #mapResponse(response: any): Channel {
+  static #mapResponse(response: any, id?: string): Channel {
     const streams = response.relatedStreams ?? response.content
-    const uploader = response.uploader ?? response.content?.[0]?.uploaderName
-    const uploaderUrl = 'https://youtube.com' + streams?.[0]?.uploaderUrl
+    const url = id ? 'https://youtube.com/playlist?list=' + id : 'https://youtube.com' + streams?.[0]?.uploaderUrl
     return {
-      'url': uploaderUrl,
-      'name': uploader,
-      'displayName': uploader,
+      'url': url,
+      'name': response.name || streams?.[0]?.uploaderName,
+      'displayName': response.name || streams?.[0]?.uploaderName,
       'videos': streams.map((video: any) => ({
         'url': `https://youtube.com${video.url}`,
         'title': video.title,
@@ -169,7 +168,7 @@ export class Channels extends LocalStorage {
   static async #fetchPlaylist(id: URL, reload: boolean): Promise<Channel> {
     return fetch(`${get(config).instance.value}/playlists/${id}`, {cache: reload ? 'reload' : 'default'})
       .then(response => response.json())
-      .then(response => this.#mapResponse(response))
+      .then(response => this.#mapResponse(response, id))
   }
 
   static #parseId(url: string): URL | undefined {
