@@ -4,7 +4,6 @@
   import { app } from './state/app.svelte'
   import { preventDefault } from '../util/wrappers';
   import BookmarksAdd from './BookmarksAdd.svelte';
-  import ChannelsAdd from './ChannelsAdd.svelte';
   import ChannelsFilter from './ChannelsFilter.svelte';
   import ChannelsSync from './ChannelsSync.svelte';
   import Closeable from './Closeable.svelte';
@@ -61,12 +60,6 @@
       </button>
 
       <ul class="nav__menu-right-list" class:expand={isRightMenuOpen}>
-        <li>
-          <Dropdown value={strings.addChannel}>
-            <ChannelsAdd />
-          </Dropdown>
-        </li>
-
         <li>
           <Dropdown value={strings.addBookmark}>
             <BookmarksAdd />
