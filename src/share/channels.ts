@@ -77,6 +77,10 @@ export class Channels extends LocalStorage {
     })
   }
 
+  static addExisting(id: URL, channel: Channel) {
+    channels.update(s => s.set(id, channel))
+  }
+
   static toArray(selected: [URL, Channel] | Map<URL, Channel>): ChannelVideo[] {
     return this.#toArray(
       selected instanceof Map ? [...selected.entries()] : [selected]

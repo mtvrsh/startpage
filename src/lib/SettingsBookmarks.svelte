@@ -1,22 +1,44 @@
 <script lang="ts">
   import strings from '../share/strings'
-  import bookmarks from '../share/bookmarks'
+  import Bookmarks, { bookmarks, type Bookmark } from '../share/bookmarks'
   import ButtonRemove from './ButtonRemove.svelte';
 
-  let { store } = bookmarks
+  type BookmarkItem = {
+    url: string
+    bookmark: Bookmark
+    isRemoved: boolean
+  }
+
+  let items: BookmarkItem[] = $state(
+    [...$bookmarks].map(([url, bookmark]) => ({
+      url,
+      bookmark,
+      isRemoved: false
+    }))
+  )
 </script>
 
 <div class="bookmarks">
-  {#if $store.size}
+  {#if items.length}
     <ul class="bookmarks__list">
-      {#each $store as [url, {tag, name}]}
+      {#each items as item (item.url)}
         <li class="bookmarks__list-item">
           <input
             class="bookmarks__input"
-            value={`${tag}: ${name}`}
+            value={`${item.bookmark.tag}: ${item.bookmark.name}`}
             disabled
           >
-          <ButtonRemove remove={() => bookmarks.delete(url)} />
+          <ButtonRemove
+            isRemoved={item.isRemoved}
+            remove={() => {
+              Bookmarks.delete(item.url)
+              item.isRemoved = true
+            }}
+            restore={() => {
+              Bookmarks.set(item.bookmark)
+              item.isRemoved = false
+            }}
+          />
         </li>
       {/each}
     </ul>

@@ -1,22 +1,49 @@
 <script lang="ts">
   import strings from '../share/strings'
-  import { Channels, channels } from '../share/channels'
+  import { Channels, channels, type Channel } from '../share/channels'
   import ButtonRemove from './ButtonRemove.svelte';
 
-  let channelsSortedByName = $derived([...$channels].sort(Channels.BY_NAME))
+  type ChannelItem = {
+    id: string
+    channel: Channel
+    isRemoved: boolean
+  }
+
+  let items: ChannelItem[] = $state(
+    [...$channels].sort(Channels.BY_NAME).map(([id, channel]) => ({
+      id,
+      channel,
+      isRemoved: false
+    }))
+  )
 </script>
 
 <div class="channels">
-  {#if $channels.size}
+  {#if items.length}
     <ul class="channels__list">
-      {#each channelsSortedByName as [id, channel]}
+      {#each items as item (item.id)}
         <li class="channels__list-item">
           <input
             class="channels__input"
-            bind:value={channel.displayName}
-            placeholder={channel.name}
+            value={item.channel.displayName}
+            placeholder={item.channel.name}
+            onchange={(e) => {
+              const newValue = e.currentTarget.value
+              item.channel.displayName = newValue
+              Channels.update(item.id, { displayName: newValue })
+            }}
           >
-          <ButtonRemove remove={() => Channels.remove(id)} />
+          <ButtonRemove
+            isRemoved={item.isRemoved}
+            remove={() => {
+              Channels.remove(item.id)
+              item.isRemoved = true
+            }}
+            restore={() => {
+              Channels.addExisting(item.id, item.channel)
+              item.isRemoved = false
+            }}
+          />
         </li>
       {/each}
     </ul>

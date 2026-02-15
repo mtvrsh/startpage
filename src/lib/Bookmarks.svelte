@@ -1,16 +1,14 @@
 <script lang="ts">
-  import bookmarks from '../share/bookmarks'
+  import { bookmarks } from '../share/bookmarks'
   import strings from '../share/strings'
-
-  let { store } = bookmarks
 </script>
 
 <div class="container">
-{#if $store.size}
-	{#each Map.groupBy($store.values(), ({tag}) => tag) as [tag, bookmarks]}
+{#if $bookmarks.size}
+	{#each Map.groupBy($bookmarks.values(), ({tag}) => tag) as [tag, tagBookmarks]}
   <ul>
     <h3 class="tag-name">{tag}</h3>
-    {#each bookmarks as {url, name}}
+    {#each tagBookmarks as {url, name}}
     <li class="tag-bookmark">
       <a class="" href={url}>{name}</a>
     </li>

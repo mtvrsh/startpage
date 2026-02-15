@@ -1,21 +1,26 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
   import strings from '../share/strings'
 
   let {
-    remove
+    isRemoved,
+    remove,
+    restore
   } = $props()
 
-  let isRemoved = $state(false)
-
-  onDestroy(() => isRemoved && remove())
+  function toggle() {
+    if (isRemoved) {
+      restore()
+    } else {
+      remove()
+    }
+  }
 </script>
 
 <input
   type="button"
   class:removed={isRemoved}
   value={isRemoved ? strings.restore : strings.remove}
-  onclick={() => isRemoved = !isRemoved}>
+  onclick={toggle}>
 
 <style>
   input {
