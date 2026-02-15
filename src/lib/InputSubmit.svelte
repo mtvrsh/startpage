@@ -27,17 +27,13 @@
   }
 
   input[type=submit]:hover {
+    background-color: var(--color-surface-light);
     cursor: pointer;
-  }
-
-  input[type=submit]:focus {
-    outline: var(--outline) var(--color-accent-light);
   }
 
   input[type=submit]:disabled {
     cursor: default;
     background-color: var(--color-bg);
-    outline-color: var(--color-bg-light);
   }
 
   .gg-spinner-container {

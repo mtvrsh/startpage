@@ -158,9 +158,8 @@
             }
 
             &-link {
-              &:focus,
               &:hover {
-                background: var(--color-bg-light);
+                background: var(--color-surface-light);
               }
             }
           }
@@ -182,7 +181,7 @@
   :global(.nav__item.focus),
   :global(.nav__item:focus),
   :global(.nav__item:hover) {
-    background: var(--color-bg-light);
+    background: var(--color-surface-light);
     cursor: pointer;
   }
 

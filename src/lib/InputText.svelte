@@ -13,19 +13,20 @@
     padding: .5rem;
     margin-bottom: .5rem;
     color: var(--color-fg);
-    background-color: var(--color-bg);
-    border: var(--border) var(--color-accent);
+    background-color: var(--color-surface);
+    border: none;
+    outline: none;
+  }
+
+  input[type=text]:hover {
+    background-color: var(--color-surface-light);
   }
 
   input[type=text]:focus {
-    outline: var(--outline) var(--color-accent-light);
+    outline: 0.2rem solid var(--color-accent);
   }
 
   input[type=text].error {
-    border-color: var(--color-error);
-  }
-
-  input[type=text]:focus.error {
-    outline-color: var(--color-error);
+    color: var(--color-error);
   }
 </style>
