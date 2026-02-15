@@ -1,5 +1,5 @@
 import { get } from 'svelte/store'
-import { config } from '../share/config'
+import { config } from '../share/config.ts'
 
 export class Piped {
   static RELOAD           = false

@@ -1,4 +1,4 @@
-import config from '../config'
+import config from '../config.ts'
 
 export function getRedirectPathSetBy404Page() {
   const redirectPath = localStorage[config.GH_PAGES_REDIRECT]

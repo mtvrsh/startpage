@@ -1,5 +1,5 @@
 import type { Component } from 'svelte';
-import strings from './share/strings'
+import strings from './share/strings.ts'
 import Empty from './lib/Empty.svelte'
 import Home from './lib/Home.svelte'
 import Settings from './lib/Settings.svelte'
