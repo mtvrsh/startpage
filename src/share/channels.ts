@@ -17,7 +17,7 @@ export interface Video {
   url: string;
   title: string;
   thumbnail: string;
-  duration: number;
+  duration: string;
   uploaded: number;
   uploadedDate: string;
 }
@@ -137,14 +137,32 @@ export class Channels extends LocalStorage {
   }
 
   static #mapVideos(streams: any[]) {
-    return streams.map((video: any) => ({
-      'url': `https://youtube.com${video.url}`,
-      'title': video.title,
-      'thumbnail': video.thumbnail,
-      'duration': humanizeDuration(video.duration * 1000, { round: true, units: video.duration >= 60 ? ['h', 'm'] : ['s'] }),
-      'uploaded': video.uploaded,
-      'uploadedDate': video.uploadedDate
-    }))
+    return streams.map((video) => {
+      let duration = humanizeDuration(video.duration * 1000, { round: true, units: video.duration >= 60 ? ['h', 'm'] : ['s'] })
+      let uploaded = video.uploaded
+      let uploadedDate = video.uploadedDate
+
+      // live
+      if (video.uploaded === -1) {
+        uploaded = Date.now()
+        uploadedDate = 'Live'
+        duration = ''
+      }
+
+      // premiere
+      if (video.uploaded > Date.now()) {
+        uploadedDate = `in ${humanizeDuration(video.uploaded - Date.now(), { round: true, units: ['h', 'm'] })}`
+      }
+
+      return {
+        url: `https://youtube.com${video.url}`,
+        title: video.title,
+        thumbnail: video.thumbnail,
+        duration: duration,
+        uploaded: uploaded,
+        uploadedDate: uploadedDate
+      }
+    })
   }
 
   static #fetchChannel(id: URL, reload: boolean): Promise<Channel> {
