@@ -6,7 +6,6 @@ export interface Bookmark {
   url: URL;
   tag: string;
   name: string;
-  use: boolean;
 }
 
 export const bookmarks = writable<Map<URL, Bookmark>>(
