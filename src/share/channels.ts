@@ -185,9 +185,9 @@ export class Channels extends LocalStorage {
       .then(response => {
         const streams = response.relatedStreams ?? response.content
         return {
-          'url': 'https://youtube.com' + streams?.[0]?.uploaderUrl,
-          'name': streams?.[0]?.uploaderName,
-          'displayName': streams?.[0]?.uploaderName,
+          'url': 'https://youtube.com' + streams[0].uploaderUrl,
+          'name': streams[0].uploaderName,
+          'displayName': streams[0].uploaderName,
           'videos': this.#mapVideos(streams)
         }
       })
