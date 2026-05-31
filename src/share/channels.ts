@@ -184,10 +184,12 @@ export class Channels extends LocalStorage {
       .then(response => response.json())
       .then(response => {
         const streams = response.relatedStreams ?? response.content
+        if (!streams?.length)
+          throw new Error(`No videos found for ${id}`)
         return {
-          'url': 'https://youtube.com' + streams?.[0]?.uploaderUrl,
-          'name': streams?.[0]?.uploaderName,
-          'displayName': streams?.[0]?.uploaderName,
+          'url': 'https://youtube.com' + streams[0].uploaderUrl,
+          'name': streams[0].uploaderName,
+          'displayName': streams[0].uploaderName,
           'videos': this.#mapVideos(streams)
         }
       })
