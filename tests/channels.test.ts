@@ -248,32 +248,3 @@ describe('restore', () => {
     expect(result.size).toBe(1)
   })
 })
-
-describe('migrate', () => {
-  t('migrates URL-keyed entries to ID-keyed entries', () => {
-    const data = [
-      ['https://youtube.com/channel/UCabc123', { url: 'https://channel.url', name: 'Chan', displayName: 'Chan', videos: [] }],
-      ['PLplaylist456', { url: 'https://playlist.url', name: 'PL', displayName: 'PL', videos: [] }]
-    ]
-    localStorage['channels'] = JSON.stringify(data)
-
-    Channels.migrate()
-
-    const parsed = JSON.parse(localStorage['channels'])
-    const keys = parsed.map(([k]: [string, any]) => k)
-    expect(keys).toContain('UCabc123')
-    expect(keys).toContain('PLplaylist456')
-    expect(keys).not.toContain('https://youtube.com/channel/UCabc123')
-  })
-
-  t('does nothing if localStorage is empty', () => {
-    delete localStorage['channels']
-    expect(() => Channels.migrate()).not.toThrow()
-  })
-
-  t('does nothing if data is not an array', () => {
-    localStorage['channels'] = JSON.stringify({ not: 'array' })
-    Channels.migrate()
-    expect(localStorage['channels']).toBe('{"not":"array"}')
-  })
-})

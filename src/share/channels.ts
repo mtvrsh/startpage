@@ -219,24 +219,6 @@ export class Channels extends LocalStorage {
     return url.split(delimeter).pop()
   }
 
-  static migrate() {
-    const raw = localStorage[this.ls_name()]
-    if (!raw) return
-    try {
-      const data = JSON.parse(raw)
-      if (!Array.isArray(data)) return
-      let changed = false
-      const migrated: [string, any][] = data.map(([url, ch]: [string, any]) => {
-        const id = this.#parseId(url)
-        if (!id || id === url) return [url, ch]
-        changed = true
-        return [id, ch]
-      })
-      if (changed)
-        localStorage[this.ls_name()] = JSON.stringify([...new Map(migrated)])
-    } catch {}
-  }
-
   static serialize() {
     return [...get(channels)].map(([url, ch]) => [url, {
       url: ch.url,
@@ -251,8 +233,6 @@ export class Channels extends LocalStorage {
     channels.set(new Map(entries))
   }
 }
-
-Channels.migrate()
 
 const stored = Channels.get()
 export const channels = writable<Map<string, Channel>>(new Map(Array.isArray(stored) ? stored : []))
