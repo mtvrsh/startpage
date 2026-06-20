@@ -3,14 +3,13 @@
   import strings from '../share/strings'
   import { Channels } from '../share/channels'
   import { Config, config } from '../share/config'
-  import { Piped } from '../util/piped';
-  import { rejectIfResponseIsNotOk } from '../util/fetch';
+  import { getAdapter } from '../lib/api/adapter'
   import { FocusNavigator } from '../util/focus.svelte';
   import { preventDefault } from '../util/wrappers';
   import Closeable from './Closeable.svelte';
   import Image from './Image.svelte';
   import IconSearch from './icons/Search.svelte'
-  import type { SearchChannelsResult } from '../util/piped';
+  import type { SearchChannelsResult } from '../lib/api/adapter';
   import { getDirectThumbnail } from '../util/youtube'
 
   let focus = new FocusNavigator();
@@ -43,11 +42,9 @@
       return;
     };
 
-    Piped.search(query, {filter: Piped.FILTER_CHANNELS})
-    .then(rejectIfResponseIsNotOk)
-    .then(r => r.json())
-    .then(r => suggestions = r.items || [])
-    .then(_ => openOutput())
+    getAdapter().search(query)
+      .then(results => suggestions = results)
+      .then(_ => openOutput())
   }
 
   let searchDelayed = () => {

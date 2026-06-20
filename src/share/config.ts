@@ -14,11 +14,14 @@ export class Config extends LocalStorage{
   }
 }
 
+export type InstanceType = 'piped' | 'startpage'
+
 export const defaults = {
   keybind: {
     close: 'Escape',
     focusSearch: { user: '', default: 's' }
   },
+  instanceType: 'piped' as InstanceType,
   instance:
     { label: 'private.coffee', value: 'https://api.piped.private.coffee' },
   instances: [
@@ -27,6 +30,7 @@ export const defaults = {
     { label: 'private.coffee', value: 'https://api.piped.private.coffee' },
     { label: 'wireway.ch',     value: 'https://pipedapi.wireway.ch' }
   ],
+  backendUrl: 'https://startpage-api.mtvrs.workers.dev',
   feedProtocolName: 'mpv',
   feedProtocolEnabledForVideos: false,
   feedProtocolEnabledForVideosInTitles: true,

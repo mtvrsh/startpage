@@ -10,6 +10,13 @@
   import ToggleSwitch from './inputs/ToggleSwitch.svelte';
 
   let importError = $state('')
+  let backendUse = $state({
+    value: $config.instanceType,
+    label: $config.instanceType === 'piped' ? strings.piped : strings.startpageBackend
+  })
+  $effect(() => {
+    $config.instanceType = backendUse.value
+  })
   let importInput: HTMLInputElement
 
   let exportConfig = () => {
@@ -62,11 +69,29 @@
     <ul class="general__group-list">
       <li class="general__group-list-item">
         <InputSelect
-          id={strings.instanceId}
-          label={strings.instance}
-          bind:use={$config.instance}
-          bind:options={$config.instances} />
+          id="settings-instance-type"
+          label={strings.backendType}
+          bind:use={backendUse}
+          options={[
+            { value: 'piped', label: strings.piped },
+            { value: 'startpage', label: strings.startpageBackend }
+          ]} />
       </li>
+
+      {#if $config.instanceType === 'piped'}
+        <li class="general__group-list-item">
+          <InputSelect
+            id={strings.instanceId}
+            label={strings.instance}
+            bind:use={$config.instance}
+            bind:options={$config.instances} />
+        </li>
+      {:else}
+        <li class="general__group-list-item">
+          <label for="settings-backend-url">{strings.backendUrl}</label>
+          <Text id="settings-backend-url" bind:value={$config.backendUrl} />
+        </li>
+      {/if}
     </ul>
   </li>
 
