@@ -9,7 +9,7 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
-    "youtubei.js": "github:LuanRT/YouTube.js"
+    "youtubei.js": "^17.2.0"
   },
   "devDependencies": {
     "@types/node": "^26.0.0",
