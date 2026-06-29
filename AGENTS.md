@@ -1,7 +1,7 @@
 # Startpage - Agent Instructions
 
 ## Project Overview
-Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API for fetching channel videos. Deployed to GitHub Pages.
+Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API or YouTube.js backend for fetching channel videos. Deployed to GitHub Pages.
 
 ## Commands
 - `deno task test` - Run Vitest tests
@@ -44,6 +44,7 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API f
 - `Dropdown.svelte` - Uses `Closeable`, `open = $bindable(false)` for two-way binding
 
 ### Backend (API Strategy)
+- Two API sources: **Piped API** (public instances) and **startpage-api** (YouTube.js deployed on Cloudflare Worker in `startpage-api/`)
 - `src/lib/api/backend.ts` — `Backend` interface, `backends` record mapping keys to classes, `backend` derived store
 - Each backend class has `static backendKey = 'name' as const` — the single source of truth for its identifier
 - `BACKEND_TYPES` array derived from record keys, `InstanceType` type derived from `BACKEND_TYPES`

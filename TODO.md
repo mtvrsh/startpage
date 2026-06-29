@@ -60,6 +60,6 @@ or `player` endpoint) has the full data, but fetching per-item is too expensive 
 a feed context.
 
 ### Related Files
-- `worker/src/index.ts` — `mapPlaylistItem()` and `getChannel()` video mapper
+- `startpage-api/src/index.ts` — `mapPlaylistItem()` and `getChannel()` video mapper
 - `3party/NewPipeExtractor/extractor/.../YoutubeShortsLockupInfoItemExtractor.java` — NewPipe's implementation showing same limitations
 - `3party/NewPipeExtractor/extractor/.../YoutubeStreamInfoItemLockupExtractor.java` — NewPipe's LockupView extractor (has full duration/date)
