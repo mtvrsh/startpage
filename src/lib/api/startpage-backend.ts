@@ -17,6 +17,8 @@ function bestThumbnail(thumbnails: any[]): string {
 }
 
 export class StartpageBackend implements Backend {
+  static name = 'startpage' as const
+
   async search(query: string): Promise<SearchChannelsResult[]> {
     const { backendUrl, timeoutInSeconds } = get(config)
     const response = await fetch(`${backendUrl}/search/channels?q=${encodeURIComponent(query)}`, {

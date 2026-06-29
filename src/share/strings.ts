@@ -46,7 +46,6 @@ export default {
   saveHint: 'Press Enter to save changes',
   searchForChannel: 'Search',
   settings: 'Settings',
-  startpage: 'startpage',
   startpageBackend: 'Startpage API',
   sync: 'Synchronize',
   tag: 'Tag',

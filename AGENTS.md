@@ -43,6 +43,19 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API f
 - `Closeable.svelte` - Wrapper for dropdowns/menus, closes on configurable key (default Escape) or click-outside, has `onClose` callback
 - `Dropdown.svelte` - Uses `Closeable`, `open = $bindable(false)` for two-way binding
 
+### Backend (API Strategy)
+- `src/lib/api/backend.ts` — `Backend` interface, `backends` record mapping keys to classes, `backend` derived store
+- Each backend class has `static backendKey = 'name' as const` — the single source of truth for its identifier
+- `BACKEND_TYPES` array derived from record keys, `InstanceType` type derived from `BACKEND_TYPES`
+- `SettingsGeneral.svelte` maps `InstanceType` → UI labels via `backendLabel` record
+
+Adding a new backend:
+1. Create `src/lib/api/<name>-backend.ts` with `class <Name>Backend implements Backend { static backendKey = '<name>' as const }`
+2. Add import + entry to `backends` record in `backend.ts`
+3. Add UI label to `src/share/strings.ts`
+4. Add label entry in `SettingsGeneral.svelte` `backendLabel` map
+5. If it needs unique config fields, add an `{#if}` block in the settings template
+
 ### SCSS
 - Variables: `src/lib/scss/_variables.scss` (gaps, z-index, etc.)
 - Themes: `src/lib/scss/_themes.scss` (Gruvbox color palette)

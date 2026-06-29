@@ -14,11 +14,13 @@ export interface Backend {
 }
 
 const backends = {
-  piped: PipedBackend,
-  startpage: StartpageBackend,
+  [PipedBackend.name]: PipedBackend,
+  [StartpageBackend.name]: StartpageBackend,
 } satisfies Record<string, new () => Backend>
 
 export type InstanceType = keyof typeof backends
+
+export const BACKEND_TYPES = Object.keys(backends) as InstanceType[]
 
 function createBackend(type: InstanceType): Backend {
   return new backends[type]()

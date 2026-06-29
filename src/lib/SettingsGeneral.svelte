@@ -2,6 +2,7 @@
   import { merge } from 'lodash'
   import strings from '../share/strings'
   import { config, defaults } from '../share/config'
+  import { BACKEND_TYPES, type InstanceType } from '../lib/api/backend'
   import Bookmarks from '../share/bookmarks'
   import { Channels } from '../share/channels'
   import InputNumber from './InputNumber.svelte';
@@ -10,9 +11,15 @@
   import ToggleSwitch from './inputs/ToggleSwitch.svelte';
 
   let importError = $state('')
+
+  const backendLabel: Record<InstanceType, string> = {
+    piped: strings.piped,
+    startpage: strings.startpageBackend,
+  }
+
   let backendUse = $state({
     value: $config.instanceType,
-    label: $config.instanceType === 'piped' ? strings.piped : strings.startpageBackend
+    label: backendLabel[$config.instanceType as InstanceType],
   })
   $effect(() => {
     $config.instanceType = backendUse.value
@@ -72,24 +79,21 @@
           id="settings-instance-type"
           label={strings.backendType}
           bind:use={backendUse}
-          options={[
-            { value: 'piped', label: strings.piped },
-            { value: 'startpage', label: strings.startpageBackend }
-          ]} />
+          options={BACKEND_TYPES.map(t => ({ value: t, label: backendLabel[t] }))} />
       </li>
 
-      {#if $config.instanceType === 'piped'}
+      {#if $config.instanceType === 'startpage'}
+        <li class="general__group-list-item">
+          <label for="settings-backend-url">{strings.backendUrl}</label>
+          <Text id="settings-backend-url" bind:value={$config.backendUrl} />
+        </li>
+      {:else}
         <li class="general__group-list-item">
           <InputSelect
             id={strings.instanceId}
             label={strings.instance}
             bind:use={$config.instance}
             bind:options={$config.instances} />
-        </li>
-      {:else}
-        <li class="general__group-list-item">
-          <label for="settings-backend-url">{strings.backendUrl}</label>
-          <Text id="settings-backend-url" bind:value={$config.backendUrl} />
         </li>
       {/if}
     </ul>

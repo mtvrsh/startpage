@@ -8,6 +8,8 @@ import type { Channel } from '../../share/channels'
 import type { SearchChannelsResult } from '../../util/piped'
 
 export class PipedBackend implements Backend {
+  static name = 'piped' as const
+
   async search(query: string): Promise<SearchChannelsResult[]> {
     const response = await Piped.search(query, { filter: Piped.FILTER_CHANNELS })
     if (!response.ok) return []
