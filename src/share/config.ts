@@ -1,6 +1,7 @@
 import { merge } from 'lodash'
 import { writable } from 'svelte/store'
 import { LocalStorage } from '../util/storage'
+import type { InstanceType } from '../lib/api/backend'
 
 export class Config extends LocalStorage{
   static LS_NAME = 'config'
@@ -13,8 +14,6 @@ export class Config extends LocalStorage{
     return keybind.user || keybind.default
   }
 }
-
-export type InstanceType = 'piped' | 'startpage'
 
 export const defaults = {
   keybind: {

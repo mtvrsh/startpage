@@ -3,7 +3,7 @@
   import strings from '../share/strings'
   import { Channels } from '../share/channels'
   import { Config, config } from '../share/config'
-  import { getBackend } from '../lib/api/backend'
+  import { backend } from '../lib/api/backend'
   import { FocusNavigator } from '../util/focus.svelte';
   import { preventDefault } from '../util/wrappers';
   import Closeable from './Closeable.svelte';
@@ -42,7 +42,7 @@
       return;
     };
 
-    getBackend().search(query)
+    $backend.search(query)
       .then(channelResults => suggestions = channelResults)
       .then(_ => openOutput())
   }

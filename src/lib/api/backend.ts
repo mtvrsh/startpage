@@ -1,7 +1,6 @@
 import type { Channel } from '../../share/channels'
 import type { SearchChannelsResult } from '../../util/piped'
-import type { InstanceType } from '../../share/config'
-import { get } from 'svelte/store'
+import { derived } from 'svelte/store'
 import { config } from '../../share/config'
 import { PipedBackend } from './piped-backend'
 import { StartpageBackend } from './startpage-backend'
@@ -14,21 +13,18 @@ export interface Backend {
   fetchPlaylist(id: string, reload?: boolean): Promise<Channel>
 }
 
-let cachedBackend: { type: InstanceType; backend: Backend } | null = null
+const backends = {
+  piped: PipedBackend,
+  startpage: StartpageBackend,
+} satisfies Record<string, new () => Backend>
 
-export function getBackend(): Backend {
-  const type = get(config).instanceType
-  const cached = cachedBackend
-  if (cached && cached.type === type) return cached.backend
-  cachedBackend = { type, backend: createBackend(type) }
-  return cachedBackend.backend
-}
+export type InstanceType = keyof typeof backends
 
 function createBackend(type: InstanceType): Backend {
-  switch (type) {
-    case 'startpage':
-      return new StartpageBackend()
-    case 'piped':
-      return new PipedBackend()
-  }
+  return new backends[type]()
 }
+
+// Derive from instanceType only so createBackend() isn't called on every
+// config change (e.g. feedLimit, timeoutInSeconds)
+const instanceType = derived(config, $c => $c.instanceType)
+export const backend = derived(instanceType, $t => createBackend($t))

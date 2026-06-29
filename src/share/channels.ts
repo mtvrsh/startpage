@@ -2,7 +2,7 @@ import { writable, get } from 'svelte/store';
 import { LocalStorage } from '../util/storage'
 import { config } from './config'
 import { status } from './status'
-import { getBackend } from '../lib/api/backend'
+import { backend } from '../lib/api/backend'
 
 export interface Channel {
   url: string;
@@ -39,12 +39,10 @@ export class Channels extends LocalStorage {
     if (!id)
       return new Promise((_, reject) => reject(`No URL found in ${url}`))
 
-    const backend = getBackend()
-
     return (
         this.#isPlaylist(url)
-      ? backend.fetchPlaylist(id, reload)
-      : backend.fetchChannel(id, reload)
+      ? get(backend).fetchPlaylist(id, reload)
+      : get(backend).fetchChannel(id, reload)
     ).then(channel => {
         if (partial)
           this.update(id, {videos: channel.videos})
