@@ -3,13 +3,13 @@
   import strings from '../share/strings'
   import { Channels } from '../share/channels'
   import { Config, config } from '../share/config'
-  import { getAdapter } from '../lib/api/adapter'
+  import { getBackend } from '../lib/api/backend'
   import { FocusNavigator } from '../util/focus.svelte';
   import { preventDefault } from '../util/wrappers';
   import Closeable from './Closeable.svelte';
   import Image from './Image.svelte';
   import IconSearch from './icons/Search.svelte'
-  import type { SearchChannelsResult } from '../lib/api/adapter';
+  import type { SearchChannelsResult } from '../lib/api/backend';
   import { getDirectThumbnail } from '../util/youtube'
 
   let focus = new FocusNavigator();
@@ -24,7 +24,7 @@
   )
 
   let suggestionsSortedBySubscribers = $derived(
-    [...suggestions].sort((a,b) => b.subscribers - a.subscribers)
+    [...suggestions].sort((channelA, channelB) => channelB.subscribers - channelA.subscribers)
   )
 
   let openOutput = () =>
@@ -42,8 +42,8 @@
       return;
     };
 
-    getAdapter().search(query)
-      .then(results => suggestions = results)
+    getBackend().search(query)
+      .then(channelResults => suggestions = channelResults)
       .then(_ => openOutput())
   }
 
@@ -64,8 +64,8 @@
       })
   }
 
-  let handleSubmit = (e: Event) => {
-    e.preventDefault()
+  let handleSubmit = (event: Event) => {
+    event.preventDefault()
 
     if (!query) {
       clearSuggestions()
@@ -80,41 +80,41 @@
     search()
   }
 
-  let AddChannelAndClose = (e: MouseEvent) => {
-    addChannel((e.currentTarget as HTMLAnchorElement).href)
+  let AddChannelAndClose = (event: MouseEvent) => {
+    addChannel((event.currentTarget as HTMLAnchorElement).href)
   }
 
-  let handleGlobalKeybinds = (e: KeyboardEvent) => {
+  let handleGlobalKeybinds = (event: KeyboardEvent) => {
     // Block when typing in text areas or content-editable elements
     // and allow buttons/checkboxes/radios
-    const target = e.target as HTMLElement
-    const tag = target.tagName.toLowerCase()
-    if (tag === 'textarea' || target.isContentEditable)
+    const target = event.target as HTMLElement
+    const tagName = target.tagName.toLowerCase()
+    if (tagName === 'textarea' || target.isContentEditable)
       return
-    if (tag === 'input') {
+    if (tagName === 'input') {
       const type = (target as HTMLInputElement).type
       if (type !== 'button' && type !== 'submit' && type !== 'checkbox' && type !== 'radio')
         return
     }
 
-    switch (e.key) {
+    switch (event.key) {
       case focusKeybind:
-        e.preventDefault();
+        event.preventDefault();
         focus.at(0);
         break;
     }
   }
 
-  let handleLocalKeybinds = (e: KeyboardEvent) => {
-    e.stopPropagation()
+  let handleLocalKeybinds = (event: KeyboardEvent) => {
+    event.stopPropagation()
 
-    switch (e.key) {
+    switch (event.key) {
       case 'ArrowUp':
-        e.preventDefault();
+        event.preventDefault();
         focus.prev();
         break;
       case 'ArrowDown':
-        e.preventDefault();
+        event.preventDefault();
         focus.next();
         break;
     }
@@ -162,13 +162,13 @@
         <ul class="search__output" tabindex="-1">
           {#each suggestionsSortedBySubscribers.slice(0, 5) as {
             url, name, thumbnail
-          }, i }
+          }, index }
             <li>
               <a
                 class="search__output-link"
                 href={url}
                 onclick={preventDefault(AddChannelAndClose)}
-                bind:this={focus.items[i+1]}
+                bind:this={focus.items[index+1]}
                 tabindex="-1"
               >
                 <div class="search__output-thumbnail">

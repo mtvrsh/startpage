@@ -3,32 +3,32 @@ import type { SearchChannelsResult } from '../../util/piped'
 import type { InstanceType } from '../../share/config'
 import { get } from 'svelte/store'
 import { config } from '../../share/config'
-import { PipedAdapter } from './piped-adapter'
-import { StartpageAdapter } from './startpage-adapter'
+import { PipedBackend } from './piped-backend'
+import { StartpageBackend } from './startpage-backend'
 
 export type { Channel, SearchChannelsResult }
 
-export interface ApiAdapter {
+export interface Backend {
   search(query: string): Promise<SearchChannelsResult[]>
   fetchChannel(id: string, reload?: boolean): Promise<Channel>
   fetchPlaylist(id: string, reload?: boolean): Promise<Channel>
 }
 
-let cachedAdapter: { type: InstanceType; adapter: ApiAdapter } | null = null
+let cachedBackend: { type: InstanceType; backend: Backend } | null = null
 
-export function getAdapter(): ApiAdapter {
+export function getBackend(): Backend {
   const type = get(config).instanceType
-  const instance = cachedAdapter
-  if (instance && instance.type === type) return instance.adapter
-  cachedAdapter = { type, adapter: createAdapter(type) }
-  return cachedAdapter.adapter
+  const cached = cachedBackend
+  if (cached && cached.type === type) return cached.backend
+  cachedBackend = { type, backend: createBackend(type) }
+  return cachedBackend.backend
 }
 
-function createAdapter(type: InstanceType): ApiAdapter {
+function createBackend(type: InstanceType): Backend {
   switch (type) {
     case 'startpage':
-      return new StartpageAdapter()
+      return new StartpageBackend()
     case 'piped':
-      return new PipedAdapter()
+      return new PipedBackend()
   }
 }

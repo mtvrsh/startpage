@@ -2,7 +2,7 @@ import { writable, get } from 'svelte/store';
 import { LocalStorage } from '../util/storage'
 import { config } from './config'
 import { status } from './status'
-import { getAdapter } from '../lib/api/adapter'
+import { getBackend } from '../lib/api/backend'
 
 export interface Channel {
   url: string;
@@ -30,7 +30,7 @@ export class Channels extends LocalStorage {
   static LS_NAME = 'channels'
 
   static saveOnUpdate() {
-    channels.subscribe(s => super.set([...s]))
+    channels.subscribe(channelMap => super.set([...channelMap]))
   }
 
   static add(url: string, partial = false, reload = false): Promise<void> {
@@ -39,45 +39,45 @@ export class Channels extends LocalStorage {
     if (!id)
       return new Promise((_, reject) => reject(`No URL found in ${url}`))
 
-    const adapter = getAdapter()
+    const backend = getBackend()
 
     return (
         this.#isPlaylist(url)
-      ? adapter.fetchPlaylist(id, reload)
-      : adapter.fetchChannel(id, reload)
+      ? backend.fetchPlaylist(id, reload)
+      : backend.fetchChannel(id, reload)
     ).then(channel => {
         if (partial)
           this.update(id, {videos: channel.videos})
         else
-          channels.update(s => s.set(id, channel))
+          channels.update(channelMap => channelMap.set(id, channel))
 
-        status.update(s => {
-          s.feed.fetching.now = s.feed.fetching.now.filter(
-            (u: string) => u != id
+        status.update(state => {
+          state.feed.fetching.now = state.feed.fetching.now.filter(
+            (channelId: string) => channelId != id
           )
 
-          if (s.feed.fetching.now.length == 0)
-            s.feed.fetching.max = 0
+          if (state.feed.fetching.now.length == 0)
+            state.feed.fetching.max = 0
 
-          return s
+          return state
         })
       }
     )
   }
 
-  static update(id: string, values: any) {
-    channels.update(s => s.set(id, {...s.get(id), ...values}))
+  static update(id: string, channelProps: any) {
+    channels.update(channelMap => channelMap.set(id, {...channelMap.get(id), ...channelProps}))
   }
 
   static remove(id: string) {
-    channels.update(s => {
-      s.delete(id)
-      return s
+    channels.update(channelMap => {
+      channelMap.delete(id)
+      return channelMap
     })
   }
 
   static addExisting(id: string, channel: Channel) {
-    channels.update(s => s.set(id, channel))
+    channels.update(channelMap => channelMap.set(id, channel))
   }
 
   static toArray(selected: [string, Channel] | Map<string, Channel>): ChannelVideo[] {
@@ -95,34 +95,34 @@ export class Channels extends LocalStorage {
     })))
   }
 
-  static BY_UPLOADED = (a: Video, b: Video) =>
-    b.uploaded - a.uploaded
+  static BY_UPLOADED = (videoA: Video, videoB: Video) =>
+    videoB.uploaded - videoA.uploaded
 
-  static BY_CHANNEL_DISPLAY_NAME = (a: ChannelVideo, b: ChannelVideo) =>
-    (a.channelDisplayName || a.channelName).localeCompare(b.channelDisplayName || b.channelName)
+  static BY_CHANNEL_DISPLAY_NAME = (channelA: ChannelVideo, channelB: ChannelVideo) =>
+    (channelA.channelDisplayName || channelA.channelName).localeCompare(channelB.channelDisplayName || channelB.channelName)
 
-  static BY_NAME = ([, a]: [string, Channel], [, b]: [string, Channel]) =>
-    (a.displayName || a.name).localeCompare(b.displayName || b.name)
+  static BY_NAME = ([, channelA]: [string, Channel], [, channelB]: [string, Channel]) =>
+    (channelA.displayName || channelA.name).localeCompare(channelB.displayName || channelB.name)
 
   static refetch({reload = false} = {}) {
-    const r = reload || !this.#isFeedFresh()
+    const forceReload = reload || !this.#isFeedFresh()
 
-    channels.update(v => {
-      status.update(s => {
-        s.feed.fetching.now = [...v].map(c => c[0])
-        s.feed.fetching.max = v.size
-        return s
+    channels.update(channelMap => {
+      status.update(state => {
+        state.feed.fetching.now = [...channelMap].map(entry => entry[0])
+        state.feed.fetching.max = channelMap.size
+        return state
       })
 
-      v.forEach((_, id) => 
-        this.add(id, true, r)
-        .catch(_ => status.update(s => {
-          s.feed.fetching.now = []
-          s.feed.fetching.max = 0
-          return s
+      channelMap.forEach((_, id) => 
+        this.add(id, true, forceReload)
+        .catch(_ => status.update(state => {
+          state.feed.fetching.now = []
+          state.feed.fetching.max = 0
+          return state
         })))
 
-      return v
+      return channelMap
     })
 
     this.#resetFeedFetchedAt()
@@ -133,7 +133,7 @@ export class Channels extends LocalStorage {
   }
 
   static #resetFeedFetchedAt() {
-    status.update(s => { s.feed.fetchedAt = Date.now(); return s })
+    status.update(state => { state.feed.fetchedAt = Date.now(); return state })
   }
 
   static #isPlaylist(url: string): boolean {
@@ -144,22 +144,22 @@ export class Channels extends LocalStorage {
   }
 
   static #parseId(url: string): string | undefined {
-    let delimeter = this.#isPlaylist(url) ? '=' : '/'
+    let delimiter = this.#isPlaylist(url) ? '=' : '/'
 
-    return url.split(delimeter).pop()
+    return url.split(delimiter).pop()
   }
 
   static serialize() {
-    return [...get(channels)].map(([url, ch]) => [url, {
-      url: ch.url,
-      name: ch.name,
-      displayName: ch.displayName
+    return [...get(channels)].map(([url, channel]) => [url, {
+      url: channel.url,
+      name: channel.name,
+      displayName: channel.displayName
     }])
   }
 
   static restore(data: [string, { url: string; name: string; displayName: string }][]) {
     const entries = data
-      .map(([url, ch]) => [this.#parseId(url) || url, { ...ch, videos: [] }] as [string, Channel])
+      .map(([url, channel]) => [this.#parseId(url) || url, { ...channel, videos: [] }] as [string, Channel])
     channels.set(new Map(entries))
   }
 }
