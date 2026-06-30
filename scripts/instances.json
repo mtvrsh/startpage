@@ -8,6 +8,7 @@
   "invidious": {
     "workingInstances": [
       "https://invidious.f5.si",
+      "https://invidious.tiekoetter.com",
       "https://inv.zoomerville.com"
     ]
   }
