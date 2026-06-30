@@ -1,4 +1,6 @@
-#!/usr/bin/env -S deno run --allow-net --allow-read
+#!/usr/bin/env -S deno run --allow-net --allow-read --allow-import
+
+import { parseArgs } from "jsr:@std/cli/parse-args";
 
 const TIMEOUT = 5_000;
 const PLAYLIST_ID = "UUWTA5Yd0rAkQt5-9etIFoBA";
@@ -42,15 +44,15 @@ async function checkPiped() {
     const [healthcheck, version, playlist] = await Promise.all([
       fetchText(`${uri}/healthcheck`),
       fetchText(`${uri}/version`),
-      fetchJson<{ name?: string; videos?: number }>(
+      fetchJson<{ name?: string; relatedStreams?: { url?: string }[] }>(
         `${uri}/playlists/${PLAYLIST_ID}`,
       ),
     ]);
 
-    if (!playlist?.name || (playlist.videos ?? 0) === 0) continue;
+    if (!playlist?.name || !playlist.relatedStreams?.length) continue;
 
     console.log(
-      `${uri}\t${healthcheck.trim()}\t${version.trim()}\t${playlist.videos}`,
+      `${uri}\t${healthcheck.trim()}\t${version.trim()}\t${playlist.relatedStreams.length}`,
     );
   }
 }
@@ -68,30 +70,22 @@ async function checkInvidious() {
     const [version, playlist] = await Promise.all([
       fetchJson<{ software?: { version?: string } }>(`${uri}/api/v1/stats`)
         .then((s) => s?.software?.version ?? ""),
-      fetchJson<{ title?: string; videoCount?: number }>(
+      fetchJson<{ title?: string; videos?: { videoId: string }[] }>(
         `${uri}/api/v1/playlists/${PLAYLIST_ID}`,
       ),
     ]);
 
-    if (!playlist?.title || (playlist.videoCount ?? 0) === 0) continue;
+    if (!playlist?.title || !playlist.videos?.length) continue;
 
-    console.log(`${uri}\t${version}\t${playlist.videoCount}`);
+    console.log(`${uri}\t${version}\t${playlist.videos.length}`);
   }
 }
 
-const backend = Deno.args[0];
+const flags = parseArgs(Deno.args, { boolean: ["piped", "invidious"] });
 
-if (backend === "piped") {
-  await checkPiped();
-}
-
-if (backend === "invidious") {
-  await checkInvidious();
-}
-
-if (!backend) {
+if (flags.piped) await checkPiped();
+if (flags.invidious) await checkInvidious();
+if (Deno.args.length === 0) {
   await checkPiped();
   await checkInvidious();
 }
-
-export { }
