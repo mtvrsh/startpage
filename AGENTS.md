@@ -5,7 +5,7 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 
 ## Commands
 - `deno task test` - Run Vitest tests
-- `deno task check` - Svelte typecheck + TypeScript checks (node config + full tsc pass)
+- `deno task check` - Svelte typecheck + TypeScript checks (node config + full tsc pass; `tsc -p tsconfig.node.json` is `composite` and regenerates the gitignored `src/constants.d.ts`)
 - `deno task dev` - Start dev server
 - `deno task build` - Production build (output: `dist/`)
 - `deno task preview` - Preview production build locally
@@ -86,8 +86,10 @@ Adding a new backend:
 - Bookmarks edit name, tag, and URL inline. URL changes are re-keyed through `Bookmarks.replace()` and rejected when the new URL already exists.
 
 ### Service Worker
-- `public/sw.js` - versioned by commit hash (replaced during CI build via sed)
-- Cached assets: `.`, `404.html`, `index.html`, `favicon.svg`, `assets/index.js`, `assets/index.css`
+- `src/sw.js` — built via `vite.config.js:10-20` Rollup `input: { index: './index.html', sw: './src/sw.js' }` + `output.entryFileNames: sw ? 'sw.js' : 'assets/[name].js'` to keep scope at `/startpage/sw.js` (registered in `src/App.svelte:18` as `config.base + '/sw.js'` — `src/constants.ts:1` `BASE`). Do not move SW under `assets/` or scope breaks.
+- `vite.config.js:15-16` `assetFileNames: 'assets/[name].[ext]'` / `chunkFileNames: 'assets/[name].js'` are **intentionally without `[hash]`** — SW manifest in `src/sw.js:7-13` hard-codes `'.', '404.html', 'index.html', 'favicon.svg', 'assets/index.js', 'assets/index.css'`. **Invariant:** if hashing is re-enabled or code-splitting emits extra chunks, the hard-coded list will 404 or miss coverage — update `src/sw.js` manifest or switch to generated manifest (`workbox` / `vite-plugin-pwa`).
+- Version `src/sw.js:1` `VERSION = import.meta.env.VITE_GIT_COMMIT` (also `src/config.ts:14` / `src/lib/SettingsGeneral.svelte:211`) — no fallback per B2, must be set at build: `.github/workflows/deploy.yml:24` `VITE_GIT_COMMIT=$(git rev-parse --short HEAD) npm run build` (Vite replaces at build time via `VITE_` prefix). Local builds without it produce `void 0` / `"undefined"` cache name — intentional.
+- Install `src/sw.js:15-17` guards `resp.ok` before `cache.put` to avoid caching 404/500 error responses (prevents cache poisoning).
 
 ### Atom/RSS reader (CORS)
 - `feedProxyUrl` in `src/share/config.ts` defaults to the `startpage-api` worker. Requests become `<feedProxyUrl>/feed?url=<encoded feed URL>`; an empty value means direct `fetch`, which only works for feeds that send `Access-Control-Allow-Origin` (many blogs and `youtube.com/feeds` do not).

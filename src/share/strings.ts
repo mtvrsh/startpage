@@ -78,5 +78,6 @@ export default {
     home: '/',
     notFound: '/not-found',
     settings: '/settings'
-  }
+  },
+  version: 'Version'
 }

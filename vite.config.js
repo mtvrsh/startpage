@@ -1,31 +1,38 @@
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import config from './src/config'
+import { BASE } from './src/constants'
 
 export default defineConfig({
   plugins: [svelte()],
-  base: config.base,
+  base: BASE,
   build: {
     rollupOptions: {
+      input: {
+        index: './index.html',
+        sw: './src/sw.js'
+      },
       output: {
-        entryFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]'
+        assetFileNames: 'assets/[name].[ext]',
+        chunkFileNames: 'assets/[name].js',
+        entryFileNames: (chunkInfo) => {
+          return chunkInfo.name === 'sw' ? 'sw.js' : 'assets/[name].js'
+        }
       }
     }
   },
-	test: {
-		environment: 'jsdom'
-	},
-	resolve: process.env.VITEST
-		? {
-				conditions: ['browser']
-			}
-		: undefined,
+  test: {
+    environment: 'jsdom'
+  },
+  resolve: process.env.VITEST
+    ? {
+      conditions: ['browser']
+    }
+    : undefined,
   css: {
     preprocessorOptions: {
       scss: {
         api: 'modern-compiler'
       }
     }
-	}
+  }
 });

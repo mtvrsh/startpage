@@ -1,6 +1,8 @@
+import { BASE, NAME } from './constants'
+
 export default {
-  name: 'Startpage',
-  base: '/startpage',
+  name: NAME,
+  base: BASE,
   GH_PAGES_REDIRECT: 'redirect',
   search: {
     max: 5,
@@ -8,5 +10,6 @@ export default {
   },
   fetching: {
     widthInVw: 5
-  }
+  },
+  version: import.meta.env.VITE_GIT_COMMIT,
 }

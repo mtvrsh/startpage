@@ -1,5 +1,6 @@
 <script lang="ts">
   import { merge } from 'lodash'
+  import appConfig from '../config'
   import strings from '../share/strings'
   import { config, defaults } from '../share/config'
   import { BACKEND_TYPES, type InstanceType } from '../lib/api/backend'
@@ -206,20 +207,23 @@
     {@render separator(strings.configManagement)}
 
     <ul class="general__group-list">
-      <li class="general__group-list-item general__group-list-item--buttons">
-        <button class="button" onclick={exportConfig}>
-          {strings.exportConfig}
-        </button>
-        <button class="button" onclick={() => importInput.click()}>
-          {strings.importConfig}
-        </button>
-        <input
-          type="file"
-          accept=".json"
-          bind:this={importInput}
-          onchange={importConfig}
-          style="display: none"
-        />
+      <li class="general__group-list-item">
+        <span class="general__version">{strings.version}: {appConfig.version}</span>
+        <div class="general__group-list-item general__group-list-item--buttons" style="padding: 0;">
+          <button class="button" onclick={exportConfig}>
+            {strings.exportConfig}
+          </button>
+          <button class="button" onclick={() => importInput.click()}>
+            {strings.importConfig}
+          </button>
+          <input
+            type="file"
+            accept=".json"
+            bind:this={importInput}
+            onchange={importConfig}
+            style="display: none"
+          />
+        </div>
       </li>
       {#if importError}
         <li class="general__group-list-item general__error">
@@ -275,6 +279,11 @@
           user-select: none;
         }
       }
+    }
+
+    &__version {
+      font-size: .8rem;
+      color: var(--color-fg-inactive);
     }
   }
 </style>

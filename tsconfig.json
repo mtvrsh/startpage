@@ -16,8 +16,24 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "noUnusedLocals": true,
-    "plugins": [{"name": "typescript-svelte-plugin"}]
+    "plugins": [
+      {
+        "name": "typescript-svelte-plugin"
+      }
+    ]
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "tests/**/*.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "src/**/*.svelte",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "src/sw.js"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
 }

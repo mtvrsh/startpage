@@ -20,11 +20,8 @@ jobs:
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
 
-      - name: Update service-worker version
-        run: sed -i "s/GIT_LAST_COMMIT_HASH/$(git rev-parse --short HEAD)/g" public/sw.js
-
       - name: Build project
-        run: npm run build
+        run: VITE_GIT_COMMIT=$(git rev-parse --short HEAD) npm run build
 
       - name: Run unit tests
         run: npm run test

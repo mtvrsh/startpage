@@ -12,6 +12,6 @@
   },
   "include": [
     "vite.config.js",
-    "src/config.ts"
+    "src/constants.ts"
   ]
 }
