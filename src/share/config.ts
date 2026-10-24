@@ -20,7 +20,8 @@ export class Config extends LocalStorage{
 export const defaults = {
   keybind: {
     close: 'Escape',
-    focusSearch: { user: '', default: 's' }
+    focusSearch: { user: '', default: 's' },
+    openSettings: { user: '', default: ',' }
   },
   instanceType: 'piped' as InstanceType,
   instance:

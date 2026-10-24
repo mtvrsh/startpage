@@ -14,8 +14,14 @@
     onClose?.();
   }
 
-  let closeIfPressedCloseKey = (e: KeyboardEvent) =>
-    e.key == $config.keybind.close && close()
+  let closeIfPressedCloseKey = (e: KeyboardEvent) => {
+    // Let inputs (e.g. inline rename) handle the key themselves.
+    if ((e.target as HTMLElement)?.closest?.('input, textarea, select, [contenteditable]'))
+      return
+
+    if (e.key == $config.keybind.close)
+      close()
+  }
 
   let closeIfClickedElementNotInContainer = (e: MouseEvent) =>
     container.contains(e.target as HTMLElement) || close()

@@ -62,6 +62,18 @@ export class Feeds extends LocalStorage {
     })
   }
 
+  static rename(url: string, name: string) {
+    if (!get(feeds).has(url)) return
+
+    const nextName = name.trim()
+    this.update(url, { name: nextName })
+
+    const feedName = nextName || this.#hostname(url)
+    entries.update(list => list.map(entry =>
+      entry.feedUrl === url ? { ...entry, feedName } : entry
+    ))
+  }
+
   static refetch({ reload = false } = {}): Promise<void> {
     return Promise.all(
       [...get(feeds).keys()].map(url => this.refresh(url, { reload }))

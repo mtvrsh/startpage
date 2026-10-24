@@ -92,6 +92,28 @@ describe('add', () => {
   })
 })
 
+describe('rename', () => {
+  test('updates the feed name and cached entry metadata', async () => {
+    respond(ATOM)
+    await Feeds.add('https://example.com/atom.xml', 'Example')
+
+    Feeds.rename('https://example.com/atom.xml', '  Renamed  ')
+
+    expect(get(feeds).get('https://example.com/atom.xml')?.name).toBe('Renamed')
+    expect(get(entries).every(entry => entry.feedName === 'Renamed')).toBe(true)
+  })
+
+  test('falls back to the hostname when the name is cleared', async () => {
+    respond(ATOM)
+    await Feeds.add('https://example.com/atom.xml', 'Example')
+
+    Feeds.rename('https://example.com/atom.xml', '   ')
+
+    expect(get(feeds).get('https://example.com/atom.xml')?.name).toBe('')
+    expect(get(entries).every(entry => entry.feedName === 'example.com')).toBe(true)
+  })
+})
+
 describe('remove', () => {
   test('removes the feed, its entries and its state', async () => {
     respond(ATOM)

@@ -5,5 +5,6 @@ export const app = $state({
   route: {
     path: getRedirectPathSetBy404Page() || window.location.pathname.replace(config.base, '') || '/'
   },
-  filter: ''
+  filter: '',
+  searchOpen: false
 })

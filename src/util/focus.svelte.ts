@@ -3,19 +3,23 @@ export class FocusNavigator {
   items: HTMLElement[] = $state([]);
 
   at(index: number) {
-    this.index = index;
-    this.current();
+    const items = this.items.filter(item => item?.isConnected)
+
+    if (!items.length) return
+
+    this.index = ((index % items.length) + items.length) % items.length;
+    items[this.index].focus();
   };
 
   current() {
-    this.items[this.index].focus();
+    this.at(this.index);
   };
 
   prev() {
-    this.at(this.index - 1 < 0 ? this.items.length - 1 : this.index - 1);
+    this.at(this.index - 1);
   };
 
   next() {
-    this.at((this.index + 1) % this.items.length);
+    this.at(this.index + 1);
   };
 };

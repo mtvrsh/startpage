@@ -15,19 +15,7 @@ export const routes: Routes =  {
     name: strings.settings,
     path: strings.paths.settings,
     view: Settings,
-    args: { tabIndex: 0 }
-  },
-  channels: {
-    name: strings.channels,
-    path: strings.paths.channels,
-    view: Settings,
-    args: { tabIndex: 1 }
-  },
-  bookmarks: {
-    name: strings.bookmarks,
-    path: strings.paths.bookmarks,
-    view: Settings,
-    args: { tabIndex: 2 }
+    args: {}
   },
   notFound: {
     name: strings.notFound,

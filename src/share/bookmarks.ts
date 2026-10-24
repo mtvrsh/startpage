@@ -21,8 +21,32 @@ export default class Bookmarks {
     bookmarks.update(v => v.set(bookmark.url, bookmark))
   }
 
-  static update(url: URL, partial: Bookmark) {
-    bookmarks.update(v => v.set(url, {...v.get(url), ...partial}))
+  static update(url: URL, partial: Partial<Bookmark>) {
+    bookmarks.update(v => {
+      const bookmark = v.get(url)
+
+      if (!bookmark) return v
+
+      return new Map(v).set(url, { ...bookmark, ...partial, url })
+    })
+  }
+
+  static replace(url: URL, bookmark: Bookmark): boolean {
+    const current = get(bookmarks)
+
+    if (!current.has(url)) return false
+    if (bookmark.url !== url && current.has(bookmark.url)) return false
+
+    bookmarks.update(v => {
+      const next = new Map(v)
+
+      next.delete(url)
+      next.set(bookmark.url, bookmark)
+
+      return next
+    })
+
+    return true
   }
 
   static delete(url: URL) {

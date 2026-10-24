@@ -1,8 +1,8 @@
 <script lang="ts">
   import strings from '../share/strings'
-  import Bookmarks from './Bookmarks.svelte';
-  import Channels from './Channels.svelte';
-  import Feeds from './Feeds.svelte';
+  import Bookmarks from './Bookmarks.svelte'
+  import Channels from './Channels.svelte'
+  import Feeds from './Feeds.svelte'
 
   let tabs = [
     strings.channels,
@@ -14,26 +14,26 @@
 </script>
 
 <main class="home">
-  <div class="home__content" class:feeds-open={focused == 2}>
-    <div class="home__content-item" class:show={focused == 0} tabindex="-1">
+  <div class="home__content">
+    <div class="home__content-item" class:show={focused == 0}>
       <Channels />
     </div>
-    <div class="home__content-item" class:show={focused == 1} tabindex="-1">
+    <div class="home__content-item" class:show={focused == 1}>
       <Bookmarks />
     </div>
-    <div class="home__content-item" class:show={focused == 2} tabindex="-1">
+    <div class="home__content-item" class:show={focused == 2}>
       <Feeds />
     </div>
   </div>
 
   <nav class="home__navigation">
     {#each tabs as tab, i}
-      <input
+      <button
         class="home__navigation-button"
         class:focus={focused == i}
         type="button"
-        value={tab}
-        onclick={() => focused = i}>
+        onclick={() => focused = i}
+      >{tab}</button>
     {/each}
   </nav>
 </main>
@@ -42,21 +42,25 @@
   @use 'scss/breakpoints' as *;
 
   .home {
-    display: grid;
-    grid-template-rows: 1fr auto;
-    overflow-y: scroll;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
   }
 
   .home__content {
-    overflow-y: inherit;
+    flex: 1;
+    min-height: 0;
   }
 
   .home__content-item {
     display: none;
+    height: 100%;
+    min-height: 0;
   }
 
   .home__content-item.show {
-    display: initial;
+    display: block;
   }
 
   .home__navigation {
@@ -87,62 +91,18 @@
     color: var(--color-accent);
   }
 
-  @include breakpoint-md {
-    .home__content {
-      display: grid;
-      grid-template-rows: none;
-      grid-template-columns: 32rem 1fr;
-    }
-
-    .home__content-item {
-      overflow-y: inherit;
-    }
-
-    .home__content-item:nth-child(1),
-    .home__content-item:nth-child(2) {
-      display: initial;
-    }
-
-    // The reader is a tab until there is room for a third column.
-    .home__content-item:nth-child(3) {
-      display: none;
-    }
-
-    .home__content.feeds-open {
-      grid-template-columns: 1fr;
-    }
-
-    .home__content.feeds-open .home__content-item:nth-child(1),
-    .home__content.feeds-open .home__content-item:nth-child(2) {
-      display: none;
-    }
-
-    .home__content.feeds-open .home__content-item:nth-child(3) {
-      display: initial;
-    }
-  }
-
-  @include breakpoint-lg {
-    .home__content {
-      grid-template-columns: 36rem 1fr;
-    }
-  }
-
   @include breakpoint-xl {
     .home__navigation {
       display: none;
     }
 
-    .home__content,
-    .home__content.feeds-open {
+    .home__content {
+      display: grid;
       grid-template-columns: 36rem minmax(0, 1fr) minmax(0, 1fr);
     }
 
-    .home__content-item:nth-child(3),
-    .home__content.feeds-open .home__content-item:nth-child(1),
-    .home__content.feeds-open .home__content-item:nth-child(2),
-    .home__content.feeds-open .home__content-item:nth-child(3) {
-      display: initial;
+    .home__content-item {
+      display: block;
     }
   }
 </style>

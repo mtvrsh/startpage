@@ -1,105 +1,92 @@
 <script lang="ts">
-  import config from '../config'
   import strings from '../share/strings'
-  import { preventDefault } from '../util/wrappers'
   import { app } from './state/app.svelte'
   import SettingsGeneral from './SettingsGeneral.svelte'
-  import SettingsChannels from './SettingsChannels.svelte'
-  import SettingsBookmarks from './SettingsBookmarks.svelte'
 
-  let {
-    tabIndex
-  } = $props()
+  let closeButton: HTMLButtonElement | undefined = $state()
 
-  let tabs = [
-    {name: strings.general, path: strings.paths.settings, view: SettingsGeneral},
-    {name: strings.channels, path: strings.paths.channels, view: SettingsChannels},
-    {name: strings.bookmarks, path: strings.paths.bookmarks, view: SettingsBookmarks}
-  ]
+  let close = () =>
+    app.route.path = strings.paths.home
 
-  let tab = $derived(tabs[tabIndex])
+  $effect(() => {
+    closeButton?.focus()
+  })
 </script>
 
 <div class="settings">
-  <ul class="settings__tabs">
-    {#each tabs as {name, path}}
-      <li class="settings__tabs-item">
-        {#if tab.name == name}
-          <p class="settings__tabs-button focus">{name}</p>
-        {:else}
-          <a
-            href={config.base + path}
-            class="settings__tabs-button"
-            onclick={preventDefault(() => app.route.path = path)}
-          >{name}</a>
-        {/if}
-      </li>
-    {/each}
-  </ul>
+  <header class="settings__header">
+    <h1 class="settings__title">{strings.settings}</h1>
+
+    <button
+      class="settings__close"
+      type="button"
+      title={strings.close}
+      aria-label={strings.close}
+      bind:this={closeButton}
+      onclick={close}
+    >×</button>
+  </header>
 
   <div class="settings__list">
-    <tab.view />
+    <SettingsGeneral />
   </div>
 </div>
 
 <style lang="scss">
-  @use 'scss/breakpoints' as *;
   @use 'scss/variables' as *;
-  
+
   .settings {
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    overflow-y: scroll;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    background: var(--color-bg);
 
-    &__tabs {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+    &__header {
+      display: flex;
+      flex-shrink: 0;
+      align-items: center;
+      justify-content: space-between;
+      gap: $gap-1;
+      padding: $gap-1;
+      border-bottom: $border var(--color-surface);
+    }
 
-      &-item {
-        display: grid;
-      }
+    &__title {
+      overflow: hidden;
+      font-size: .8rem;
+      color: var(--color-accent);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      user-select: none;
+    }
 
-      &-button {
-        padding: .75rem;
-        color: inherit;
-        text-align: center;
-        text-decoration: none;
+    &__close {
+      width: 1.5rem;
+      height: 1.5rem;
+      padding: 0;
+      font-size: 1rem;
+      line-height: 1;
+      color: var(--color-accent);
+      background: var(--color-surface);
+      border: none;
+      cursor: pointer;
 
-        &:hover,
-        &:focus {
-          background-color: var(--color-surface-light);
-          outline: none;
-        }
-
-        &.focus {
-          color: var(--color-accent-fg);
-          background-color: var(--color-accent);
-          cursor: default;
-        }
+      &:hover,
+      &:focus {
+        color: var(--color-accent-fg);
+        background: var(--color-accent);
+        outline: none;
       }
     }
 
     &__list {
-      display: grid;
-      overflow-y: scroll;
-    }
-  }
-
-  @include breakpoint-md {
-    .settings {
-      grid-template-rows: 1fr auto;
-      grid-template-columns: 10rem 1fr;
-
-      &__tabs {
-        grid-row: 1 / span 2;
-        grid-template-rows: repeat(3, auto) 1fr;
-        grid-template-columns: auto;
-        overflow-y: scroll;
-
-        &-button {
-          padding: .75rem;
-        }
-      }
+      flex: 1;
+      min-height: 0;
+      padding: $gap-2;
+      overflow-y: auto;
     }
   }
 </style>

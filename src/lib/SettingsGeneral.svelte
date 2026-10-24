@@ -207,10 +207,10 @@
 
     <ul class="general__group-list">
       <li class="general__group-list-item general__group-list-item--buttons">
-        <button class="nav__item" onclick={exportConfig}>
+        <button class="button" onclick={exportConfig}>
           {strings.exportConfig}
         </button>
-        <button class="nav__item" onclick={() => importInput.click()}>
+        <button class="button" onclick={() => importInput.click()}>
           {strings.importConfig}
         </button>
         <input

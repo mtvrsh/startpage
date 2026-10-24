@@ -14,8 +14,15 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 
 ### Entry Points
 - `src/main.ts` - Mounts `App.svelte`
-- `src/App.svelte` - Router (navaid), global state subscriptions, service worker registration
+- `src/App.svelte` - Router (navaid), global state subscriptions, service worker registration, settings overlay, dock
 - `src/config.ts` - App-level config (base path `/startpage`, search delay, etc.)
+
+### Layout
+- No top navigation bar. `Home.svelte` shows the three main columns (Channels, Bookmarks, Feeds); below the `xl` breakpoint only the selected column is shown with a bottom tab bar.
+- All three columns use `Column.svelte`: compact header with title + header actions + `+` toggle, an optional collapsible form snippet, and a scrollable body.
+- Shared control primitives (`.column__*`, `.button`) live in `src/app.scss` because they are used across component scopes.
+- `Dock.svelte` is the fixed bottom-right entry point for the floating search palette and settings (mouse/touch access alongside keybinds).
+- `SearchPalette.svelte` renders only when `app.searchOpen` is true; it is mounted globally in `App.svelte`.
 
 ### State Management
 - **`src/share/config.ts`** - `config` store (writable), `Config` class extends `LocalStorage`
@@ -34,16 +41,20 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 ### Routing
 - Uses `navaid` (client-side router)
 - Routes defined in `src/routes.ts`
-- Settings page reuses `Settings.svelte` component with `tabIndex` prop to switch tabs (General=0, Channels=1, Bookmarks=2)
+- Settings is a single-page overlay at `/settings` (`Settings.svelte` wrapping `SettingsGeneral`). The old `/settings/channels` and `/settings/bookmarks` URLs redirect to `/settings`.
+- Settings renders as a modal overlay over a still-mounted `Home`; close (button, `Escape`/configured close key, backdrop) navigates home. Deep links still work because the real route is preserved.
 - GitHub Pages SPA fallback: `public/404.html` stores path in localStorage, read by `src/util/github.ts`
 
 ### Key Components
-- `Search.svelte` - Channel search via Piped API, global default `s` keybind to focus (configurable, guarded when typing in inputs)
-- `Channels.svelte` - Video feed, calls `Channels.refetch()` on mount
-- `ChannelsFilter.svelte` - Dropdown to filter feed by channel
-- `Feeds.svelte` - Atom/RSS reader panel (third Home column at `xl`, tab below); merges entries from all subscriptions, inline add/remove. Parsing lives in `src/util/feed.ts` (Atom, RSS 2.0, RSS 1.0/RDF); entry summaries are text-only, never `{@html}`, and hidden unless `feedShowSummary` is enabled
+- `SearchPalette.svelte` - Floating channel search/add palette, opened by the configurable `s` keybind or the dock; searches via the active backend, adds channel/playlist URLs, closes after adding
+- `Column.svelte` - Shared compact column shell (header, actions, add toggle, form slot, scrolling body)
+- `Channels.svelte` - Video feed column; calls `Channels.refetch()` on mount, inline channel URL add form
+- `ChannelsFilter.svelte` - Header dropdown to filter the feed by channel; rows support inline rename (right-click or long-press, Enter/blur saves, Escape cancels) and remove (`×`)
+- `ChannelsSync.svelte` - Header sync button
+- `Bookmarks.svelte` - Bookmarks column grouped by tag, inline add form, inline edit form (name/tag/URL via right-click or long-press), per-entry remove
+- `Feeds.svelte` - Atom/RSS reader column; merges entries from all subscriptions, inline add/remove and rename (click, right-click, or long-press). Parsing lives in `src/util/feed.ts` (Atom, RSS 2.0, RSS 1.0/RDF); entry summaries are text-only, never `{@html}`, and hidden unless `feedShowSummary` is enabled
+- `Dock.svelte` - Fixed search/settings buttons (also handles the `,` settings keybind)
 - `Closeable.svelte` - Wrapper for dropdowns/menus, closes on configurable key (default Escape) or click-outside, has `onClose` callback
-- `Dropdown.svelte` - Uses `Closeable`, `open = $bindable(false)` for two-way binding
 
 ### Backend (API Strategy)
 - Two API sources: **Piped API** (public instances) and **startpage-api** (YouTube.js deployed on Cloudflare Worker in `startpage-api/`)
@@ -65,8 +76,14 @@ Adding a new backend:
 - Breakpoints: `src/lib/scss/_breakpoints.scss`
 - Mixins: `src/lib/scss/_mixins.scss` (line-clamp)
 - Components use `@use 'scss/variables' as *;` (Vite resolves via `src/lib/scss/`)
+- Global layout/control primitives live in `src/app.scss` (`Column` chrome form controls, `.button`)
 
 ## Important Conventions & Quirks
+
+### Inline editing
+- Editable labels use the `editGesture` action (`src/lib/gestures.ts`): right-click on desktop or long-press on touch. Feeds additionally rename on a normal click.
+- Single-field renames use the `inlineRename` action (`src/lib/inline-rename.ts`): Enter/blur saves, Escape (keyup) cancels. Focus is flushed synchronously so mobile keyboards open from the gesture.
+- Bookmarks edit name, tag, and URL inline. URL changes are re-keyed through `Bookmarks.replace()` and rejected when the new URL already exists.
 
 ### Service Worker
 - `public/sw.js` - versioned by commit hash (replaced during CI build via sed)

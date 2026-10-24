@@ -98,6 +98,135 @@ button, input, optgroup, select, textarea {
   text-overflow: ellipsis;
 }
 
+// Shared controls ------------------------------------------------------------
+
+.button {
+  padding: var(--gap-1) var(--gap-2);
+  font: inherit;
+  font-weight: bold;
+  color: var(--color-accent);
+  background: var(--color-bg-light);
+  border: none;
+  cursor: pointer;
+}
+
+.button:hover,
+.button:focus {
+  background: var(--color-surface-light);
+  outline: none;
+}
+
+.column__action {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--gap-0);
+  height: 1.5rem;
+  padding: 0 var(--gap-1);
+  font: inherit;
+  font-size: .75rem;
+  font-weight: bold;
+  color: var(--color-accent);
+  background: var(--color-surface);
+  border: none;
+  cursor: pointer;
+}
+
+.column__action:hover,
+.column__action:focus {
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+  outline: none;
+}
+
+.column__form form {
+  display: grid;
+  gap: var(--gap-0);
+}
+
+.column__input {
+  width: 100%;
+  min-width: 0;
+  padding: var(--gap-1);
+  font: inherit;
+  font-size: .8rem;
+  color: var(--color-fg);
+  background: var(--color-surface);
+  border: none;
+  border-bottom: var(--border) transparent;
+}
+
+.column__input:focus {
+  outline: var(--outline) var(--color-accent);
+}
+
+.column__input.error {
+  border-color: var(--color-error);
+}
+
+.column__input.error:focus {
+  outline-color: var(--color-error);
+}
+
+.column__submit {
+  padding: var(--gap-1);
+  font: inherit;
+  font-weight: bold;
+  color: var(--color-accent-fg);
+  background: var(--color-accent);
+  border: none;
+  cursor: pointer;
+}
+
+.column__submit:hover,
+.column__submit:focus {
+  background: var(--color-accent-light);
+  outline: none;
+}
+
+.column__error {
+  font-size: .75rem;
+  color: var(--color-error);
+}
+
+.column__remove {
+  flex-shrink: 0;
+  padding: 0 var(--gap-1);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: inherit;
+  background: var(--color-bg);
+  border: none;
+  cursor: pointer;
+}
+
+.column__remove:hover,
+.column__remove:focus {
+  color: var(--color-error-fg);
+  background: var(--color-error);
+  outline: none;
+}
+
+// Keep row delete actions out of the way until the row is hovered or focused.
+// Coarse pointers/touch screens keep the buttons visible because they have no
+// hover state.
+//
+// Do not use pointer-events: none or an opacity transition here. Both let the
+// button's different background show through: pointer-events delays :hover
+// until the next mouse move, and an opacity fade shows the inactive background
+// while the row is being left.
+@media (hover: hover) and (pointer: fine) {
+  .column__remove {
+    opacity: 0;
+  }
+
+  li:hover > .column__remove,
+  li:focus-within > .column__remove {
+    opacity: 1;
+  }
+}
+
 // Hide scrollbars in Chromium
 ::-webkit-scrollbar {
   display: none;
