@@ -14,7 +14,7 @@
   import Home from './lib/Home.svelte'
   import SearchPalette from './lib/SearchPalette.svelte'
 
-  if ('serviceWorker' in navigator)
+  if ('serviceWorker' in navigator && import.meta.env.PROD)
     navigator.serviceWorker.register(config.base + '/sw.js')
 
   let main = $state(routes.home)

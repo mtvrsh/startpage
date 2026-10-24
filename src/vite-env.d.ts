@@ -2,6 +2,8 @@
 declare module "*.scss" {}
 
 interface ImportMetaEnv {
+  readonly DEV: boolean;
+  readonly PROD: boolean;
   readonly VITE_GIT_COMMIT: string;
 }
 
