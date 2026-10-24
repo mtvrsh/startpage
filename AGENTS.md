@@ -10,6 +10,9 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 - `deno task build` - Production build (output: `dist/`)
 - `deno task preview` - Preview production build locally
 
+### Deno usage
+`deno task <name>` falls back to `package.json` scripts; the toolchain (`vite`, `vitest`, `svelte-check`) runs under Node. Only `scripts/healthcheck.ts` is native Deno (`deno run`, JSR). A full Deno-runtime migration is not feasible (vitest `.svelte` imports via Vite, `svelte-check` typechecker, `wrangler` backend, `node:23-slim` CI/Docker).
+
 ## Architecture
 
 ### Entry Points

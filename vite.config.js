@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 import { svelte } from '@sveltejs/vite-plugin-svelte'
-import { BASE } from './src/constants'
+import { BASE } from './src/constants.ts'
 
 export default defineConfig({
   plugins: [svelte()],

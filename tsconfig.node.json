@@ -7,6 +7,7 @@
     "moduleResolution": "Bundler",
     "strict": true,
     "emitDeclarationOnly": true,
+    "allowImportingTsExtensions": true,
     "allowJs": true,
     "noUncheckedSideEffectImports": true
   },
