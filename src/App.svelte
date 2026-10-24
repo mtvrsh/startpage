@@ -5,6 +5,7 @@
   import { app } from './lib/state/app.svelte'
   import { routes } from './routes'
   import { Channels } from './share/channels'
+  import { Feeds } from './share/feeds'
   import { Config } from './share/config'
   import { Status } from './share/status'
   import Navigation from './lib/Navigation.svelte'
@@ -34,6 +35,7 @@
   Status.saveOnUpdate()
   Config.saveOnUpdate()
   Channels.saveOnUpdate()
+  Feeds.saveOnUpdate()
   bookmarks.subscribeToLocalStorage()
 </script>
 

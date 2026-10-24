@@ -3,6 +3,8 @@ import { writable } from 'svelte/store'
 import { LocalStorage } from '../util/storage'
 import type { InstanceType } from '../lib/api/backend'
 
+const API_URL = 'https://startpage-api.mtvrs.workers.dev'
+
 export class Config extends LocalStorage{
   static LS_NAME = 'config'
 
@@ -27,14 +29,17 @@ export const defaults = {
     { label: 'wireway.ch',     value: 'https://pipedapi.wireway.ch' },
     { label: 'private.coffee', value: 'https://api.piped.private.coffee' }
   ],
-  backendUrl: 'https://startpage-api.mtvrs.workers.dev',
+  backendUrl: API_URL,
+  feedProxyUrl: API_URL,
   feedProtocolName: 'mpv',
   feedProtocolEnabledForVideos: false,
   feedProtocolEnabledForVideosInTitles: true,
   feedLimit: 100,
   feedThumbnailThemed: true,
+  readerLimit: 30,
   useDirectThumbnails: false,
   feedFetchAll: false,
+  feedShowSummary: false,
   timeoutInSeconds: 5,
   cacheLifetimeInMinutes: 10
 }

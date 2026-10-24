@@ -2,22 +2,27 @@
   import strings from '../share/strings'
   import Bookmarks from './Bookmarks.svelte';
   import Channels from './Channels.svelte';
+  import Feeds from './Feeds.svelte';
 
   let tabs = [
     strings.channels,
-    strings.bookmarks
+    strings.bookmarks,
+    strings.feeds
   ]
 
   let focused = $state(0)
 </script>
 
 <main class="home">
-  <div class="home__content">
+  <div class="home__content" class:feeds-open={focused == 2}>
     <div class="home__content-item" class:show={focused == 0} tabindex="-1">
       <Channels />
     </div>
     <div class="home__content-item" class:show={focused == 1} tabindex="-1">
       <Bookmarks />
+    </div>
+    <div class="home__content-item" class:show={focused == 2} tabindex="-1">
+      <Feeds />
     </div>
   </div>
 
@@ -90,18 +95,54 @@
     }
 
     .home__content-item {
-      display: initial;
       overflow-y: inherit;
     }
 
-    .home__navigation {
+    .home__content-item:nth-child(1),
+    .home__content-item:nth-child(2) {
+      display: initial;
+    }
+
+    // The reader is a tab until there is room for a third column.
+    .home__content-item:nth-child(3) {
       display: none;
+    }
+
+    .home__content.feeds-open {
+      grid-template-columns: 1fr;
+    }
+
+    .home__content.feeds-open .home__content-item:nth-child(1),
+    .home__content.feeds-open .home__content-item:nth-child(2) {
+      display: none;
+    }
+
+    .home__content.feeds-open .home__content-item:nth-child(3) {
+      display: initial;
     }
   }
 
   @include breakpoint-lg {
     .home__content {
       grid-template-columns: 36rem 1fr;
+    }
+  }
+
+  @include breakpoint-xl {
+    .home__navigation {
+      display: none;
+    }
+
+    .home__content,
+    .home__content.feeds-open {
+      grid-template-columns: 36rem minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .home__content-item:nth-child(3),
+    .home__content.feeds-open .home__content-item:nth-child(1),
+    .home__content.feeds-open .home__content-item:nth-child(2),
+    .home__content.feeds-open .home__content-item:nth-child(3) {
+      display: initial;
     }
   }
 </style>

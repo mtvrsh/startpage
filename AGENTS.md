@@ -22,6 +22,7 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 - **`src/share/status.ts`** - `status` store (writable), `Status` class extends `LocalStorage`
 - **`src/share/channels.ts`** - `channels` store (`Map<string, Channel>`), `Channels` class extends `LocalStorage`
 - **`src/share/bookmarks.ts`** - `bookmarks` store (`Map<string, Bookmark>`), `Bookmarks` class (manual localStorage sync, NOT `LocalStorage`)
+- **`src/share/feeds.ts`** - `feeds` store (`Map<string, Feed>`, Atom/RSS subscriptions persisted as `[url, Feed][]`) + in-memory `entries` and `feedStates` caches, `Feeds` class extends `LocalStorage`
 - **`src/lib/state/app.svelte.ts`** - `$state` app object (route, filter)
 
 ### LocalStorage Pattern
@@ -40,6 +41,7 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 - `Search.svelte` - Channel search via Piped API, global default `s` keybind to focus (configurable, guarded when typing in inputs)
 - `Channels.svelte` - Video feed, calls `Channels.refetch()` on mount
 - `ChannelsFilter.svelte` - Dropdown to filter feed by channel
+- `Feeds.svelte` - Atom/RSS reader panel (third Home column at `xl`, tab below); merges entries from all subscriptions, inline add/remove. Parsing lives in `src/util/feed.ts` (Atom, RSS 2.0, RSS 1.0/RDF); entry summaries are text-only, never `{@html}`, and hidden unless `feedShowSummary` is enabled
 - `Closeable.svelte` - Wrapper for dropdowns/menus, closes on configurable key (default Escape) or click-outside, has `onClose` callback
 - `Dropdown.svelte` - Uses `Closeable`, `open = $bindable(false)` for two-way binding
 
@@ -69,6 +71,12 @@ Adding a new backend:
 ### Service Worker
 - `public/sw.js` - versioned by commit hash (replaced during CI build via sed)
 - Cached assets: `.`, `404.html`, `index.html`, `favicon.svg`, `assets/index.js`, `assets/index.css`
+
+### Atom/RSS reader (CORS)
+- `feedProxyUrl` in `src/share/config.ts` defaults to the `startpage-api` worker. Requests become `<feedProxyUrl>/feed?url=<encoded feed URL>`; an empty value means direct `fetch`, which only works for feeds that send `Access-Control-Allow-Origin` (many blogs and `youtube.com/feeds` do not).
+- `startpage-api/src/feed-proxy.ts` implements `GET /feed?url=`. It returns raw XML so the frontend remains the only parser, allows only XML feed content types, caps responses at 2 MB, times out after 10 s, and blocks local/private hosts plus every redirect target. It follows at most four redirects manually.
+- Feed metadata is persisted; parsed entries are memory-only and re-fetched per `cacheLifetimeInMinutes` (`reload` bypasses it). Entries across feeds are deduped by URL and capped by `readerLimit`.
+- Feed summaries are stripped to plain text deliberately — do not switch to `{@html}` without a sanitizer.
 
 ### Testing
 - Test files in `tests/`

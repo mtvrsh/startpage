@@ -5,6 +5,7 @@
   import { BACKEND_TYPES, type InstanceType } from '../lib/api/backend'
   import Bookmarks from '../share/bookmarks'
   import { Channels } from '../share/channels'
+  import { Feeds } from '../share/feeds'
   import InputNumber from './InputNumber.svelte';
   import InputSelect from './InputSelect.svelte';
   import Text from './inputs/Text.svelte';
@@ -30,7 +31,8 @@
     const data = {
       config: $config,
       bookmarks: Bookmarks.serialize(),
-      channels: Channels.serialize()
+      channels: Channels.serialize(),
+      feeds: Feeds.serialize()
     }
     const json = JSON.stringify(data, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
@@ -53,6 +55,7 @@
         config.set(merge({}, defaults, imported.config))
         if (imported.bookmarks) Bookmarks.restore(imported.bookmarks)
         if (imported.channels) Channels.restore(imported.channels)
+        if (imported.feeds) Feeds.restore(imported.feeds)
       })
       .catch(() => {
         importError = strings.importFailed
@@ -100,7 +103,7 @@
   </li>
 
   <li class="general__group">
-    {@render separator(strings.feed)}
+    {@render separator(strings.videoFeed)}
 
     <ul class="general__group-list">
       <li>
@@ -169,6 +172,32 @@
             bind:value={$config.feedProtocolName}
             disabled={!$config.feedProtocolEnabledForVideos} />
         </label>
+      </li>
+    </ul>
+  </li>
+
+  <li class="general__group">
+    {@render separator(strings.readerFeed)}
+
+    <ul class="general__group-list">
+      <li>
+        <label class="general__group-list-item">
+          {strings.feedShowSummary}
+          <ToggleSwitch bind:checked={$config.feedShowSummary} />
+        </label>
+      </li>
+
+      <li class="general__group-list-item">
+        <InputNumber
+          id="reader-limit"
+          label={strings.readerLimit}
+          min={0}
+          bind:value={$config.readerLimit} />
+      </li>
+
+      <li class="general__group-list-item">
+        <label for="settings-feed-proxy-url">{strings.feedProxyUrl}</label>
+        <Text id="settings-feed-proxy-url" bind:value={$config.feedProxyUrl} />
       </li>
     </ul>
   </li>

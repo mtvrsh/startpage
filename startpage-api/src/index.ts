@@ -1,4 +1,5 @@
 import { Innertube } from 'youtubei.js/cf-worker';
+import { feedProxy, ProxyError } from './feed-proxy';
 
 let ytjs: Promise<Innertube> | null = null;
 
@@ -68,7 +69,7 @@ function parseRelativeMs(text: string): number {
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
+    headers: { ...CORS, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
   });
 }
 
@@ -235,6 +236,7 @@ export default {
     const { pathname, searchParams } = url;
 
     try {
+      if (pathname === '/feed') return await feedProxy(searchParams, CORS);
       if (pathname === '/search/channels') return searchChannels(searchParams);
       if (pathname === '/suggestions') return handleSuggestions(searchParams);
 
@@ -252,6 +254,9 @@ export default {
 
       return json({ error: 'not found' }, 404);
     } catch (err) {
+      if (err instanceof ProxyError)
+        return json({ error: err.message }, err.status);
+
       const message = err instanceof Error ? err.message : 'unknown error';
       console.error(JSON.stringify({ message: 'request failed', error: message, path: pathname }));
       return json({ error: message }, 500);
