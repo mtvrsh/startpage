@@ -291,6 +291,7 @@
         font-size: .85rem;
         font-weight: bold;
         @include line-clamp(2);
+        overflow: hidden;
       }
 
       &-summary {
@@ -298,6 +299,7 @@
         font-size: .75rem;
         color: var(--color-fg-inactive);
         @include line-clamp(3);
+        overflow: hidden;
       }
 
       &-meta {
