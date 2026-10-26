@@ -52,6 +52,22 @@ describe('validateFeedUrl', () => {
       expect(() => validateFeedUrl(url)).toThrow('Private network feed URLs are not allowed')
     }
   })
+
+  test('rejects non-canonical IPv4 encodings', () => {
+    for (const url of [
+      'http://2130706433/feed',
+      'http://0x7f.0x0.0x0.0x1/feed',
+      'http://127.1/feed',
+      'http://0x7f000001/feed',
+      'http://0177.0.0.1/feed',
+    ]) {
+      expect(() => validateFeedUrl(url)).toThrow('Private network feed URLs are not allowed')
+    }
+    // Out-of-range / unparseable octets are rejected as malformed URLs.
+    for (const url of ['http://256.0.0.1/feed']) {
+      expect(() => validateFeedUrl(url)).toThrow('Invalid feed URL')
+    }
+  })
 })
 
 describe('isPrivateHost', () => {
@@ -69,6 +85,28 @@ describe('isPrivateHost', () => {
     expect(isPrivateHost('[fd00::1]')).toBe(true)
     expect(isPrivateHost('[::ffff:127.0.0.1]')).toBe(true)
     expect(isPrivateHost('[::7f00:1]')).toBe(true)
+  })
+
+  test('fails closed on non-canonical IPv4 encodings', () => {
+    for (const host of [
+      '2130706433',
+      '127.1',
+      '0x7f.0x0.0x0.0x1',
+      '0x7f000001',
+      '0177.0.0.1',
+      '010.0.0.1',
+      '256.0.0.1',
+      '7f000001',
+    ]) {
+      expect(isPrivateHost(host)).toBe(true)
+    }
+  })
+
+  test('allows plausible hostnames containing digits', () => {
+    expect(isPrivateHost('example.com')).toBe(false)
+    expect(isPrivateHost('360.cn')).toBe(false)
+    expect(isPrivateHost('123.example.com')).toBe(false)
+    expect(isPrivateHost('notlocalhost')).toBe(false)
   })
 })
 

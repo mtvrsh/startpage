@@ -41,7 +41,8 @@ export class ProxyError extends Error {
 
 function parseIpv4(hostname: string): number[] | null {
   const parts = hostname.split('.')
-  if (parts.length !== 4 || !parts.every(part => /^\d{1,3}$/.test(part)))
+  // Canonical dotted-quad only: no leading zeros, 1-3 digits per octet.
+  if (parts.length !== 4 || !parts.every(part => /^(0|[1-9]\d{0,2})$/.test(part)))
     return null
 
   const numbers = parts.map(Number)
@@ -95,6 +96,51 @@ function isPrivateIpv6(hostname: string): boolean {
   return false
 }
 
+function isAmbiguousIpv4Encoding(host: string): boolean {
+  // A hostname that is not a canonical dotted-quad but still looks like an
+  // IPv4 numeric encoding (decimal, hex, partial, leading-zero). Such forms
+  // are only safe if the runtime's URL parser canonicalises them before fetch;
+  // fail closed so a parser change or a non-WHATWG caller cannot turn them
+  // into an SSRF.
+  if (/^\d{1,10}$/.test(host))
+    return true
+
+  const labels = host.split('.')
+  if (labels.some(label => label === ''))
+    return true
+  if (labels.some(label => /^0[xX][0-9a-fA-F]+$/.test(label)))
+    return true
+  if (labels.some(label => /^0[0-9]+$/.test(label)))
+    return true
+  // Partial or out-of-range dotted quads (1-4 all-numeric labels).
+  if (labels.length >= 1 && labels.length <= 4 && labels.every(label => /^\d{1,3}$/.test(label)))
+    return true
+  // Lone hex-ish label such as "7f000001".
+  if (labels.length === 1 && /^[0-9a-fA-F]{4,}$/.test(host))
+    return true
+
+  return false
+}
+
+function isPlausibleHostname(host: string): boolean {
+  // A normal FQDN-ish name: labels of [a-z0-9_-], no empty/leading/trailing
+  // hyphen, within DNS length limits, and at least one alphabetic label (which
+  // rejects bare-numeric hosts like "2130706433" that can never be a
+  // legitimately registered public hostname).
+  if (host.length === 0 || host.length > 253)
+    return false
+
+  const labels = host.split('.')
+  if (labels.some(label => label.length === 0 || label.length > 63))
+    return false
+  if (labels.some(label => !/^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$/i.test(label)))
+    return false
+  if (!labels.some(label => /[a-z]/i.test(label)))
+    return false
+
+  return true
+}
+
 export function isPrivateHost(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '')
   if (!host)
@@ -107,7 +153,15 @@ export function isPrivateHost(hostname: string): boolean {
     return isPrivateIpv6(host)
 
   const octets = parseIpv4(host)
-  return octets ? isPrivateIpv4(octets) : false
+  if (octets)
+    return isPrivateIpv4(octets)
+
+  // Not a canonical dotted-quad. Fail closed on anything that looks like an
+  // IPv4 numeric encoding, and on anything that is not a plausible hostname.
+  if (isAmbiguousIpv4Encoding(host))
+    return true
+
+  return !isPlausibleHostname(host)
 }
 
 export function validateFeedUrl(raw: string): URL {
