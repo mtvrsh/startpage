@@ -6,11 +6,14 @@ import type { WorkerEnv } from './access';
 let ytjs: Promise<Innertube> | null = null;
 
 function getYt(): Promise<Innertube> {
-  if (!ytjs) {
-    ytjs = Innertube.create({
-      retrieve_player: false,
-    });
-  }
+  ytjs ||= Innertube.create({
+    retrieve_player: false,
+  }).catch(err => {
+    // Drop the failed singleton so the next request retries a fresh create()
+    // instead of replaying the same rejection forever.
+    ytjs = null;
+    throw err;
+  });
   return ytjs;
 }
 
