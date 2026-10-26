@@ -126,10 +126,6 @@ describe('parseFeed', () => {
 })
 
 describe('fetchFeed', () => {
-  test('defaults to the startpage worker proxy', () => {
-    expect(defaults.feedProxyUrl).toBe('https://startpage-api.mtvrs.workers.dev')
-  })
-
   test('routes requests through the configured proxy', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

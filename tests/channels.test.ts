@@ -60,46 +60,20 @@ describe('addExisting', () => {
   })
 })
 
-t('toArray(Map<string, Channel>) returns ChannelVideo[]', ({id, channel}) => {
-  const actual = Channels.toArray(new Map([[id, channel]]))
+const expectedVideos = (channel: Channel) =>
+  channel.videos.map(video => ({
+    ...video,
+    channelUrl: channel.url,
+    channelName: channel.name,
+    channelDisplayName: channel.displayName
+  }))
 
-  expect(actual).toEqual(
-    [
-      {
-        ...channel.videos[0],
-        channelUrl: channel.url,
-        channelName: channel.name,
-        channelDisplayName: channel.displayName
-      },
-      {
-        ...channel.videos[1],
-        channelUrl: channel.url,
-        channelName: channel.name,
-        channelDisplayName: channel.displayName
-      }
-    ]
-  )
+t('toArray(Map<string, Channel>) returns ChannelVideo[]', ({id, channel}) => {
+  expect(Channels.toArray(new Map([[id, channel]]))).toEqual(expectedVideos(channel))
 })
 
 t('toArray([string, Channel]) returns ChannelVideo[]', ({id, channel}) => {
-  const actual = Channels.toArray([id, channel])
-
-  expect(actual).toEqual(
-    [
-      {
-        ...channel.videos[0],
-        channelUrl: channel.url,
-        channelName: channel.name,
-        channelDisplayName: channel.displayName
-      },
-      {
-        ...channel.videos[1],
-        channelUrl: channel.url,
-        channelName: channel.name,
-        channelDisplayName: channel.displayName
-      }
-    ]
-  )
+  expect(Channels.toArray([id, channel])).toEqual(expectedVideos(channel))
 })
 
 t('BY_UPLOADED sorts ChannelVideo[] by <uploaded> descending', ({id, channel}) => {
@@ -107,18 +81,8 @@ t('BY_UPLOADED sorts ChannelVideo[] by <uploaded> descending', ({id, channel}) =
 
   expect(actual).toEqual(
     [
-      {
-        ...channel.videos[1],
-        channelUrl: channel.url,
-        channelName: channel.name,
-        channelDisplayName: channel.displayName
-      },
-      {
-        ...channel.videos[0],
-        channelUrl: channel.url,
-        channelName: channel.name,
-        channelDisplayName: channel.displayName
-      }
+      { ...channel.videos[1], channelUrl: channel.url, channelName: channel.name, channelDisplayName: channel.displayName },
+      { ...channel.videos[0], channelUrl: channel.url, channelName: channel.name, channelDisplayName: channel.displayName }
     ]
   )
 })

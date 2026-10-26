@@ -72,16 +72,15 @@ describe('isAllowedOrigin / corsHeaders', () => {
 })
 
 describe('exported fetch handler', () => {
-  test('rejects unlisted origins with 403 and no CORS headers', async () => {
-    const res = await worker(request('/feed', { origin: 'https://evil.example' }), env(okLimit))
-    expect(res.status).toBe(403)
-    expect(res.headers.get('access-control-allow-origin')).toBeNull()
-    expect(await res.json()).toMatchObject({ error: 'origin not allowed' })
-  })
-
-  test('rejects requests lacking an Origin header with 403', async () => {
-    const res = await worker(request('/feed', { origin: null }), env(okLimit))
-    expect(res.status).toBe(403)
+  test('rejects unlisted origins and missing Origin with 403 and no CORS headers', async () => {
+    for (const res of [
+      await worker(request('/feed', { origin: 'https://evil.example' }), env(okLimit)),
+      await worker(request('/feed', { origin: null }), env(okLimit)),
+    ]) {
+      expect(res.status).toBe(403)
+      expect(res.headers.get('access-control-allow-origin')).toBeNull()
+      expect(await res.json()).toMatchObject({ error: 'origin not allowed' })
+    }
   })
 
   test('preflight from an allowed origin gets echoed CORS headers', async () => {

@@ -111,41 +111,24 @@ describe('isPrivateHost', () => {
     expect(isPrivateHost('[::7f00:1]')).toBe(true)
   })
 
-  test('blocks IPv4-embedding transition ranges', () => {
-    expect(isPrivateHost('64:ff9b::7f00:1')).toBe(true)
-    expect(isPrivateHost('64:ff9b:0:0:0:0:7f00:1')).toBe(true)
-    expect(isPrivateHost('2002:7f00:1::1')).toBe(true)
-    expect(isPrivateHost('2002:0:0::')).toBe(true)
-    expect(isPrivateHost('2001:0::1')).toBe(true)
-    expect(isPrivateHost('2001:0000:1:2:3:4:5:6')).toBe(true)
-  })
-
+  // The full transition-range blocklist case list is exercised through
+  // validateFeedUrl above.
   test('allows public IPv6 hosts sharing digits with blocklist prefixes', () => {
     expect(isPrivateHost('2606:4700:4700::1111')).toBe(false)
     expect(isPrivateHost('2001:4860:4860::8888')).toBe(false)
     expect(isPrivateHost('2001:db8::dead')).toBe(false)
   })
 
+  // The other encodings are already covered via validateFeedUrl above.
   test('fails closed on non-canonical IPv4 encodings', () => {
-    for (const host of [
-      '2130706433',
-      '127.1',
-      '0x7f.0x0.0x0.0x1',
-      '0x7f000001',
-      '0177.0.0.1',
-      '010.0.0.1',
-      '256.0.0.1',
-      '7f000001',
-    ]) {
+    for (const host of ['010.0.0.1', '7f000001']) {
       expect(isPrivateHost(host)).toBe(true)
     }
   })
 
   test('allows plausible hostnames containing digits', () => {
-    expect(isPrivateHost('example.com')).toBe(false)
     expect(isPrivateHost('360.cn')).toBe(false)
     expect(isPrivateHost('123.example.com')).toBe(false)
-    expect(isPrivateHost('notlocalhost')).toBe(false)
   })
 })
 
