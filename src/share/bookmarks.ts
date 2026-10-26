@@ -1,4 +1,5 @@
 import { writable, get } from 'svelte/store';
+import { hasSafeScheme } from '../util/scheme'
 
 export type URL = string
 
@@ -69,6 +70,6 @@ export default class Bookmarks {
   }
 
   static restore(data: [URL, Bookmark][]) {
-    bookmarks.set(new Map(data))
+    bookmarks.set(new Map(data.filter(([url]) => hasSafeScheme(url))))
   }
 }

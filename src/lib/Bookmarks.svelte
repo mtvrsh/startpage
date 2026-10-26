@@ -5,6 +5,7 @@
   import Column from './Column.svelte'
   import Empty from './Empty.svelte'
   import { editGesture } from './gestures'
+  import { hasSafeScheme, safeHref } from '../util/scheme'
 
   let adding = $state(false)
   let url = $state('')
@@ -32,6 +33,9 @@
     errorUrl = errorTag = errorName = false
 
     if (!url.trim())
+      errorUrl = true
+
+    if (url.trim() && !hasSafeScheme(url.trim()))
       errorUrl = true
 
     if (!tag.trim())
@@ -83,6 +87,11 @@
 
     if (!nextUrl || !nextName || !nextTag) {
       editError = strings.requiredFields
+      return
+    }
+
+    if (!hasSafeScheme(nextUrl)) {
+      editError = strings.invalidScheme
       return
     }
 
@@ -204,6 +213,12 @@
                       >{strings.cancel}</button>
                     </div>
                   </form>
+                {:else if safeHref(bookmark.url) === undefined}
+                  <span
+                    class="bookmarks__link bookmarks__link--unsafe"
+                    title={`${strings.unsafeScheme} - ${strings.editBookmarkHint}`}
+                    use:editGesture={{ onEdit: () => startEdit(bookmark) }}
+                  >{bookmark.name}</span>
                 {:else}
                   <a
                     class="bookmarks__link"
@@ -287,6 +302,10 @@
       text-overflow: ellipsis;
       user-select: none;
       -webkit-touch-callout: none;
+    }
+
+    &__link--unsafe {
+      opacity: .6;
     }
 
     &__edit {

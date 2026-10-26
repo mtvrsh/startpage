@@ -1,5 +1,6 @@
 import { writable, get } from 'svelte/store';
 import { LocalStorage } from '../util/storage'
+import { hasSafeScheme } from '../util/scheme'
 import { config } from './config'
 import { status } from './status'
 import { backend } from '../lib/api/backend'
@@ -157,6 +158,7 @@ export class Channels extends LocalStorage {
 
   static restore(data: [string, { url: string; name: string; displayName: string }][]) {
     const entries = data
+      .filter(([url, channel]) => hasSafeScheme(url) && hasSafeScheme(channel.url))
       .map(([url, channel]) => [this.#parseId(url) || url, { ...channel, videos: [] }] as [string, Channel])
     channels.set(new Map(entries))
   }

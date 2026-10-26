@@ -5,6 +5,7 @@
   import { app } from './state/app.svelte'
   import ChannelsFilter from './ChannelsFilter.svelte'
   import ChannelsSync from './ChannelsSync.svelte'
+  import { safeHref } from '../util/scheme'
   import Column from './Column.svelte'
   import Empty from './Empty.svelte'
   import Image from './Image.svelte'
@@ -85,12 +86,14 @@
         {@const name = video.channelDisplayName || video.channelName}
         {@const videoUrl = $config.feedProtocolEnabledForVideos ? `${$config.feedProtocolName}:${video.url}` : video.url}
         {@const videoTitleUrl = $config.feedProtocolEnabledForVideosInTitles ? videoUrl : video.url}
+        {@const thumbnailHref = safeHref(videoUrl)}
+        {@const titleHref = safeHref(videoTitleUrl)}
 
         <li class="feed__item">
           <a
             class="feed__item-thumbnail"
             class:themed={$config.feedThumbnailThemed}
-            href={videoUrl}
+            href={thumbnailHref}
             tabindex="-1">
             <div class="feed__item-thumbnail-img">
               <Image src={video.thumbnail} alt={strings.thumbnail} loading="lazy" />
@@ -98,7 +101,7 @@
           </a>
 
           <h1 class="feed__item-name ellipsis">
-            <a class="feed__item-name-url" href={videoTitleUrl} title={video.title}>
+            <a class="feed__item-name-url" href={titleHref} title={video.title}>
               {video.title}
             </a>
           </h1>
@@ -108,7 +111,7 @@
           </p>
 
           <p class="feed__item-user ellipsis">
-            <a href={video.channelUrl} title={name}>
+            <a href={safeHref(video.channelUrl)} title={name}>
               {name}
             </a>
           </p>
