@@ -7,6 +7,22 @@
     "enabled": true
   },
   "upload_source_maps": true,
+  // Space-separated allowlist of browser origins that may call the API.
+  // Requests with another (or absent) Origin header are rejected.
+  "vars": {
+    "ALLOWED_ORIGINS": "https://mtvrsh.github.io https://imjah.github.io http://localhost:5173 http://127.0.0.1:5173"
+  },
+  // Approximate per-IP throttle (per Cloudflare location) to blunt abuse.
+  "ratelimits": [
+    {
+      "name": "FEED_LIMIT",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    }
+  ],
   "compatibility_flags": [
     "nodejs_compat"
   ]
