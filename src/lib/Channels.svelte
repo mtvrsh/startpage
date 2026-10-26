@@ -5,7 +5,7 @@
   import { app } from './state/app.svelte'
   import ChannelsFilter from './ChannelsFilter.svelte'
   import ChannelsSync from './ChannelsSync.svelte'
-  import { safeHref } from '../util/scheme'
+  import { isSafeProtocolName, safeHref } from '../util/scheme'
   import Column from './Column.svelte'
   import Empty from './Empty.svelte'
   import Image from './Image.svelte'
@@ -84,10 +84,11 @@
     <ul class="feed">
       {#each feed as video}
         {@const name = video.channelDisplayName || video.channelName}
-        {@const videoUrl = $config.feedProtocolEnabledForVideos ? `${$config.feedProtocolName}:${video.url}` : video.url}
-        {@const videoTitleUrl = $config.feedProtocolEnabledForVideosInTitles ? videoUrl : video.url}
-        {@const thumbnailHref = safeHref(videoUrl)}
-        {@const titleHref = safeHref(videoTitleUrl)}
+        {@const protocol = $config.feedProtocolEnabledForVideos && isSafeProtocolName($config.feedProtocolName) ? $config.feedProtocolName : ''}
+        {@const videoUrl = protocol && video.url.trim() ? `${protocol}:${video.url}` : video.url}
+        {@const videoTitleUrl = $config.feedProtocolEnabledForVideosInTitles && protocol && video.url.trim() ? videoUrl : video.url}
+        {@const thumbnailHref = protocol ? videoUrl : safeHref(videoUrl)}
+        {@const titleHref = protocol ? videoTitleUrl : safeHref(videoTitleUrl)}
 
         <li class="feed__item">
           <a

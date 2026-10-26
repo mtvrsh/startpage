@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from 'vitest'
 import { get } from 'svelte/store'
-import { hasSafeScheme, safeHref } from '../src/util/scheme'
+import { hasSafeScheme, isSafeProtocolName, safeHref } from '../src/util/scheme'
 import Bookmarks, { bookmarks } from '../src/share/bookmarks'
 import { Channels, channels } from '../src/share/channels'
 
@@ -42,6 +42,33 @@ describe('hasSafeScheme', () => {
   test('rejects an unsafe custom protocol composed over a safe URL', () => {
     expect(hasSafeScheme('javascript:https://youtube.com/watch?v=x')).toBe(false)
     expect(hasSafeScheme('ja:va:https://youtube.com/watch?v=x')).toBe(false)
+  })
+})
+
+describe('isSafeProtocolName', () => {
+  test('accepts legitimate custom handlers', () => {
+    expect(isSafeProtocolName('mpv')).toBe(true)
+    expect(isSafeProtocolName('vlc')).toBe(true)
+    expect(isSafeProtocolName('infuse')).toBe(true)
+    expect(isSafeProtocolName('HTTPS-UPPER')).toBe(true)
+  })
+
+  test('accepts names the URL parser normalizes to themselves', () => {
+    expect(isSafeProtocolName('javascript ')).toBe(false)
+    expect(isSafeProtocolName(' javascript')).toBe(false)
+  })
+
+  test.each([
+    'javascript',
+    'JavaScript',
+    'data',
+    'mp v',
+    'mpv;',
+    '',
+    '   ',
+    'ja#va'
+  ])('rejects %s', name => {
+    expect(isSafeProtocolName(name)).toBe(false)
   })
 })
 
