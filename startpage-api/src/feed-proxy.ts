@@ -79,6 +79,18 @@ function isPrivateIpv6(hostname: string): boolean {
   if (/^ff[0-9a-f]{2}$/.test(firstGroup))
     return true
 
+  // NAT64 well-known prefix (64:ff9b::/96), 6to4 (2002::/16) and Teredo
+  // (2001::/32) embed or relay an IPv4 address (e.g. 64:ff9b::7f00:1 =
+  // 127.0.0.1 through NAT64). They are classic transition-range SSRF
+  // vectors and no legitimate public feed is served through such literals,
+  // so block the ranges wholesale.
+  const groups = hostname.split(':')
+  if (groups[0] === '64' && groups[1] === 'ff9b'
+    || groups[0] === '2002'
+    || groups[0] === '2001'
+      && (groups[1] === '' ? hostname.includes('::') : /^0{1,4}$/.test(groups[1])))
+    return true
+
   // IPv4-mapped addresses.
   if (hostname.startsWith('::ffff:') || hostname.startsWith('::ffff:0:')
     || hostname.startsWith('0:0:0:0:0:ffff:'))
@@ -179,8 +191,11 @@ export function validateFeedUrl(raw: string): URL {
     throw new ProxyError('Only http and https feed URLs are allowed', 400)
   if (url.username || url.password)
     throw new ProxyError('Feed URL must not include credentials', 400)
-  if (url.port === '0')
-    throw new ProxyError('Invalid feed URL', 400)
+  // Fail closed: only default-port http/https is allowed. Other ports have
+  // no legitimate feed use and could otherwise be probed through the proxy.
+  // Default ports serialize to '' here; explicit :80/:443 normalize to ''.
+  if (url.port !== '' && url.port !== '80' && url.port !== '443')
+    throw new ProxyError('Feed URLs must use port 80 or 443', 400)
   if (isPrivateHost(url.hostname))
     throw new ProxyError('Private network feed URLs are not allowed', 403)
 

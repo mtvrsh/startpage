@@ -5,6 +5,20 @@ import type { WorkerEnv } from './access';
 
 let ytjs: Promise<Innertube> | null = null;
 
+// Path parameters come straight from the URL and are passed to InnerTube;
+// cap them so junk / oversized input cannot be relayed to YouTube on every
+// request. Channel ids are either browse-style alphanumeric plus `-`/`_`
+// (UCxxxxx) or a handle (`@foo`, letters/digits/`.`/`-`/`_` per YouTube's
+// handle grammar — YouTube.js resolves handles via its NavigateAction
+// fallback); playlist ids are alphanumeric plus `-`/`_`. All are well under
+// 64 characters.
+const ID_PATTERN = /^(@[\w.-]{1,63}|[\w-]{1,64})$/;
+const MAX_QUERY_LENGTH = 100;
+
+function isInvalidId(id: string): boolean {
+  return !ID_PATTERN.test(id);
+}
+
 function getYt(): Promise<Innertube> {
   ytjs ||= Innertube.create({
     retrieve_player: false,
@@ -79,6 +93,7 @@ function parseRelativeMs(text: string): number {
 async function handleSuggestions(searchParams: URLSearchParams): Promise<Response> {
   const q = searchParams.get('q');
   if (!q) return json({ error: 'query parameter is required' }, 400);
+  if (q.length > MAX_QUERY_LENGTH) return json({ error: 'query is too long' }, 400);
 
   const yt = await getYt();
   const suggestions = await yt.getSearchSuggestions(q);
@@ -86,12 +101,14 @@ async function handleSuggestions(searchParams: URLSearchParams): Promise<Respons
 }
 
 async function rawChannel(channelId: string): Promise<Response> {
+  if (isInvalidId(channelId)) return json({ error: 'invalid channel id' }, 400);
   const yt = await getYt();
   const channel = await yt.getChannel(channelId);
   return json(channel.page);
 }
 
 async function rawPlaylist(playlistId: string): Promise<Response> {
+  if (isInvalidId(playlistId)) return json({ error: 'invalid playlist id' }, 400);
   const yt = await getYt();
   const playlist = await yt.getPlaylist(playlistId);
   return json(playlist.page);
@@ -100,6 +117,7 @@ async function rawPlaylist(playlistId: string): Promise<Response> {
 async function searchChannels(searchParams: URLSearchParams): Promise<Response> {
   const q = searchParams.get('q');
   if (!q) return json({ error: 'query parameter is required' }, 400);
+  if (q.length > MAX_QUERY_LENGTH) return json({ error: 'query is too long' }, 400);
 
   const yt = await getYt();
   const results = await yt.search(q, { type: 'channel' });
@@ -107,6 +125,7 @@ async function searchChannels(searchParams: URLSearchParams): Promise<Response> 
 }
 
 async function getChannel(channelId: string): Promise<Response> {
+  if (isInvalidId(channelId)) return json({ error: 'invalid channel id' }, 400);
   const yt = await getYt();
   const channel = await yt.getChannel(channelId);
 
@@ -201,6 +220,7 @@ function mapPlaylistItem(v: any) {
 }
 
 async function getPlaylist(playlistId: string): Promise<Response> {
+  if (isInvalidId(playlistId)) return json({ error: 'invalid playlist id' }, 400);
   const yt = await getYt();
   const playlist = await yt.getPlaylist(playlistId);
 
@@ -251,28 +271,34 @@ export async function handleRequest(request: Request, env: WorkerEnv): Promise<R
 
   try {
     if (pathname === '/feed') return await feedProxy(searchParams, cors);
-    if (pathname === '/search/channels') return searchChannels(searchParams);
-    if (pathname === '/suggestions') return handleSuggestions(searchParams);
+    if (pathname === '/search/channels') return await searchChannels(searchParams);
+    if (pathname === '/suggestions') return await handleSuggestions(searchParams);
 
     const rawChannelMatch = pathname.match(/^\/raw\/channels\/(.+)$/);
-    if (rawChannelMatch) return rawChannel(rawChannelMatch[1]);
+    if (rawChannelMatch) return await rawChannel(rawChannelMatch[1]);
 
     const rawPlaylistMatch = pathname.match(/^\/raw\/playlists\/(.+)$/);
-    if (rawPlaylistMatch) return rawPlaylist(rawPlaylistMatch[1]);
+    if (rawPlaylistMatch) return await rawPlaylist(rawPlaylistMatch[1]);
 
     const channelMatch = pathname.match(/^\/channels\/(.+)$/);
-    if (channelMatch) return getChannel(channelMatch[1]);
+    if (channelMatch) return await getChannel(channelMatch[1]);
 
     const playlistMatch = pathname.match(/^\/playlists\/(.+)$/);
-    if (playlistMatch) return getPlaylist(playlistMatch[1]);
+    if (playlistMatch) return await getPlaylist(playlistMatch[1]);
 
     return json({ error: 'not found' }, 404, cors);
   } catch (err) {
     if (err instanceof ProxyError)
       return json({ error: err.message }, err.status, cors);
 
-    const message = err instanceof Error ? err.message : 'unknown error';
-    console.error(JSON.stringify({ message: 'request failed', error: message, path: pathname }));
-    return json({ error: message }, 500, cors);
+    // Detail goes to the logs only; the client gets a generic message so
+    // internal errors never leak library internals.
+    console.error(JSON.stringify({ message: 'request failed', error: describeError(err), path: pathname }));
+    return json({ error: 'internal error' }, 500, cors);
   }
+}
+
+function describeError(err: unknown): string {
+  if (err instanceof Error) return `${err.name}: ${err.message}`;
+  return String(err);
 }

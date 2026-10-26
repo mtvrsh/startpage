@@ -14,11 +14,22 @@ afterEach(() => {
 })
 
 describe('validateFeedUrl', () => {
-  test('accepts public http and https URLs', () => {
+  test('accepts public http and https URLs on default ports', () => {
     expect(validateFeedUrl('https://dustri.org/b/atom.xml').href)
       .toBe('https://dustri.org/b/atom.xml')
-    expect(validateFeedUrl('http://example.com:8080/feed').href)
-      .toBe('http://example.com:8080/feed')
+    expect(validateFeedUrl('http://example.com:80/feed').href)
+      .toBe('http://example.com/feed')
+  })
+
+  test('rejects non-standard ports', () => {
+    for (const url of [
+      'http://example.com:8080/feed',
+      'https://example.com:4430/feed',
+      'http://example.com:0/feed',
+      'http://example.com:22/feed',
+    ]) {
+      expect(() => validateFeedUrl(url)).toThrow('Feed URLs must use port 80 or 443')
+    }
   })
 
   test('rejects unsupported protocols, credentials and malformed URLs', () => {
@@ -48,6 +59,19 @@ describe('validateFeedUrl', () => {
       'http://[::1]/feed',
       'http://[fe80::1]/feed',
       'http://[::127.0.0.1]/feed',
+      'http://[2001:0::1]/feed',
+    ]) {
+      expect(() => validateFeedUrl(url)).toThrow('Private network feed URLs are not allowed')
+    }
+  })
+
+  test('rejects IPv4-embedding transition ranges (NAT64/6to4/Teredo)', () => {
+    for (const url of [
+      'http://[64:ff9b::7f00:1]/feed',
+      'http://[64:ff9b:0:0:0:0:7f00:1]/feed',
+      'http://[2002:7f00:1::1]/feed',
+      'http://[2002::]/feed',
+      'http://[2001:0:1:2:3:4:5:6]/feed',
     ]) {
       expect(() => validateFeedUrl(url)).toThrow('Private network feed URLs are not allowed')
     }
@@ -85,6 +109,21 @@ describe('isPrivateHost', () => {
     expect(isPrivateHost('[fd00::1]')).toBe(true)
     expect(isPrivateHost('[::ffff:127.0.0.1]')).toBe(true)
     expect(isPrivateHost('[::7f00:1]')).toBe(true)
+  })
+
+  test('blocks IPv4-embedding transition ranges', () => {
+    expect(isPrivateHost('64:ff9b::7f00:1')).toBe(true)
+    expect(isPrivateHost('64:ff9b:0:0:0:0:7f00:1')).toBe(true)
+    expect(isPrivateHost('2002:7f00:1::1')).toBe(true)
+    expect(isPrivateHost('2002:0:0::')).toBe(true)
+    expect(isPrivateHost('2001:0::1')).toBe(true)
+    expect(isPrivateHost('2001:0000:1:2:3:4:5:6')).toBe(true)
+  })
+
+  test('allows public IPv6 hosts sharing digits with blocklist prefixes', () => {
+    expect(isPrivateHost('2606:4700:4700::1111')).toBe(false)
+    expect(isPrivateHost('2001:4860:4860::8888')).toBe(false)
+    expect(isPrivateHost('2001:db8::dead')).toBe(false)
   })
 
   test('fails closed on non-canonical IPv4 encodings', () => {

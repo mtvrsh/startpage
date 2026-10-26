@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, test } from 'vitest'
+import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { get } from 'svelte/store'
-import Bookmarks, { bookmarks, type Bookmark } from '../src/share/bookmarks'
+import Bookmarks, { bookmarks, parseStoredBookmarks, type Bookmark } from '../src/share/bookmarks'
 
 const first: Bookmark = {
   url: 'https://example.com/first',
@@ -68,5 +68,38 @@ describe('replace', () => {
   test('refuses to replace an unknown bookmark', () => {
     expect(Bookmarks.replace(first.url, first)).toBe(false)
     expect(get(bookmarks).size).toBe(0)
+  })
+})
+
+describe('parseStoredBookmarks', () => {
+  test('keeps well-formed [url, bookmark] pairs', () => {
+    localStorage.setItem('bookmarks', JSON.stringify([[first.url, first]]))
+
+    expect([...parseStoredBookmarks()]).toEqual([[first.url, first]])
+  })
+
+  test('drops entries of unexpected shape instead of throwing', () => {
+    for (const junk of [
+      '"garbage"',
+      '{"a":1}',
+      '[[1, 2]]',
+      '[[null, null]]',
+      '[[" url", "not an object"]]',
+      '[["url", {"url": 42, "name": "x", "tag": "y"}]]',
+      '["not a pair"]',
+    ]) {
+      localStorage.setItem('bookmarks', junk)
+      expect(parseStoredBookmarks().size).toBe(0)
+    }
+  })
+
+  test('returns an empty map for corrupt JSON without throwing', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+    localStorage.setItem('bookmarks', '{corrupt')
+
+    expect(parseStoredBookmarks().size).toBe(0)
+    expect(error).toHaveBeenCalled()
+
+    error.mockRestore()
   })
 })

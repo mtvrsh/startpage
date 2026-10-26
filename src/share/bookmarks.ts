@@ -9,11 +9,40 @@ export interface Bookmark {
   name: string;
 }
 
-export const bookmarks = writable<Map<URL, Bookmark>>(
-  new Map(
-    JSON.parse(localStorage['bookmarks'] || '[]')
-  )
-)
+export const bookmarks = writable<Map<URL, Bookmark>>(parseStoredBookmarks())
+
+// Like LocalStorage.get(): never let a corrupt (or unexpected-shape)
+// localStorage entry throw at module scope — that would brick app boot.
+// Unparseable or malformed data degrades to an empty map.
+export function parseStoredBookmarks(): Map<URL, Bookmark> {
+  let parsed: unknown
+
+  try {
+    parsed = JSON.parse(localStorage['bookmarks'] || '[]')
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      console.error('Failed to parse bookmarks local storage')
+      return new Map()
+    }
+    throw e
+  }
+
+  if (!Array.isArray(parsed)) return new Map()
+
+  const pairs: [URL, Bookmark][] = []
+  for (const value of parsed) {
+    if (
+      Array.isArray(value) && value.length === 2
+      && typeof value[0] === 'string'
+      && value[1] !== null && typeof value[1] === 'object'
+      && typeof value[1].url === 'string'
+      && typeof value[1].name === 'string'
+    )
+      pairs.push([value[0], value[1]])
+  }
+
+  return new Map(pairs)
+}
 
 export default class Bookmarks {
   static LS_CACHE = 'bookmarks'

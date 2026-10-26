@@ -47,6 +47,7 @@ self.addEventListener('fetch', e => {
     return;
   }
 
+  // Pass-through (cross-origin GETs are never cached here); add an origin filter if caching is ever extended.
   e.respondWith(
     caches.match(request)
       .then(cached => cached || fetch(request))

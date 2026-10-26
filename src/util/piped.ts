@@ -33,7 +33,7 @@ export class Piped {
     filter = this.FILTER_ALL,
     reload = this.RELOAD
   } = {}) {
-    return this.get(`/search?q=${query}&filter=${filter}`, reload)
+    return this.get(`/search?q=${encodeURIComponent(query)}&filter=${filter}`, reload)
   }
 
   static parseId(url: string) {

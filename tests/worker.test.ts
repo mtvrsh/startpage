@@ -3,6 +3,16 @@ import { handleRequest as worker } from '../startpage-api/src/router'
 import { corsHeaders, isAllowedOrigin } from '../startpage-api/src/access'
 import type { WorkerEnv } from '../startpage-api/src/access'
 
+// The YouTube.js client is never exercised here; rejecting create() gives the
+// generic-500 path a deterministic trigger. The mock must use the resolved
+// file path: the bare specifier resolves from startpage-api/node_modules,
+// which vitest cannot mock by name from tests/.
+vi.mock('../startpage-api/node_modules/youtubei.js/dist/src/platform/cf-worker.js', () => ({
+  Innertube: {
+    create: () => Promise.reject(new TypeError('secret innertube detail')),
+  },
+}))
+
 const ALLOWED_ORIGINS = 'https://app.example http://localhost:5173'
 
 function env(limit: { limit: (options: { key: string }) => Promise<{ success: boolean }> } | undefined) {
@@ -112,5 +122,54 @@ describe('exported fetch handler', () => {
     expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
     expect(res.headers.get('vary')).toBe('Origin')
     expect(await res.text()).toBe('<feed/>')
+  })
+
+  describe('input validation', () => {
+    test('rejects a query over 100 characters with 400', async () => {
+      const res = await worker(request(`/search/channels?q=${'a'.repeat(101)}`), env(okLimit))
+      expect(res.status).toBe(400)
+      expect(await res.json()).toMatchObject({ error: 'query is too long' })
+    })
+
+    test('rejects malformed channel and playlist ids with 400', async () => {
+      for (const path of [
+        `/channels/${'a'.repeat(65)}`,
+        `/channels/a%20b`,
+        `/raw/channels/%20x`,
+        `/playlists/a%20b`,
+        `/raw/playlists/${'x'.repeat(65)}`,
+        `/channels/foo@bar`,
+        `/channels/@`,
+      ]) {
+        const res = await worker(request(path), env(okLimit))
+        expect(res.status).toBe(400)
+      }
+    })
+
+    test('accepts channel handles', async () => {
+      // InnerTube is mocked to fail (500), so what matters here is that the
+      // id passes validation instead of being rejected with 400.
+      for (const path of ['/channels/@foo', '/raw/channels/@foo', '/channels/@foo.bar']) {
+        const res = await worker(request(path), env(okLimit))
+        expect([400, 404]).not.toContain(res.status)
+        if (res.status === 500)
+          expect(await res.json()).toMatchObject({ error: 'internal error' })
+        else
+          expect(await res.json()).not.toMatchObject({ error: 'invalid channel id' })
+      }
+    })
+
+    test('returns a generic 500 without leaking internals', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+      const res = await worker(request('/search/channels?q=ok'), env(okLimit))
+      expect(res.status).toBe(500)
+      expect(await res.json()).toMatchObject({ error: 'internal error' })
+      expect(consoleError.mock.calls.flat().some(line =>
+        typeof line === 'string' && line.includes('secret innertube detail')
+      )).toBe(true)
+
+      consoleError.mockRestore()
+    })
   })
 })
