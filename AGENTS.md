@@ -11,7 +11,7 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 - `deno task preview` - Preview production build locally
 
 ### Deno usage
-`deno task <name>` falls back to `package.json` scripts; the toolchain (`vite`, `vitest`, `svelte-check`) runs under Node. Only `scripts/healthcheck.ts` is native Deno (`deno run`, JSR). A full Deno-runtime migration is not feasible (vitest `.svelte` imports via Vite, `svelte-check` typechecker, `wrangler` backend, `node:23-slim` CI/Docker).
+`deno task <name>` falls back to `package.json` scripts; the toolchain (`vite`, `vitest`, `svelte-check`) runs under Node. Only `scripts/healthcheck.ts` is native Deno (`deno run`, JSR). A full Deno-runtime migration is not feasible (vitest `.svelte` imports via Vite, `svelte-check` typechecker, `wrangler` backend, Node-based CI/Docker).
 
 ## Architecture
 
@@ -91,7 +91,7 @@ Adding a new backend:
 ### Service Worker
 - `src/sw.js` — built via `vite.config.js:10-20` Rollup `input: { index: './index.html', sw: './src/sw.js' }` + `output.entryFileNames: sw ? 'sw.js' : 'assets/[name].js'` to keep scope at `/startpage/sw.js` (registered in `src/App.svelte:18` as `config.base + '/sw.js'` — `config.base` is `src/constants.ts:1` `BASE`; registration is prod-only via the `import.meta.env.PROD` guard at `src/App.svelte:17`, because `vite dev` does not serve the bundled SW). Do not move SW under `assets/` or scope breaks.
 - `vite.config.js:15-16` `assetFileNames: 'assets/[name].[ext]'` / `chunkFileNames: 'assets/[name].js'` are **intentionally without `[hash]`** — SW manifest in `src/sw.js:7-13` hard-codes `'.', '404.html', 'index.html', 'favicon.svg', 'assets/index.js', 'assets/index.css'`. **Invariant:** if hashing is re-enabled or code-splitting emits extra chunks, the hard-coded list will 404 or miss coverage — update `src/sw.js` manifest or switch to generated manifest (`workbox` / `vite-plugin-pwa`).
-- Version `src/sw.js:1` `VERSION = import.meta.env.VITE_GIT_COMMIT` (also `src/config.ts:14` / `src/lib/SettingsGeneral.svelte:211`) — no fallback, must be set at build: `.github/workflows/deploy.yml:24` `VITE_GIT_COMMIT=$(git rev-parse --short HEAD) npm run build` (Vite replaces at build time via `VITE_` prefix). Local builds without it produce `void 0` / `"undefined"` cache name — intentional.
+- Version `src/sw.js:1` `VERSION = import.meta.env.VITE_GIT_COMMIT` (also `src/config.ts:14` / `src/lib/SettingsGeneral.svelte:211`) — no fallback, must be set at build: `.github/workflows/deploy.yml:46` `VITE_GIT_COMMIT=$(git rev-parse --short HEAD) npm run build` (Vite replaces at build time via `VITE_` prefix). Local builds without it produce `void 0` / `"undefined"` cache name — intentional.
 - Install `src/sw.js:15-17` guards `resp.ok` before `cache.put` to avoid caching 404/500 error responses (prevents cache poisoning).
 
 ### Atom/RSS reader (CORS)
