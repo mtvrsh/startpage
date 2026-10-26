@@ -209,7 +209,7 @@
     <ul class="general__group-list">
       <li class="general__group-list-item">
         <span class="general__version">{strings.version}: {appConfig.version}</span>
-        <div class="general__group-list-item general__group-list-item--buttons" style="padding: 0;">
+        <div class="general__group-list-item general__group-list-item--buttons">
           <button class="button" onclick={exportConfig}>
             {strings.exportConfig}
           </button>
@@ -221,7 +221,7 @@
             accept=".json"
             bind:this={importInput}
             onchange={importConfig}
-            style="display: none"
+            class="general__hidden-input"
           />
         </div>
       </li>
@@ -258,6 +258,7 @@
           &--buttons {
             justify-content: flex-end;
             gap: $gap-2;
+            padding: 0;
           }
         }
       }
@@ -279,6 +280,10 @@
           user-select: none;
         }
       }
+    }
+
+    &__hidden-input {
+      display: none;
     }
 
     &__version {
