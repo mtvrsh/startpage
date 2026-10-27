@@ -292,6 +292,11 @@
         font-weight: bold;
         @include line-clamp(2);
         overflow: hidden;
+
+        // Only real anchors match `:visited`; the span fallback is unaffected.
+        &:visited {
+          color: var(--color-visited);
+        }
       }
 
       &-summary {
