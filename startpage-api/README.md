@@ -63,9 +63,31 @@ limits).
 
 ```sh
 npx wrangler dev          # local development
-npx wrangler deploy       # deploy to Cloudflare
 npx wrangler types        # generate TypeScript types after binding changes
+npm run deploy            # deploy to Cloudflare
 ```
 
 Run `wrangler types` after changing bindings in `wrangler.jsonc`. Tests covering
 the feed proxy live in the main repo's `tests/` (`deno task test` at the root).
+
+### Deploys
+
+Deploys are manual, and tagged with the commit they were built from plus a
+`-dirty` suffix when the tree has uncommitted tracked changes:
+
+Read back what is live:
+
+```sh
+npx wrangler versions list
+npx wrangler versions list --json \
+  | jq -r 'max_by(.metadata.created_on).annotations["workers/tag"] // "untagged"'
+```
+
+To check the tag without uploading:
+
+```sh
+npm run deploy -- --dry-run
+```
+
+The `--` matters: without it npm parses `--dry-run` itself instead of forwarding
+it to wrangler.
