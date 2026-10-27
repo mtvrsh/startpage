@@ -85,10 +85,10 @@
       {#each feed as video}
         {@const name = video.channelDisplayName || video.channelName}
         {@const protocol = $config.feedProtocolEnabledForVideos && isSafeProtocolName($config.feedProtocolName) ? $config.feedProtocolName : ''}
-        {@const videoUrl = protocol && video.url.trim() ? `${protocol}:${video.url}` : video.url}
-        {@const videoTitleUrl = $config.feedProtocolEnabledForVideosInTitles && protocol && video.url.trim() ? videoUrl : video.url}
-        {@const thumbnailHref = protocol ? videoUrl : safeHref(videoUrl)}
-        {@const titleHref = protocol ? videoTitleUrl : safeHref(videoTitleUrl)}
+        {@const protocolUrl = protocol && video.url.trim() ? `${protocol}:${video.url}` : ''}
+        {@const safeVideoUrl = safeHref(video.url)}
+        {@const thumbnailHref = protocolUrl || safeVideoUrl}
+        {@const titleHref = $config.feedProtocolEnabledForVideosInTitles ? (protocolUrl || safeVideoUrl) : safeVideoUrl}
 
         <li class="feed__item">
           <a
