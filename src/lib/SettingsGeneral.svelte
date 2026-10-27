@@ -89,8 +89,17 @@
           useBackend(nextConfig.instanceType)
         }
         if (nextBookmarks) Bookmarks.restore(nextBookmarks)
-        if (nextChannels) Channels.restore(nextChannels)
-        if (nextFeeds) Feeds.restore(nextFeeds)
+        if (nextChannels) {
+          Channels.restore(nextChannels)
+          // Imported channels carry no videos (exports never include them) and
+          // Channels.svelte is already mounted behind this overlay, so its
+          // mount-time refetch won't fire again. Reload so the feed fills.
+          Channels.refetch({ reload: true })
+        }
+        if (nextFeeds) {
+          Feeds.restore(nextFeeds)
+          Feeds.refetch({ reload: true })
+        }
       })
       .catch(() => {
         importError = strings.importFailed
