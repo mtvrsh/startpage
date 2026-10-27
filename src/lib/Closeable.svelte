@@ -1,5 +1,6 @@
 <script lang="ts">
   import { config } from '../share/config'
+  import { isTypedCharacter } from '../util/keyboard'
 
   let {
     children,
@@ -15,8 +16,9 @@
   }
 
   let closeIfPressedCloseKey = (e: KeyboardEvent) => {
-    // Let inputs (e.g. inline rename) handle the key themselves.
-    if ((e.target as HTMLElement)?.closest?.('input, textarea, select, [contenteditable]'))
+    // A character being typed into a field (e.g. inline rename) must not
+    // close the dropdown; named keys like Escape still work.
+    if (isTypedCharacter(e))
       return
 
     if (e.key == $config.keybind.close)

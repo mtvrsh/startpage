@@ -7,6 +7,7 @@
   import { app } from './state/app.svelte'
   import { backend } from '../lib/api/backend'
   import { FocusNavigator } from '../util/focus.svelte'
+  import { isTypedCharacter } from '../util/keyboard'
   import { preventDefault } from '../util/wrappers'
   import Image from './Image.svelte'
   import IconSearch from './icons/Search.svelte'
@@ -110,20 +111,10 @@
     addChannel((event.currentTarget as HTMLAnchorElement).href)
 
   let handleGlobalKeybinds = (event: KeyboardEvent) => {
-    // Block when typing in text areas or content-editable elements
-    // and allow buttons/checkboxes/radios
-    const target = event.target
-
-    if (target instanceof HTMLElement) {
-      const tagName = target.tagName.toLowerCase()
-      if (tagName === 'textarea' || target.isContentEditable)
-        return
-      if (tagName === 'input') {
-        const type = (target as HTMLInputElement).type
-        if (!['button', 'submit', 'checkbox', 'radio'].includes(type))
-          return
-      }
-    }
+    // A character being typed into a field must not trigger the keybinds
+    // (buttons/checkboxes/radios are fine); named keys keep working.
+    if (isTypedCharacter(event))
+      return
 
     if (app.searchOpen && event.key === closeKeybind) {
       event.preventDefault()

@@ -2,6 +2,7 @@
   import strings from '../share/strings'
   import { Config, config } from '../share/config'
   import { app } from './state/app.svelte'
+  import { isTypedCharacter } from '../util/keyboard'
   import IconSearch from './icons/Search.svelte'
   import IconSettings from './icons/Settings.svelte'
 
@@ -14,18 +15,9 @@
   let handleKeydown = (event: KeyboardEvent) => {
     if (event.key !== settingsKeybind) return
 
-    const target = event.target
-
-    if (target instanceof HTMLElement) {
-      const tagName = target.tagName.toLowerCase()
-      if (tagName === 'textarea' || target.isContentEditable)
-        return
-      if (tagName === 'input') {
-        const type = (target as HTMLInputElement).type
-        if (!['button', 'submit', 'checkbox', 'radio'].includes(type))
-          return
-      }
-    }
+    // A character being typed into a field must not trigger the keybind;
+    // named keys like Escape still work from anywhere.
+    if (isTypedCharacter(event)) return
 
     event.preventDefault()
     openSettings()
