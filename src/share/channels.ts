@@ -57,19 +57,21 @@ export class Channels extends LocalStorage {
           this.update(ref.id, {videos: channel.videos})
         else
           channels.update(channelMap => channelMap.set(ref.id, channel))
-
-        status.update(state => {
-          state.feed.fetching.now = state.feed.fetching.now.filter(
-            (channelId: string) => channelId != ref.id
-          )
-
-          if (state.feed.fetching.now.length == 0)
-            state.feed.fetching.max = 0
-
-          return state
-        })
       }
-    )
+    ).finally(() => this.#clearFetching(ref.id))
+  }
+
+  static #clearFetching(id: string) {
+    status.update(state => {
+      state.feed.fetching.now = state.feed.fetching.now.filter(
+        (channelId: string) => channelId != id
+      )
+
+      if (state.feed.fetching.now.length == 0)
+        state.feed.fetching.max = 0
+
+      return state
+    })
   }
 
   static update(id: string, channelProps: any) {
@@ -126,12 +128,11 @@ export class Channels extends LocalStorage {
       })
 
       channelMap.forEach((channel, id) => {
-        this.#fetch(this.#refFor(channel, id), true, forceReload)
-        .catch(_ => status.update(state => {
-          state.feed.fetching.now = []
-          state.feed.fetching.max = 0
-          return state
-        }))
+        void this.#fetch(this.#refFor(channel, id), true, forceReload)
+        .catch(() => {
+          // Failed channel was already removed from fetching.now in #fetch;
+          // remaining ids keep their in-flight progress
+        })
       })
 
       return channelMap
