@@ -81,13 +81,36 @@ function extractPublished(v: any): { text: string } {
   return { text: '' };
 }
 
-function parseRelativeMs(text: string): number {
+// Publish dates arrive as free text, not just YouTube's compact "1 day ago":
+// premieres and streams are prefixed ("Streamed 2 years ago", "Premiered 5
+// hours ago") and long-form units are spelled out. Match the first
+// <number><unit> pair anywhere in the string and accept both full and
+// abbreviated unit names. The map is keyed by exact unit, so `mo` stays months
+// while `m` stays minutes.
+const UNIT_MS: Record<string, number> = {
+  y: 31536e6, year: 31536e6, yr: 31536e6, // 365 days
+  mo: 2592e6, month: 2592e6, mth: 2592e6, // 30 days
+  w: 6048e5, week: 6048e5, wk: 6048e5, // 7 days
+  d: 864e5, day: 864e5,
+  h: 36e5, hour: 36e5, hr: 36e5,
+  m: 60000, minute: 60000, min: 60000,
+  s: 1000, second: 1000, sec: 1000,
+};
+
+export function parseRelativeMs(text: string): number {
   if (!text) return 0;
-  const m = text.match(/^(\d+)\s*(d|w|mo|m|y|h|s)/);
-  if (!m) return 0;
-  const n = parseInt(m[1]);
-  const mult: Record<string, number> = { d: 864e5, w: 6048e5, mo: 2592e6, m: 60000, y: 31536e6, h: 36e5, s: 1000 };
-  return Date.now() - n * (mult[m[2]] || 0);
+  for (const m of text.matchAll(/(\d+)\s*([a-z]+)/gi)) {
+    // Skip numbers that are part of a decimal/grouped figure ("1.5M views").
+    if (m.index > 0 && /[\d.,]/.test(text[m.index - 1])) continue;
+    const raw = m[2].toLowerCase();
+    // A lone `s` is seconds; for real words drop a trailing plural `s`
+    // ("hours" → "hour", "mins" → "min").
+    const unit = raw === 's' ? raw : raw.replace(/s$/, '');
+    const ms = UNIT_MS[unit];
+    // Skip unmatched pairs (e.g. "12K views 2 days ago") and keep looking.
+    if (ms) return Date.now() - parseInt(m[1], 10) * ms;
+  }
+  return 0;
 }
 
 async function handleSuggestions(searchParams: URLSearchParams): Promise<Response> {
