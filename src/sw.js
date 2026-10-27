@@ -1,9 +1,13 @@
 // @ts-nocheck
 const VERSION = import.meta.env.VITE_GIT_COMMIT;
+// Cache Storage is per-origin: GitHub Pages project sites share `<user>.github.io`,
+// so this SW must never touch caches it did not create.
+const CACHE_PREFIX = 'startpage-';
+const CACHE = CACHE_PREFIX + VERSION;
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(VERSION)
+    caches.open(CACHE)
       .then(cache => Promise.all([
         '.',
         '404.html',
@@ -25,7 +29,8 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     Promise.all([
       caches.keys().then(keys => Promise.all(
-        keys.filter(cache => cache !== VERSION).map(cache => caches.delete(cache))
+        keys.filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE)
+          .map(key => caches.delete(key))
       )),
       self.clients.claim()
     ])
