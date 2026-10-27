@@ -167,7 +167,7 @@ describe('refetch', () => {
     })
 
     const first = Feeds.refetch({ reload: true })
-    const second = Feeds.refetch({ reload: true })
+    const second = Feeds.refetch()
 
     expect(second).toBe(first)
     expect(fetchMock).toHaveBeenCalledTimes(2)
@@ -180,6 +180,30 @@ describe('refetch', () => {
     const third = Feeds.refetch({ reload: true })
     expect(third).not.toBe(first)
     await third
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  test('schedules a forced reload after the run in flight instead of dropping it', async () => {
+    respond(ATOM)
+    await Feeds.add('https://example.com/atom.xml', 'Example')
+
+    let release!: () => void
+    const pending = new Promise<void>(resolve => { release = resolve })
+    fetchMock.mockImplementationOnce(async () => {
+      await pending
+      return { ok: true, status: 200, text: async () => ATOM }
+    })
+
+    const first = Feeds.refetch({ reload: true })
+    const forced = Feeds.refetch({ reload: true })
+
+    // Nothing extra fires while the first run is busy...
+    expect(forced).not.toBe(first)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+
+    release()
+    await forced
+    // ...and the forced fetch executes afterwards.
     expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 })

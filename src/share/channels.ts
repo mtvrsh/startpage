@@ -128,7 +128,14 @@ export class Channels extends LocalStorage {
     (channelA.displayName || channelA.name).localeCompare(channelB.displayName || channelB.name)
 
   static refetch({reload = false} = {}): Promise<void> {
-    if (Channels.#refetching) return Channels.#refetching
+    // Overlapping calls join the run in flight; a request that asked for a
+    // forced reload is chained after it instead, so the intent is not
+    // silently dropped (the sync button is disabled meanwhile, so this only
+    // matters for programmatic triggers).
+    if (Channels.#refetching)
+      return reload
+        ? Channels.#refetching.then(() => this.refetch({ reload }))
+        : Channels.#refetching
 
     const forceReload = reload || !this.#isFeedFresh()
     const tasks: Promise<void>[] = []

@@ -492,7 +492,7 @@ describe('refetch', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const first = Channels.refetch()
-    const second = Channels.refetch({ reload: true })
+    const second = Channels.refetch()
 
     expect(second).toBe(first)
     expect(fetchMock).toHaveBeenCalledTimes(2)
@@ -508,6 +508,32 @@ describe('refetch', () => {
     expect(third).not.toBe(first)
     await third
     expect(fetchMock).toHaveBeenCalledTimes(4)
+  })
+
+  t('schedules a forced reload after the run in flight instead of dropping it', async () => {
+    Channels.restore([])
+    Channels.addExisting('UCa', { url: 'https://youtube.com/channel/UCa', name: 'a', displayName: 'a', videos: [] })
+
+    let release!: () => void
+    const pending = new Promise<void>(resolve => { release = resolve })
+    fetchMock = vi.fn(async () => {
+      await pending
+      return { ok: true, json: async () => ({ content: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }] }) }
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const first = Channels.refetch()
+    const forced = Channels.refetch({ reload: true })
+
+    // Nothing extra fires while the first run is busy...
+    expect(forced).not.toBe(first)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    release()
+    await forced
+    // ...and the forced run executes afterwards with cache: 'reload'.
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect((globalThis.fetch as any).mock.calls[1][1]?.cache).toBe('reload')
   })
 })
 

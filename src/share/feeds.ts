@@ -80,7 +80,12 @@ export class Feeds extends LocalStorage {
   }
 
   static refetch({ reload = false } = {}): Promise<void> {
-    if (Feeds.#refetching) return Feeds.#refetching
+    // Overlapping calls join the run in flight; a forced reload is chained
+    // after it instead of being silently dropped.
+    if (Feeds.#refetching)
+      return reload
+        ? Feeds.#refetching.then(() => this.refetch({ reload }))
+        : Feeds.#refetching
 
     const run = Promise.all(
       [...get(feeds).keys()].map(url => this.refresh(url, { reload }))
