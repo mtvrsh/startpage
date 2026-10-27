@@ -17,14 +17,14 @@ export class PipedBackend implements Backend {
     return data.items || []
   }
 
-  async fetchChannel(id: string, reload?: boolean): Promise<Channel> {
+  async fetchChannel(id: string, reload = Piped.RELOAD): Promise<Channel> {
     const endpoint = get(config).feedFetchAll
       ? `/playlists/UU${id.toString().slice(2)}`
       : `/channels/tabs?data=${encodeURIComponent(JSON.stringify({ id: `${id}`, contentFilters: ['videos'] }))}`
 
-    const response = await fetch(`${get(config).instance.value}${endpoint}`, {
-      cache: reload ? 'reload' : 'default'
-    })
+    const response = await Piped.get(endpoint, reload)
+    if (!response.ok) throw new Error(`Failed to fetch channel ${id}`)
+
     const data = await response.json()
     const streams = data.relatedStreams ?? data.content
 
@@ -39,15 +39,19 @@ export class PipedBackend implements Backend {
     }
   }
 
-  async fetchPlaylist(id: string, _reload?: boolean): Promise<Channel> {
-    const response = await fetch(`${get(config).instance.value}/playlists/${id}`, { cache: 'default' })
+  async fetchPlaylist(id: string, reload = Piped.RELOAD): Promise<Channel> {
+    const response = await Piped.getPlaylist(id, { reload })
+    if (!response.ok) throw new Error(`Failed to fetch playlist ${id}`)
+
     const data = await response.json()
+    const streams = data.relatedStreams ?? []
+    if (!streams.length) throw new Error(`No videos found for playlist ${id}`)
 
     return {
       url: `https://youtube.com/playlist?list=${id.toString()}`,
       name: data.name,
       displayName: data.name,
-      videos: this.mapVideos(data.relatedStreams)
+      videos: this.mapVideos(streams)
     }
   }
 
