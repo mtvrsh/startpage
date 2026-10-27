@@ -213,19 +213,21 @@
                       >{strings.cancel}</button>
                     </div>
                   </form>
-                {:else if safeHref(bookmark.url) === undefined}
-                  <span
-                    class="bookmarks__link bookmarks__link--unsafe"
-                    title={`${strings.unsafeScheme} - ${strings.editBookmarkHint}`}
-                    use:editGesture={{ onEdit: () => startEdit(bookmark) }}
-                  >{bookmark.name}</span>
                 {:else}
-                  <a
-                    class="bookmarks__link"
-                    href={bookmark.url}
-                    title={`${bookmark.url} - ${strings.editBookmarkHint}`}
-                    use:editGesture={{ onEdit: () => startEdit(bookmark) }}
-                  >{bookmark.name}</a>
+                  {#if safeHref(bookmark.url) === undefined}
+                    <span
+                      class="bookmarks__link bookmarks__link--unsafe"
+                      title={`${strings.unsafeScheme} - ${strings.editBookmarkHint}`}
+                      use:editGesture={{ onEdit: () => startEdit(bookmark) }}
+                    >{bookmark.name}</span>
+                  {:else}
+                    <a
+                      class="bookmarks__link"
+                      href={bookmark.url}
+                      title={`${bookmark.url} - ${strings.editBookmarkHint}`}
+                      use:editGesture={{ onEdit: () => startEdit(bookmark) }}
+                    >{bookmark.name}</a>
+                  {/if}
 
                   <button
                     class="column__remove"
