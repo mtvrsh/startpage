@@ -72,6 +72,7 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 - Each backend class has `static name = '<name>' as const` — the single source of truth for its identifier
 - `BACKEND_TYPES` / `InstanceType` / `isInstanceType` live in `src/lib/api/backend-types.ts` (leaf module, so `config.ts` can validate `instanceType` without importing `backend.ts` → cycle). `backends` in `backend.ts` is typed `Record<InstanceType, …>`, so the compiler enforces parity
 - `SettingsGeneral.svelte` maps `InstanceType` → UI labels via `backendLabel` record
+- **Rate budget:** `startpage-api` throttles *every* route (channels, playlists, `/feed`, search) through one binding (`FEED_LIMIT` in `startpage-api/wrangler.jsonc`): 120 req/min per client IP, counted per Cloudflare location and approximate. A page load costs one request per channel plus one per feed, fired in parallel — there is deliberately no client-side pacing. `Channels.refetch`/`Feeds.refetch` are single-flight so overlapping triggers (double-clicked sync, mount + sync) don't re-run the batch, but subscription counts above the budget still 429 on the tail.
 
 Adding a new backend:
 1. Create `src/lib/api/<name>-backend.ts` with `class <Name>Backend implements Backend { static name = '<name>' as const }`

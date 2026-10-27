@@ -477,6 +477,38 @@ describe('refetch', () => {
       if (get(status).feed.fetching.now.length) throw new Error('still fetching')
     })
   })
+
+  t('joins an in-flight refetch instead of duplicating requests', async () => {
+    Channels.restore([])
+    Channels.addExisting('UCa', { url: 'https://youtube.com/channel/UCa', name: 'a', displayName: 'a', videos: [] })
+    Channels.addExisting('UCb', { url: 'https://youtube.com/channel/UCb', name: 'b', displayName: 'b', videos: [] })
+
+    let release!: () => void
+    const pending = new Promise<void>(resolve => { release = resolve })
+    fetchMock = vi.fn(async () => {
+      await pending
+      return { ok: true, json: async () => ({ content: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }] }) }
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const first = Channels.refetch()
+    const second = Channels.refetch({ reload: true })
+
+    expect(second).toBe(first)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+
+    release()
+    await first
+    await vi.waitFor(() => {
+      if (get(status).feed.fetching.now.length) throw new Error('still fetching')
+    })
+
+    // The guard clears once the run settles, so the next refetch refreshes again.
+    const third = Channels.refetch({ reload: true })
+    expect(third).not.toBe(first)
+    await third
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+  })
 })
 
 describe('add validation', () => {

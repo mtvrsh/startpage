@@ -153,6 +153,35 @@ describe('refetch', () => {
     expect(get(entries)).toHaveLength(2)
     expect(get(feedStates).get('https://example.com/atom.xml')?.error).toBe('')
   })
+
+  test('joins an in-flight refetch instead of duplicating requests', async () => {
+    respond(ATOM)
+    await Feeds.add('https://example.com/atom.xml', 'Example')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    let release!: () => void
+    const pending = new Promise<void>(resolve => { release = resolve })
+    fetchMock.mockImplementationOnce(async () => {
+      await pending
+      return { ok: true, status: 200, text: async () => ATOM }
+    })
+
+    const first = Feeds.refetch({ reload: true })
+    const second = Feeds.refetch({ reload: true })
+
+    expect(second).toBe(first)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+
+    release()
+    await first
+
+    // The guard clears once the run settles, so the next refetch fetches again.
+    respond(ATOM)
+    const third = Feeds.refetch({ reload: true })
+    expect(third).not.toBe(first)
+    await third
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
 })
 
 describe('restore', () => {

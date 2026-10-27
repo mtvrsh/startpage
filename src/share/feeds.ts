@@ -27,6 +27,10 @@ export interface FeedState {
 export class Feeds extends LocalStorage {
   static LS_NAME = 'feeds'
 
+  // A run already in flight: overlapping refetches join it instead of
+  // subscribing to every feed twice.
+  static #refetching: Promise<void> | null = null
+
   static saveOnUpdate() {
     feeds.subscribe(feedMap => super.set([...feedMap]))
   }
@@ -76,9 +80,16 @@ export class Feeds extends LocalStorage {
   }
 
   static refetch({ reload = false } = {}): Promise<void> {
-    return Promise.all(
+    if (Feeds.#refetching) return Feeds.#refetching
+
+    const run = Promise.all(
       [...get(feeds).keys()].map(url => this.refresh(url, { reload }))
-    ).then(() => {})
+    )
+      .then(() => {})
+      .finally(() => { Feeds.#refetching = null })
+
+    Feeds.#refetching = run
+    return run
   }
 
   static refresh(url: string, { reload = false } = {}): Promise<void> {

@@ -139,6 +139,15 @@ button, input, optgroup, select, textarea {
   outline: none;
 }
 
+.column__action:disabled,
+.column__action:disabled:hover,
+.column__action:disabled:focus {
+  color: var(--color-accent);
+  background: var(--color-surface);
+  cursor: default;
+  opacity: .6;
+}
+
 .column__form form {
   display: grid;
   gap: var(--gap-0);

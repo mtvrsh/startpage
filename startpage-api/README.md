@@ -10,6 +10,11 @@ You can run this worker yourself instead of using the deployed instance. Point t
 frontend's `backendUrl` setting (Settings → Piped → Backend URL) and `feedProxyUrl`
 setting (Settings → Reader feed → Feed reader proxy URL) at your instance.
 
+The Worker applies an approximate per-IP rate limit to every route (`FEED_LIMIT`
+in `wrangler.jsonc`, 120 requests per minute per Cloudflare location). A page load
+costs one request per channel plus one per feed, so raise `simple.limit` if you
+self-host with a large subscription list.
+
 ### Egress safety (read this if you self-host)
 
 The `/feed` endpoint fetches a caller-supplied URL — from *anyone* who can reach

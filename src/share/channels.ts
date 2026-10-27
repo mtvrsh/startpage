@@ -36,6 +36,11 @@ type ChannelRef = {
 export class Channels extends LocalStorage {
   static LS_NAME = 'channels'
 
+  // The run currently in flight, so a second trigger (double-clicking sync,
+  // or mounting while a manual sync runs) joins it instead of firing another
+  // request for every channel.
+  static #refetching: Promise<void> | null = null
+
   static saveOnUpdate() {
     channels.subscribe(channelMap => super.set([...channelMap]))
   }
@@ -122,8 +127,11 @@ export class Channels extends LocalStorage {
   static BY_NAME = ([, channelA]: [string, Channel], [, channelB]: [string, Channel]) =>
     (channelA.displayName || channelA.name).localeCompare(channelB.displayName || channelB.name)
 
-  static refetch({reload = false} = {}) {
+  static refetch({reload = false} = {}): Promise<void> {
+    if (Channels.#refetching) return Channels.#refetching
+
     const forceReload = reload || !this.#isFeedFresh()
+    const tasks: Promise<void>[] = []
 
     channels.update(channelMap => {
       status.update(state => {
@@ -133,17 +141,26 @@ export class Channels extends LocalStorage {
       })
 
       channelMap.forEach((channel, id) => {
-        void this.#fetch(this.#refFor(channel, id), true, forceReload)
-        .catch(() => {
-          // Failed channel was already removed from fetching.now in #fetch;
-          // remaining ids keep their in-flight progress
-        })
+        tasks.push(this.#fetch(this.#refFor(channel, id), true, forceReload)
+          .catch(() => {
+            // Failed channel was already removed from fetching.now in #fetch;
+            // remaining ids keep their in-flight progress
+          })
+        )
       })
 
       return channelMap
     })
 
     this.#resetFeedFetchedAt()
+
+    // Settle all channels, then let the next refetch start a new run.
+    const run = Promise.all(tasks)
+      .then(() => {})
+      .finally(() => { Channels.#refetching = null })
+
+    Channels.#refetching = run
+    return run
   }
 
   static #isFeedFresh() {

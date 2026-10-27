@@ -12,13 +12,19 @@
   "vars": {
     "ALLOWED_ORIGINS": "https://mtvrsh.github.io https://imjah.github.io http://localhost:5173 http://127.0.0.1:5173"
   },
-  // Approximate per-IP throttle (per Cloudflare location) to blunt abuse.
+  // Approximate throttle shared by every route (channels, playlists, /feed,
+  // search), keyed on the client IP and counted per Cloudflare location.
+  // A page load fires one request per channel plus one per feed, so the
+  // budget has to cover the whole page at once: 120/min leaves room for
+  // ~100 channels + feeds + a few searches without 429ing. The frontend does
+  // not pace requests (bulk refetches stay parallel); raise this if you
+  // self-host with a larger subscription list.
   "ratelimits": [
     {
       "name": "FEED_LIMIT",
       "namespace_id": "1001",
       "simple": {
-        "limit": 30,
+        "limit": 120,
         "period": 60
       }
     }
