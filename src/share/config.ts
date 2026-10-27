@@ -79,7 +79,13 @@ function readBoolean(value: unknown, fallback: boolean, path: string, issues?: s
   return value
 }
 
-function readCount(value: unknown, fallback: number, path: string, issues?: string[]): number {
+function readCount(
+  value: unknown,
+  fallback: number,
+  path: string,
+  issues?: string[],
+  min = 0
+): number {
   // Svelte number inputs write `null` when the field is cleared, so that is a
   // valid "unset" marker rather than a malformed value.
   if (value === undefined || value === null) return fallback
@@ -89,11 +95,14 @@ function readCount(value: unknown, fallback: number, path: string, issues?: stri
     return fallback
   }
 
-  if (value < 0) {
-    issues?.push(`${path}: expected a non-negative number`)
+  if (value < min) {
+    issues?.push(min === 0
+      ? `${path}: expected a non-negative number`
+      : `${path}: expected a number of at least ${min}`)
+    return min
   }
 
-  return Math.max(0, value)
+  return value
 }
 
 function parseInstanceSource(
@@ -256,7 +265,10 @@ export function parseConfig(raw: unknown, issues?: string[]): AppConfig {
       source.timeoutInSeconds,
       defaults.timeoutInSeconds,
       'config.timeoutInSeconds',
-      issues
+      issues,
+      // 0 (or less) makes AbortSignal.timeout() fire immediately, so every
+      // request would fail before it starts.
+      1
     ),
     cacheLifetimeInMinutes: readCount(
       source.cacheLifetimeInMinutes,

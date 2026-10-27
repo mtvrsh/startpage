@@ -71,6 +71,15 @@ describe('parseConfig', () => {
     expect(parsed.backendUrl).toBe(defaults.backendUrl)
   })
 
+  it('raises a zero or negative timeout to the smallest usable value', () => {
+    const issues: string[] = []
+
+    expect(parseConfig({ timeoutInSeconds: 0 }, issues).timeoutInSeconds).toBe(1)
+    expect(issues).toEqual(['config.timeoutInSeconds: expected a number of at least 1'])
+
+    expect(parseConfig({ timeoutInSeconds: -5 }).timeoutInSeconds).toBe(1)
+  })
+
   it('merges keybind fields individually', () => {
     const parsed = parseConfig({ keybind: { close: 42, focusSearch: { user: 'k' } } })
 

@@ -46,6 +46,20 @@ async function importConfig(data: unknown) {
   await tick()
 }
 
+describe('Number inputs', () => {
+  test('clamps values below min on change instead of leaking them into config', async () => {
+    const input = target.querySelector<HTMLInputElement>('#feed-limit')!
+
+    input.value = '-5'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    await tick()
+
+    expect(get(config).feedLimit).toBe(0)
+    expect(input.value).toBe('0')
+  })
+})
+
 describe('Settings config import', () => {
   test('applies and displays the imported backend type', async () => {
     expect(backendSelect().value).toBe('piped')
