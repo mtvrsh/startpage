@@ -40,12 +40,11 @@ export class Channels extends LocalStorage {
   }
 
   static add(url: string, partial = false, reload = false): Promise<void> {
-    const ref = this.#parse(url)
-
-    if (!ref)
-      return Promise.reject(`No URL found in ${url}`)
-
-    return this.#fetch(ref, partial, reload)
+    try {
+      return this.#fetch(this.#parse(url), partial, reload)
+    } catch (reason) {
+      return Promise.reject(reason)
+    }
   }
 
   static #fetch(ref: ChannelRef, partial = false, reload = false): Promise<void> {
@@ -158,20 +157,82 @@ export class Channels extends LocalStorage {
   }
 
   static #isPlaylist(url: string): boolean {
-    if (url.includes('playlist') || url.includes('list=')) return true
-    if (!url.includes('/') && !url.includes('='))
-      return !url.startsWith('UC')
-    return false
+    try {
+      return this.#parse(url).kind === 'playlist'
+    } catch {
+      // Unrecognised stored URL: fall back to legacy heuristics
+      return url.includes('playlist') || url.includes('list=')
+    }
   }
 
-  static #parse(url: string): ChannelRef | undefined {
-    if (this.#isPlaylist(url)) {
-      const id = url.split('=').pop()
-      return id ? { kind: 'playlist', id } : undefined
+  static #parse(url: string): ChannelRef {
+    const ref = this.#parseRef(url.trim())
+    return ref ?? this.#fail(url)
+  }
+
+  static #tryParse(url: string): ChannelRef | undefined {
+    try {
+      return this.#parse(url)
+    } catch {
+      return undefined
+    }
+  }
+
+  static #fail(url: string): never {
+    throw new Error(`No channel or playlist URL found in ${url}`)
+  }
+
+  static #parseRef(raw: string): ChannelRef | undefined {
+    // Bare ids: 'UC…' channel ids or playlist ids (also legacy 'x=list=…' keys)
+    if (!raw.includes('/')) {
+      if (raw.includes('=')) {
+        const id = raw.split('=').pop()
+        return id ? { kind: 'playlist', id } : undefined
+      }
+
+      return raw.startsWith('UC')
+        ? { kind: 'channel', id: raw }
+        : { kind: 'playlist', id: raw }
     }
 
-    const id = url.split('/').pop()
-    return id ? { kind: 'channel', id } : undefined
+    let parsedUrl: URL
+    try {
+      parsedUrl = new URL(raw)
+    } catch {
+      return undefined
+    }
+
+    const list = parsedUrl.searchParams.get('list')
+    if (list)
+      return { kind: 'playlist', id: list }
+
+    const hostname = parsedUrl.hostname.replace(/^www\./i, '')
+    if (!/(^|\.)youtube\.com$/.test(hostname))
+      return undefined
+
+    // A single video is never a channel or playlist
+    if (/\/(watch|shorts\/[^/]+)\/?$/.test(parsedUrl.pathname))
+      throw new Error(`Video URLs cannot be added — use a channel or playlist URL (${raw})`)
+
+    let segments = parsedUrl.pathname.split('/').filter(Boolean)
+
+    // Strip trailing tab segments (/videos, /shorts, /featured, …)
+    let end = segments.length
+    while (end > 1 && TAB_SEGMENTS.has(segments[end - 1])) end--
+    segments = segments.slice(0, end)
+
+    const [first, second] = segments
+
+    if (first?.startsWith('@'))
+      return { kind: 'channel', id: first }
+
+    if ((first === 'channel' || first === 'c' || first === 'user')) {
+      if (!second)
+        this.#fail(raw)
+      return { kind: 'channel', id: second }
+    }
+
+    return undefined
   }
 
   static serialize() {
@@ -185,10 +246,23 @@ export class Channels extends LocalStorage {
   static restore(data: [string, { url: string; name: string; displayName: string }][]) {
     const entries = data
       .filter(([url, channel]) => hasSafeScheme(url) && hasSafeScheme(channel.url))
-      .map(([url, channel]) => [this.#parse(url)?.id || url, { ...channel, videos: [] }] as [string, Channel])
+      .map(([url, channel]) => [this.#tryParse(url)?.id || url, { ...channel, videos: [] }] as [string, Channel])
     channels.set(new Map(entries))
   }
 }
+
+const TAB_SEGMENTS = new Set([
+  'videos',
+  'shorts',
+  'streams',
+  'live',
+  'featured',
+  'playlists',
+  'community',
+  'about',
+  'podcasts',
+  'releases'
+])
 
 const stored = Channels.get()
 export const channels = writable<Map<string, Channel>>(new Map(Array.isArray(stored) ? stored : []))

@@ -37,7 +37,22 @@ export class Piped {
   }
 
   static parseId(url: string) {
-    return url.split('/').pop() || ''
+    const TAB_SEGMENTS = [
+      'videos', 'shorts', 'streams', 'live', 'featured',
+      'playlists', 'community', 'about', 'podcasts', 'releases'
+    ]
+
+    try {
+      const parsed = new URL(url)
+      if (/\/(watch|shorts)\/?$/.test(parsed.pathname)) return ''
+      return parsed.searchParams.get('list')
+        || parsed.pathname.split('/').filter(
+          segment => segment && !TAB_SEGMENTS.includes(segment)
+        ).pop()
+        || ''
+    } catch {
+      return url.split('/').pop() || ''
+    }
   }
 }
 

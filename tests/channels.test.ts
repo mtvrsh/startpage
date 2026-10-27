@@ -212,3 +212,38 @@ describe('restore', () => {
     expect(result.size).toBe(1)
   })
 })
+
+describe('restore re-keys channels by parsed url', () => {
+  const restoreUrl = (url: string) => {
+    Channels.restore([[url, { url, name: 'name', displayName: '' }]])
+    return [...get(channels).keys()][0]
+  }
+
+  t('parses playlist urls with extra query params', () => {
+    expect(restoreUrl('https://youtube.com/playlist?list=PL123&si=abc')).toBe('PL123')
+  })
+
+  t('parses channel urls with extra query params', () => {
+    expect(restoreUrl('https://youtube.com/channel/UC123/?si=abc')).toBe('UC123')
+  })
+
+  t('strips trailing tab segments', () => {
+    expect(restoreUrl('https://youtube.com/channel/UC123/videos')).toBe('UC123')
+    expect(restoreUrl('https://youtube.com/@foo/shorts')).toBe('@foo')
+    expect(restoreUrl('https://youtube.com/c/foo/featured')).toBe('foo')
+    expect(restoreUrl('https://youtube.com/user/foo/community')).toBe('foo')
+  })
+
+  t('recognizes bare handle urls', () => {
+    expect(restoreUrl('https://youtube.com/@foo/')).toBe('@foo')
+  })
+
+  t('rejects video urls and keeps the original url', () => {
+    const url = 'https://youtube.com/watch?v=abc123'
+    expect(restoreUrl(url)).toBe(url)
+  })
+
+  t('keeps the original url for unparseable urls', () => {
+    expect(restoreUrl('https://example.com/foo')).toBe('https://example.com/foo')
+  })
+})
