@@ -33,11 +33,13 @@ export function parseStoredBookmarks(): Map<URL, Bookmark> {
   for (const value of parsed) {
     if (!Array.isArray(value) || value.length !== 2) continue
 
-    const [url, bookmark] = value
-    if (typeof url !== 'string') continue
-
+    const [, bookmark] = value
     const parsedBookmark = parseStoredBookmark(bookmark)
-    if (parsedBookmark) pairs.push([url, parsedBookmark])
+    if (!parsedBookmark) continue
+
+    // The map invariant is key === bookmark.url; a mismatched serialized key
+    // cannot be edited or deleted through the UI, so it is re-keyed here.
+    pairs.push([parsedBookmark.url, parsedBookmark])
   }
 
   return new Map(pairs)
@@ -119,11 +121,16 @@ export default class Bookmarks {
     for (const value of Array.isArray(data) ? data : []) {
       if (!Array.isArray(value) || value.length !== 2) continue
 
-      const [url, bookmarkValue] = value
-      if (typeof url !== 'string') continue
+      const [urlKey, bookmarkValue] = value
+      if (typeof urlKey !== 'string') continue
 
       const bookmark = parseStoredBookmark(bookmarkValue)
-      if (bookmark && hasSafeScheme(url)) pairs.push([url, bookmark])
+      if (!bookmark) continue
+
+      // Re-key by bookmark.url so key === bookmark.url holds after import, and
+      // only accept entries whose URL is safe to store.
+      if (!hasSafeScheme(bookmark.url)) continue
+      pairs.push([bookmark.url, bookmark])
     }
 
     bookmarks.set(new Map(pairs))

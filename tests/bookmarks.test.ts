@@ -93,6 +93,16 @@ describe('parseStoredBookmarks', () => {
     }
   })
 
+  test('rekeys entries whose serialized key differs from bookmark.url', () => {
+    localStorage.setItem('bookmarks', JSON.stringify([[
+      'https://key.example', { url: 'https://value.example', name: 'B', tag: 't' }
+    ]]))
+
+    const map = parseStoredBookmarks()
+    expect([...map.keys()]).toEqual(['https://value.example'])
+    expect(map.get('https://value.example')?.name).toBe('B')
+  })
+
   test('returns an empty map for corrupt JSON without throwing', () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     localStorage.setItem('bookmarks', '{corrupt')
@@ -101,5 +111,27 @@ describe('parseStoredBookmarks', () => {
     expect(error).toHaveBeenCalled()
 
     error.mockRestore()
+  })
+})
+
+describe('restore rekeys by bookmark url', () => {
+  test('imports bookmarks keyed by their bookmark.url, not the serialized key', () => {
+    Bookmarks.restore([['https://key.example', { url: 'https://value.example', name: 'B', tag: 't' }]] as any)
+
+    const map = get(bookmarks)
+    expect([...map.keys()]).toEqual(['https://value.example'])
+  })
+
+  test('imports entries with an unsafe serialized key when bookmark.url is safe', () => {
+    Bookmarks.restore([['javascript:alert(1)', { url: 'https://ok.example' }]] as any)
+
+    expect(get(bookmarks).has('https://ok.example')).toBe(true)
+    expect(get(bookmarks).get('https://ok.example')).toEqual({ url: 'https://ok.example', name: '', tag: '' })
+  })
+
+  test('drops entries whose bookmark.url has an unsafe scheme', () => {
+    Bookmarks.restore([['javascript:alert(1)', { url: 'javascript:alert(1)', name: 'x' }]] as any)
+
+    expect(get(bookmarks).size).toBe(0)
   })
 })
