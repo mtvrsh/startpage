@@ -37,14 +37,14 @@ export class StartpageBackend implements Backend {
     }))
   }
 
-  async fetchChannel(id: string, _reload?: boolean): Promise<Channel> {
-    const { backendUrl, timeoutInSeconds, feedFetchAll } = get(config)
-    const response = await fetch(
+  async fetchChannel(id: string, reload = false): Promise<Channel> {
+    const { backendUrl, feedFetchAll } = get(config)
+    const response = await this.request(
       feedFetchAll
         ? `${backendUrl}/playlists/UU${id.slice(2)}`
-        : `${backendUrl}/channels/${id}`, {
-      signal: AbortSignal.timeout(timeoutInSeconds * 1000)
-    })
+        : `${backendUrl}/channels/${id}`,
+      reload
+    )
     if (!response.ok) throw new Error(`Failed to fetch channel ${id}`)
 
     const data: any = await response.json()
@@ -77,11 +77,9 @@ export class StartpageBackend implements Backend {
     }
   }
 
-  async fetchPlaylist(id: string, _reload?: boolean): Promise<Channel> {
-    const { backendUrl, timeoutInSeconds } = get(config)
-    const response = await fetch(`${backendUrl}/playlists/${id}`, {
-      signal: AbortSignal.timeout(timeoutInSeconds * 1000)
-    })
+  async fetchPlaylist(id: string, reload = false): Promise<Channel> {
+    const { backendUrl } = get(config)
+    const response = await this.request(`${backendUrl}/playlists/${id}`, reload)
     if (!response.ok) throw new Error(`Failed to fetch playlist ${id}`)
 
     const data: any = await response.json()
@@ -112,6 +110,16 @@ export class StartpageBackend implements Backend {
       displayName: data.name || author?.name || '',
       videos
     }
+  }
+
+  private request(url: string, reload: boolean): Promise<Response> {
+    return fetch(url, {
+      // The worker marks listings `private, max-age=…`, so a normal refetch
+      // reuses the browser cache. `reload` forces the network and refreshes
+      // that entry for the sync button and expired local cache lifetimes.
+      cache: reload ? 'reload' : 'default',
+      signal: AbortSignal.timeout(get(config).timeoutInSeconds * 1000)
+    })
   }
 
   private formatDuration(duration: any, isLive: boolean): string {

@@ -152,6 +152,58 @@ describe('exported fetch handler', () => {
     expect(res.headers.get('vary')).toBe('Origin')
   })
 
+  test('channel and playlist listings are browser-cacheable', async () => {
+    vi.resetModules()
+    vi.doMock('../startpage-api/node_modules/youtubei.js/dist/src/platform/cf-worker.js', () => ({
+      Innertube: {
+        create: async () => ({
+          getChannel: async (id: string) => id === 'UCnovideos000000000000000'
+            ? { has_videos: false }
+            : {
+              has_videos: true,
+              getVideos: async () => ({
+                videos: [{
+                  content_id: 'vid12345678',
+                  content_image: { image: [{ url: 'https://i.ytimg.com/vi/vid12345678/hqdefault.jpg' }] },
+                  metadata: { title: { toString: () => 'Video' } },
+                }],
+                memo: new Map(),
+              }),
+              metadata: { title: 'Channel' },
+              header: { author: { name: 'Channel', thumbnails: [] } },
+            },
+          getPlaylist: async () => ({
+            videos: [{
+              content_id: 'vid12345678',
+              content_image: { image: [{ url: 'https://i.ytimg.com/vi/vid12345678/hqdefault.jpg' }] },
+              metadata: { title: { toString: () => 'Video' } },
+            }],
+            memo: new Map(),
+            info: { title: 'Playlist', author: { name: 'Channel' } },
+          }),
+        }),
+      },
+    }))
+    const { handleRequest: cached } = await import('../startpage-api/src/router')
+
+    for (const path of [
+      '/channels/UC1234567890abcdefghijklm',
+      '/channels/UCnovideos000000000000000',
+      '/playlists/PL1234567890abcdefghijklmno1',
+    ]) {
+      const res = await cached(request(path), env(okLimit))
+      expect(res.status).toBe(200)
+      expect(res.headers.get('cache-control')).toBe('private, max-age=600')
+      expect(res.headers.get('vary')).toBe('Origin')
+      expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
+    }
+
+    // Errors and validation failures must never be stored.
+    const invalid = await cached(request('/channels/a%20b'), env(okLimit))
+    expect(invalid.status).toBe(400)
+    expect(invalid.headers.get('cache-control')).toBe('no-store')
+  })
+
   describe('input validation', () => {
     test('rejects a query over 100 characters with 400 and CORS headers', async () => {
       const res = await worker(request(`/search/channels?q=${'a'.repeat(101)}`), env(okLimit))

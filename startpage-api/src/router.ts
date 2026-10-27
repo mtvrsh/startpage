@@ -15,6 +15,14 @@ let ytjs: Promise<Innertube> | null = null;
 const ID_PATTERN = /^(@[\w.-]{1,63}|[\w-]{1,64})$/;
 const MAX_QUERY_LENGTH = 100;
 
+// Browser cache lifetime for channel/playlist listings. It matches the
+// frontend's default `cacheLifetimeInMinutes` (10 min): a reload inside that
+// window is served from the browser cache, while `Channels.refetch({reload:
+// true})` (the sync button) and any refetch past the window send
+// `cache: 'reload'`, which bypasses it. `private` because freshness is tracked
+// per browser (`status.fetchedAt`), not shared between users.
+const LISTING_CACHE_SECONDS = 600;
+
 function isInvalidId(id: string): boolean {
   return !ID_PATTERN.test(id);
 }
@@ -35,10 +43,17 @@ function json(
   data: unknown,
   status = 200,
   cors: Record<string, string> = {},
+  cacheSeconds = 0,
 ): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    headers: {
+      ...cors,
+      'Content-Type': 'application/json',
+      // Only the fixed-lifetime listing responses opt in; errors, search and
+      // the raw debug routes must never be stored by the browser.
+      'Cache-Control': cacheSeconds > 0 ? `private, max-age=${cacheSeconds}` : 'no-store',
+    },
   });
 }
 
@@ -153,7 +168,7 @@ async function getChannel(channelId: string): Promise<Response> {
   const channel = await yt.getChannel(channelId);
 
   if (!channel.has_videos) {
-    return json([]);
+    return json([], 200, {}, LISTING_CACHE_SECONDS);
   }
 
   const videosTab = await channel.getVideos();
@@ -213,7 +228,7 @@ async function getChannel(channelId: string): Promise<Response> {
     }
   }).filter(Boolean);
 
-  return json(result);
+  return json(result, 200, {}, LISTING_CACHE_SECONDS);
 }
 
 function mapPlaylistItem(v: any) {
@@ -266,7 +281,7 @@ async function getPlaylist(playlistId: string): Promise<Response> {
     name: playlist.info?.title,
     author: playlist.info?.author,
     items,
-  });
+  }, 200, {}, LISTING_CACHE_SECONDS);
 }
 
 async function dispatch(
