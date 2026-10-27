@@ -107,8 +107,8 @@
     searchDelayed()
   }
 
-  let addChannelAndClose = (event: MouseEvent) =>
-    addChannel((event.currentTarget as HTMLAnchorElement).href)
+  let addChannelAndClose = (url: string) =>
+    addChannel(url)
 
   let handleGlobalKeybinds = (event: KeyboardEvent) => {
     // A character being typed into a field must not trigger the keybinds
@@ -237,7 +237,7 @@
               <a
                 class="palette__link"
                 href={url}
-                onclick={preventDefault(addChannelAndClose)}
+                onclick={preventDefault(() => addChannelAndClose(url))}
                 bind:this={focus.items[index + 1]}
                 tabindex="-1"
               >

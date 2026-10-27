@@ -29,6 +29,32 @@ afterEach(() => {
   config.set(structuredClone(defaults))
 })
 
+describe('search', () => {
+  test('makes site-relative channel urls absolute', async () => {
+    stubFetch({
+      items: [
+        { url: `/channel/${CHANNEL_ID}`, name: 'Channel', thumbnail: '', subscribers: 1 },
+        { url: 'https://youtube.com/@handle', name: 'Handle', thumbnail: '', subscribers: 0 },
+        { url: 'youtube.com/c/Legacy', name: 'Legacy', thumbnail: '', subscribers: 0 }
+      ]
+    })
+
+    const results = await new PipedBackend().search('query')
+
+    expect(results.map(result => result.url)).toEqual([
+      `https://youtube.com/channel/${CHANNEL_ID}`,
+      'https://youtube.com/@handle',
+      'https://youtube.com/c/Legacy'
+    ])
+  })
+
+  test('returns no results when the instance fails', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false })))
+
+    expect(await new PipedBackend().search('query')).toEqual([])
+  })
+})
+
 describe('fetchChannel with feedFetchAll', () => {
   test('uses the uploads playlist for real channel ids', async () => {
     config.set({ ...structuredClone(defaults), feedFetchAll: true })
