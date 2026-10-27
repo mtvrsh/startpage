@@ -108,7 +108,13 @@
               type="button"
               title={strings.remove}
               aria-label={`${strings.remove} ${displayName || name}`}
-              onclick={() => remove(id)}
+              onclick={(e) => {
+                // The row is removed synchronously, detaching the click target
+                // before the event bubbles to Closeable's window listener,
+                // where container.contains() would fail and close the dropdown.
+                e.stopPropagation()
+                remove(id)
+              }}
             >×</button>
           </li>
         {/each}
