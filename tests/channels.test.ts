@@ -39,6 +39,14 @@ describe('update', () => {
     expect(result?.displayName).toBe('newName')
     expect(result?.name).toBe(channel.name)
   })
+
+  t('is a no-op when channel was removed (partial fetch race)', ({id, channel}) => {
+    Channels.addExisting(id, channel)
+    Channels.remove(id)
+    Channels.update(id, { videos: channel.videos })
+
+    expect(get(channels).has(id)).toBe(false)
+  })
 })
 
 describe('remove', () => {

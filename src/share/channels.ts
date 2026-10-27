@@ -73,7 +73,11 @@ export class Channels extends LocalStorage {
   }
 
   static update(id: string, channelProps: any) {
-    channels.update(channelMap => channelMap.set(id, {...channelMap.get(id), ...channelProps}))
+    channels.update(channelMap => {
+      const channel = channelMap.get(id)
+      if (!channel) return channelMap
+      return new Map(channelMap).set(id, {...channel, ...channelProps})
+    })
   }
 
   static remove(id: string) {
