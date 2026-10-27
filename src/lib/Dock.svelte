@@ -5,8 +5,8 @@
   import IconSearch from './icons/Search.svelte'
   import IconSettings from './icons/Settings.svelte'
 
-  let searchKeybind = Config.getUsedKeybind($config.keybind.focusSearch)
-  let settingsKeybind = Config.getUsedKeybind($config.keybind.openSettings)
+  let searchKeybind = $derived(Config.getUsedKeybind($config.keybind.focusSearch))
+  let settingsKeybind = $derived(Config.getUsedKeybind($config.keybind.openSettings))
 
   let openSettings = () =>
     app.route.path = strings.paths.settings

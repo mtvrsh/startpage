@@ -21,8 +21,8 @@
   let wasOpen = false
   let timeout = 0
 
-  let focusKeybind = Config.getUsedKeybind($config.keybind.focusSearch)
-  let closeKeybind = $config.keybind.close
+  let focusKeybind = $derived(Config.getUsedKeybind($config.keybind.focusSearch))
+  let closeKeybind = $derived($config.keybind.close)
 
   let isUrl = $derived(
     query.includes('youtube.com') || query.includes('youtu.be')
