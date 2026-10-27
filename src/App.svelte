@@ -18,19 +18,32 @@
     navigator.serviceWorker.register(config.base + '/sw.js')
 
   let main = $state(routes.home)
-  let router = navaid(config.base, () => main = routes.notFound)
+  let router = navaid(config.base, uri => {
+    main = routes.notFound
+    app.route.path = uri
+  })
 
   for (let [_, route] of Object.entries(routes))
-    router.on(route.path, args => main = {...route, args: {...route.args, ...args}})
+    router.on(route.path, args => {
+      main = {...route, args: {...route.args, ...args}}
+      app.route.path = route.path
+    })
 
   // Legacy settings tabs: channel/bookmark management now lives in the columns.
   router.on(strings.paths.channels, () => app.route.path = strings.paths.settings)
   router.on(strings.paths.bookmarks, () => app.route.path = strings.paths.settings)
 
-  router.listen()
+  // Render the requested route right away. Listening on the current URL would
+  // let the route callbacks overwrite the redirect path stored by `404.html`.
+  router.listen(config.base + app.route.path)
 
   $effect(() => {
-    router.route(app.route.path)
+    let path = app.route.path
+
+    // `router.route` always pushes when a base is configured, so skip when the
+    // location already matches; otherwise back/forward would truncate history.
+    if (router.format(location.pathname) !== path)
+      router.route(path)
   })
 
   let title = $derived(
