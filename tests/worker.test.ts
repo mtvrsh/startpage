@@ -121,16 +121,29 @@ describe('exported fetch handler', () => {
     expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
     expect(res.headers.get('vary')).toBe('Origin')
     expect(await res.text()).toBe('<feed/>')
+    // The proxy response already carries CORS; it must not be duplicated.
+    expect([...res.headers.keys()].filter(k => k === 'access-control-allow-origin')).toHaveLength(1)
+  })
+
+  test('200 responses from Innertube-backed routes carry CORS headers', async () => {
+    // A channel with no videos short-circuits to a bare `[]` json() response
+    // that never saw the cors headers before the central application.
+    for (const path of ['/channels/UC1234567890abcdefghijklm', '/raw/channels/UC1234567890abcdefghijklm']) {
+      const res = await worker(request(path), env(okLimit))
+      expect(res.status).toBe(500) // Innertube create() is mocked to fail
+      expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
+    }
   })
 
   describe('input validation', () => {
-    test('rejects a query over 100 characters with 400', async () => {
+    test('rejects a query over 100 characters with 400 and CORS headers', async () => {
       const res = await worker(request(`/search/channels?q=${'a'.repeat(101)}`), env(okLimit))
       expect(res.status).toBe(400)
+      expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
       expect(await res.json()).toMatchObject({ error: 'query is too long' })
     })
 
-    test('rejects malformed channel and playlist ids with 400', async () => {
+    test('rejects malformed channel and playlist ids with 400 and CORS headers', async () => {
       for (const path of [
         `/channels/${'a'.repeat(65)}`,
         `/channels/a%20b`,
@@ -142,6 +155,28 @@ describe('exported fetch handler', () => {
       ]) {
         const res = await worker(request(path), env(okLimit))
         expect(res.status).toBe(400)
+        expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
+      }
+    })
+
+    test('all dispatched endpoints append CORS headers to their responses', async () => {
+      // Every path through dispatch() must come back usable from the browser:
+      // without Access-Control-Allow-Origin the fetch fails there regardless
+      // of the status code. Covers 400-validation, 404 and the Streamed 500s.
+      for (const path of [
+        '/search/channels',
+        '/search/channels?q=x',
+        '/suggestions',
+        '/suggestions?q=x',
+        '/channels/doesNotExistButValid-Id123',
+        '/raw/channels/UC1234567890abcdefghijklm',
+        '/playlists/PL1234567890abcdefghijklmno1',
+        '/raw/playlists/PL1234567890abcdefghijklmno1',
+        '/no-such-route',
+      ]) {
+        const res = await worker(request(path), env(okLimit))
+        expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
+        expect(res.headers.get('vary')).toBe('Origin')
       }
     })
 
@@ -163,6 +198,7 @@ describe('exported fetch handler', () => {
 
       const res = await worker(request('/search/channels?q=ok'), env(okLimit))
       expect(res.status).toBe(500)
+      expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
       expect(await res.json()).toMatchObject({ error: 'internal error' })
       expect(consoleError.mock.calls.flat().some(line =>
         typeof line === 'string' && line.includes('secret innertube detail')

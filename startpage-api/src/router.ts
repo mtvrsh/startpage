@@ -246,6 +246,47 @@ async function getPlaylist(playlistId: string): Promise<Response> {
   });
 }
 
+async function dispatch(
+  pathname: string,
+  searchParams: URLSearchParams,
+  cors: Record<string, string>,
+): Promise<Response> {
+  if (pathname === '/feed') return await feedProxy(searchParams, cors);
+  if (pathname === '/search/channels') return await searchChannels(searchParams);
+  if (pathname === '/suggestions') return await handleSuggestions(searchParams);
+
+  const rawChannelMatch = pathname.match(/^\/raw\/channels\/(.+)$/);
+  if (rawChannelMatch) return await rawChannel(rawChannelMatch[1]);
+
+  const rawPlaylistMatch = pathname.match(/^\/raw\/playlists\/(.+)$/);
+  if (rawPlaylistMatch) return await rawPlaylist(rawPlaylistMatch[1]);
+
+  const channelMatch = pathname.match(/^\/channels\/(.+)$/);
+  if (channelMatch) return await getChannel(channelMatch[1]);
+
+  const playlistMatch = pathname.match(/^\/playlists\/(.+)$/);
+  if (playlistMatch) return await getPlaylist(playlistMatch[1]);
+
+  return json({ error: 'not found' }, 404, cors);
+}
+
+/**
+ * Attach the CORS headers to every dispatched response. Without this,
+ * endpoints built with plain `json()` omit `Access-Control-Allow-Origin` and
+ * the browser silently rejects even successful (non-safelisted) responses —
+ * so it is applied centrally instead of trusting each route to remember.
+ * Responses that already carry CORS (feed proxy) are returned untouched so
+ * per-origin values are never duplicated or clobbered.
+ */
+function withCors(resp: Response, cors: Record<string, string>): Response {
+  if (resp.headers.has('Access-Control-Allow-Origin')) return resp;
+  return new Response(resp.body, {
+    status: resp.status,
+    statusText: resp.statusText,
+    headers: [...resp.headers, ...Object.entries(cors)],
+  });
+}
+
 export async function handleRequest(request: Request, env: WorkerEnv): Promise<Response> {
   // Origin gate first: reject anything not coming from an allowlisted browser
   // origin (with no CORS headers, so the fetch stays opaque there).
@@ -270,23 +311,7 @@ export async function handleRequest(request: Request, env: WorkerEnv): Promise<R
   const { pathname, searchParams } = url;
 
   try {
-    if (pathname === '/feed') return await feedProxy(searchParams, cors);
-    if (pathname === '/search/channels') return await searchChannels(searchParams);
-    if (pathname === '/suggestions') return await handleSuggestions(searchParams);
-
-    const rawChannelMatch = pathname.match(/^\/raw\/channels\/(.+)$/);
-    if (rawChannelMatch) return await rawChannel(rawChannelMatch[1]);
-
-    const rawPlaylistMatch = pathname.match(/^\/raw\/playlists\/(.+)$/);
-    if (rawPlaylistMatch) return await rawPlaylist(rawPlaylistMatch[1]);
-
-    const channelMatch = pathname.match(/^\/channels\/(.+)$/);
-    if (channelMatch) return await getChannel(channelMatch[1]);
-
-    const playlistMatch = pathname.match(/^\/playlists\/(.+)$/);
-    if (playlistMatch) return await getPlaylist(playlistMatch[1]);
-
-    return json({ error: 'not found' }, 404, cors);
+    return withCors(await dispatch(pathname, searchParams, cors), cors);
   } catch (err) {
     if (err instanceof ProxyError)
       return json({ error: err.message }, err.status, cors);
