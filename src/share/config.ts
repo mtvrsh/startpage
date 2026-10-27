@@ -90,7 +90,7 @@ function readCount(
   // valid "unset" marker rather than a malformed value.
   if (value === undefined || value === null) return fallback
 
-  if (typeof value !== 'number' || !Number.isFinite(value)) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || !Number.isInteger(value)) {
     issues?.push(`${path}: expected a number`)
     return fallback
   }

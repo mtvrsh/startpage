@@ -80,6 +80,16 @@ describe('parseConfig', () => {
     expect(parseConfig({ timeoutInSeconds: -5 }).timeoutInSeconds).toBe(1)
   })
 
+  it('falls back to the default for non-integer numbers', () => {
+    const issues: string[] = []
+
+    expect(parseConfig({ feedLimit: 1.5 }, issues).feedLimit).toBe(defaults.feedLimit)
+    expect(parseConfig({ readerLimit: NaN }, issues).readerLimit).toBe(defaults.readerLimit)
+    expect(parseConfig({ cacheLifetimeInMinutes: null }, issues).cacheLifetimeInMinutes).toBe(defaults.cacheLifetimeInMinutes)
+    expect(issues).toEqual(['config.feedLimit: expected a number', 'config.readerLimit: expected a number'])
+    expect(parseConfig({ feedLimit: 3 }).feedLimit).toBe(3)
+  })
+
   it('merges keybind fields individually', () => {
     const parsed = parseConfig({ keybind: { close: 42, focusSearch: { user: 'k' } } })
 
