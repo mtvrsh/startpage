@@ -9,6 +9,7 @@
   import { Feeds } from './share/feeds'
   import { Config, config as userConfig } from './share/config'
   import { Status } from './share/status'
+  import { isTypedCharacter } from './util/keyboard'
   import Dock from './lib/Dock.svelte'
   import FetchProgress from './lib/FetchProgress.svelte'
   import Home from './lib/Home.svelte'
@@ -81,6 +82,11 @@
     if (!isSettings) return
 
     if (event.key !== $userConfig.keybind.close) return
+
+    // A close key that is a plain character (a custom keybind like `q`) must
+    // not close settings while that character is being typed into a field.
+    // Named keys such as Escape still close from anywhere.
+    if (isTypedCharacter(event)) return
 
     event.preventDefault()
     closeSettings()
