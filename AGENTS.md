@@ -41,6 +41,13 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 - `saveOnUpdate()` subscribes store to persist on every change
 - `Bookmarks` uses its own `subscribeToLocalStorage()` with Map serialization
 
+### Store validation
+- Stored and imported data is untrusted: every store validates through one total parser (`parseBookmarks`, `Channels.parseStored`, `Feeds.parseStored`, `parseConfig`, `parseStoredStatus`). Never throws; malformed entries are skipped and missing fields degrade to defaults. `src/util/validate.ts` holds the shared shape helpers.
+- The same parser backs both module-scope hydration (a corrupt array must not brick boot) and `restore`/import. Hydration stays lenient; import passes an `issues` array (strict mode) and reports what was malformed.
+- A channel stored before `Channel.url` existed has no `url`; hydration keeps it with `url: ''` and `#refFor` resolves the kind from the map key. Do not reject an empty channel `url` — that would delete legacy channels on boot (hydration immediately persists the pruned map via `saveOnUpdate`).
+- `SettingsGeneral.importConfig` validates every section before applying any of them and rejects the whole payload when `issues` is non-empty, so a malformed payload never half-applies or reaches a store. Sections that are absent are left untouched.
+- `buildConfigFile()` (`src/share/config-file.ts`) builds the exported backup through the same parsers, so an export always re-imports: cleared number inputs serialize as `null` (accepted as "unset"), and bookmarks with unsafe schemes are dropped (`restore` would drop them anyway).
+
 ### Routing
 - Uses `navaid` (client-side router)
 - Routes defined in `src/routes.ts`
@@ -62,13 +69,13 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 ### Backend (API Strategy)
 - Two API sources: **Piped API** (public instances) and **startpage-api** (YouTube.js deployed on Cloudflare Worker in `startpage-api/`)
 - `src/lib/api/backend.ts` — `Backend` interface, `backends` record mapping keys to classes, `backend` derived store
-- Each backend class has `static backendKey = 'name' as const` — the single source of truth for its identifier
-- `BACKEND_TYPES` array derived from record keys, `InstanceType` type derived from `BACKEND_TYPES`
+- Each backend class has `static name = '<name>' as const` — the single source of truth for its identifier
+- `BACKEND_TYPES` / `InstanceType` / `isInstanceType` live in `src/lib/api/backend-types.ts` (leaf module, so `config.ts` can validate `instanceType` without importing `backend.ts` → cycle). `backends` in `backend.ts` is typed `Record<InstanceType, …>`, so the compiler enforces parity
 - `SettingsGeneral.svelte` maps `InstanceType` → UI labels via `backendLabel` record
 
 Adding a new backend:
-1. Create `src/lib/api/<name>-backend.ts` with `class <Name>Backend implements Backend { static backendKey = '<name>' as const }`
-2. Add import + entry to `backends` record in `backend.ts`
+1. Create `src/lib/api/<name>-backend.ts` with `class <Name>Backend implements Backend { static name = '<name>' as const }`
+2. Add `'<name>'` to `BACKEND_TYPES` in `src/lib/api/backend-types.ts` and the import + entry to `backends` in `backend.ts` (compile fails if the two disagree)
 3. Add UI label to `src/share/strings.ts`
 4. Add label entry in `SettingsGeneral.svelte` `backendLabel` map
 5. If it needs unique config fields, add an `{#if}` block in the settings template

@@ -1,6 +1,7 @@
 import { writable, get } from 'svelte/store';
 import { LocalStorage } from '../util/storage'
 import { hasSafeScheme } from '../util/scheme'
+import { readPairs } from '../util/validate'
 import { config } from './config'
 import { status } from './status'
 import { backend } from '../lib/api/backend'
@@ -100,12 +101,16 @@ export class Channels extends LocalStorage {
   }
 
   static #toArray(selected: Array<[string, Channel]>): ChannelVideo[] {
-    return selected.flatMap(([_url, channel]) => channel.videos.map(video => ({
-      ...video,
-      channelUrl: channel.url,
-      channelName : channel.name,
-      channelDisplayName : channel.displayName
-    })))
+    return selected.flatMap(([_url, channel]) => {
+      if (!channel || !Array.isArray(channel.videos)) return []
+
+      return channel.videos.map(video => ({
+        ...video,
+        channelUrl: channel.url,
+        channelName : channel.name,
+        channelDisplayName : channel.displayName
+      }))
+    })
   }
 
   static BY_UPLOADED = (videoA: Video, videoB: Video) =>
@@ -152,7 +157,7 @@ export class Channels extends LocalStorage {
   static #refFor(channel: Channel, fallbackId: string): ChannelRef {
     // The map key alone is ambiguous (@handle / legacy /c/ /user/ keys look like
     // playlist ids), so derive the kind from the stored channel.url instead.
-    if (channel.url)
+    if (channel?.url)
       return {
         kind: this.#isPlaylist(channel.url) ? 'playlist' : 'channel',
         id: fallbackId
@@ -267,34 +272,100 @@ export class Channels extends LocalStorage {
     }])
   }
 
-  static restore(data: [string, { url: string; name: string; displayName: string }][] | unknown) {
-    const entries: [string, Channel][] = []
+  static restore(data: unknown) {
+    channels.set(data instanceof Map ? new Map(data) : this.parseStored(data))
+  }
 
-    for (const value of Array.isArray(data) ? data : []) {
-      // Imported data is untrusted: skip malformed pairs instead of throwing
-      // mid-import (which would leave earlier stores already replaced).
-      if (!Array.isArray(value) || value.length !== 2) continue
-
-      const [key, channelValue] = value
-      if (typeof key !== 'string' || typeof channelValue !== 'object' || channelValue === null) continue
-
-      const candidate = channelValue as Record<string, unknown>
-      if (typeof candidate.url !== 'string') continue
-
-      if (!hasSafeScheme(key) || !hasSafeScheme(candidate.url)) continue
-
-      const channel: Channel = {
-        url: candidate.url,
-        name: typeof candidate.name === 'string' ? candidate.name : '',
-        displayName: typeof candidate.displayName === 'string' ? candidate.displayName : '',
-        videos: []
+  /**
+   * Validates a serialized/imported channel list. Never throws: malformed
+   * pairs are skipped, names degrade to '', and only safe schemes are kept.
+   * Shared by hydration and restore.
+   *
+   * A missing or empty `url` is a supported state, not malformed: channels
+   * stored before the field existed are resolved from the map key by #refFor,
+   * and exports of them carry `url: ''`.
+   */
+  static parseStored(raw: unknown, issues?: string[]): Map<string, Channel> {
+    const entries = readPairs(raw, 'channels', issues, (key, value, path) => {
+      if (typeof value !== 'object' || value === null) {
+        issues?.push(`${path}: expected a channel object`)
+        return undefined
       }
 
-      entries.push([this.#tryParse(key)?.id || key, channel])
-    }
+      const candidate = value as Record<string, unknown>
+      if (!hasSafeScheme(key)) {
+        issues?.push(`${path}: unsafe id`)
+        return undefined
+      }
 
-    channels.set(new Map(entries))
+      const url = candidate.url === undefined ? '' : candidate.url
+      if (typeof url !== 'string' || (url && !hasSafeScheme(url))) {
+        issues?.push(`${path}.url: expected a safe url`)
+        return undefined
+      }
+
+      if (candidate.videos !== undefined && !Array.isArray(candidate.videos)) {
+        issues?.push(`${path}.videos: expected an array`)
+      }
+
+      if (candidate.name !== undefined && typeof candidate.name !== 'string') {
+        issues?.push(`${path}.name: expected a string`)
+      }
+
+      if (candidate.displayName !== undefined && typeof candidate.displayName !== 'string') {
+        issues?.push(`${path}.displayName: expected a string`)
+      }
+
+      const videos = parseStoredVideos(candidate.videos)
+      if (Array.isArray(candidate.videos) && videos.length !== candidate.videos.length) {
+        issues?.push(`${path}.videos: contains invalid entries`)
+      }
+
+      const channel: Channel = {
+        url,
+        name: typeof candidate.name === 'string' ? candidate.name : '',
+        displayName: typeof candidate.displayName === 'string' ? candidate.displayName : '',
+        // Persisted feeds keep their cached videos across reloads; exported
+        // files have none, so this is usually empty.
+        videos
+      }
+
+      return [this.#tryParse(key)?.id || key, channel] as [string, Channel]
+    })
+
+    return new Map(entries)
   }
+}
+
+// Cached videos are persisted alongside channels (see saveOnUpdate), so keep
+// well-formed ones to avoid an empty feed flash on boot. Anything malformed is
+// dropped rather than breaking rendering/sorting.
+function parseStoredVideos(value: unknown): Video[] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap(video => {
+    if (typeof video !== 'object' || video === null) return []
+
+    const candidate = video as Record<string, unknown>
+    if (
+      typeof candidate.url !== 'string' ||
+      typeof candidate.title !== 'string' ||
+      typeof candidate.thumbnail !== 'string' ||
+      typeof candidate.duration !== 'string' ||
+      typeof candidate.uploadedDate !== 'string' ||
+      typeof candidate.uploaded !== 'number' ||
+      !Number.isFinite(candidate.uploaded)
+    ) return []
+
+    return [{
+      url: candidate.url,
+      title: candidate.title,
+      thumbnail: candidate.thumbnail,
+      duration: candidate.duration,
+      uploaded: candidate.uploaded,
+      uploadedDate: candidate.uploadedDate
+    }]
+  })
 }
 
 const TAB_SEGMENTS = new Set([
@@ -311,4 +382,4 @@ const TAB_SEGMENTS = new Set([
 ])
 
 const stored = Channels.get()
-export const channels = writable<Map<string, Channel>>(new Map(Array.isArray(stored) ? stored : []))
+export const channels = writable<Map<string, Channel>>(Channels.parseStored(stored))

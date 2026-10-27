@@ -295,6 +295,93 @@ describe('restore validation', () => {
   })
 })
 
+describe('hydration validation', () => {
+  t('parseStored skips malformed entries instead of throwing', () => {
+    const url = 'https://youtube.com/@ok'
+    const map = Channels.parseStored([
+      1,
+      [url],
+      [url, null],
+      ['javascript:alert(1)', { url: 'javascript:alert(1)' }],
+      [url, { url, name: 42, displayName: null }]
+    ] as any)
+
+    expect([...map]).toEqual([['@ok', { url, name: '', displayName: '', videos: [] }]])
+  })
+
+  t('parseStored tolerates non-array storage', () => {
+    expect(Channels.parseStored(undefined).size).toBe(0)
+    expect(Channels.parseStored(null).size).toBe(0)
+    expect(Channels.parseStored({ a: 1 }).size).toBe(0)
+  })
+
+  t('parseStored keeps valid cached videos and drops malformed ones', () => {
+    const url = 'https://youtube.com/@ok'
+    const video = {
+      url: '/watch?v=1', title: 't', thumbnail: 'i', duration: '1m',
+      uploaded: 1, uploadedDate: 'now'
+    }
+    const map = Channels.parseStored([[
+      url,
+      { url, name: 'ok', displayName: 'Ok', videos: [video, { ...video, uploaded: 'nope' }, null] }
+    ]])
+
+    expect(map.get('@ok')?.videos).toEqual([video])
+  })
+
+  t('toArray ignores null channel values', () => {
+    expect(() => Channels.toArray(new Map([['bad', null as any]]))).not.toThrow()
+    expect(Channels.toArray(new Map([['bad', null as any]]))).toEqual([])
+  })
+
+  t('parseStored reports malformed entries in strict mode', () => {
+    const issues: string[] = []
+
+    Channels.parseStored([
+      null,
+      ['@ok', { url: 'https://youtube.com/@ok', name: 42, videos: {} }]
+    ], issues)
+
+    expect(issues).toEqual([
+      'channels[0]: expected a [key, value] pair',
+      'channels[1].videos: expected an array',
+      'channels[1].name: expected a string'
+    ])
+  })
+
+  t('parseStored keeps channels stored before the url field existed', () => {
+    const map = Channels.parseStored([['@legacy', { name: 'n', displayName: 'N' }]])
+
+    expect(map.get('@legacy')).toEqual({
+      url: '', name: 'n', displayName: 'N', videos: []
+    })
+  })
+
+  t('parseStored round-trips a channel with an empty url in strict mode', () => {
+    const issues: string[] = []
+    const map = Channels.parseStored([['@legacy', { url: '', name: 'n' }]], issues)
+
+    expect(issues).toEqual([])
+    expect(map.get('@legacy')?.url).toBe('')
+  })
+
+  t('parseStored reports unsafe urls in strict mode', () => {
+    const issues: string[] = []
+
+    Channels.parseStored([
+      ['javascript:alert(1)', { url: 'https://youtube.com/@ok' }],
+      ['@ok', { url: 'javascript:alert(1)' }],
+      ['@bad', { url: 42 }]
+    ], issues)
+
+    expect(issues).toEqual([
+      'channels[0]: unsafe id',
+      'channels[1].url: expected a safe url',
+      'channels[2].url: expected a safe url'
+    ])
+  })
+})
+
 describe('refetch', () => {
   const video = { url: '/watch?v=1', title: 't', thumbnail: '', duration: 60, uploaded: Date.now() - 1000, uploadedDate: '1 day ago' }
   const handleChannel: Channel = { url: 'https://youtube.com/@foo', name: 'n', displayName: 'n', videos: [] }
@@ -376,6 +463,19 @@ describe('refetch', () => {
     expect(get(status).feed.fetching.now).toEqual([])
     expect(get(status).feed.fetching.max).toBe(0)
     expect(get(channels).get('UCb')!.videos.length).toBe(1)
+  })
+
+  t('skips a null channel value instead of throwing', async () => {
+    Channels.restore([])
+    Channels.addExisting('UCbad', null as any)
+    Channels.addExisting('UCok', { url: 'https://youtube.com/channel/UCok', name: 'ok', displayName: 'ok', videos: [] })
+    stubFetch()
+
+    expect(() => Channels.refetch()).not.toThrow()
+
+    await vi.waitFor(() => {
+      if (get(status).feed.fetching.now.length) throw new Error('still fetching')
+    })
   })
 })
 

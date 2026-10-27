@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { get } from 'svelte/store'
-import Bookmarks, { bookmarks, parseStoredBookmarks, type Bookmark } from '../src/share/bookmarks'
+import Bookmarks, { bookmarks, parseBookmarks, parseStoredBookmarks, type Bookmark } from '../src/share/bookmarks'
 
 const first: Bookmark = {
   url: 'https://example.com/first',
@@ -101,6 +101,25 @@ describe('parseStoredBookmarks', () => {
     const map = parseStoredBookmarks()
     expect([...map.keys()]).toEqual(['https://value.example'])
     expect(map.get('https://value.example')?.name).toBe('B')
+  })
+
+  test('reports malformed entries in strict mode', () => {
+    const issues: string[] = []
+
+    parseBookmarks([
+      null,
+      ['https://key.example', { url: 'javascript:alert(1)', name: 'x' }],
+      ['https://key.example', { url: 'https://ok.example', name: 42, tag: null }],
+      ['https://key.example', ['not', 'a', 'bookmark']]
+    ], issues)
+
+    expect(issues).toEqual([
+      'bookmarks[0]: expected a [key, value] pair',
+      'bookmarks[1]: unsafe url',
+      'bookmarks[2].tag: expected a string',
+      'bookmarks[2].name: expected a string',
+      'bookmarks[3]: expected a bookmark object'
+    ])
   })
 
   test('returns an empty map for corrupt JSON without throwing', () => {

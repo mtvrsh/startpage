@@ -174,4 +174,60 @@ describe('restore', () => {
 
     expect(get(feeds).size).toBe(0)
   })
+
+  test('skips malformed entries instead of throwing', () => {
+    expect(() => Feeds.restore([
+      null,
+      42,
+      'junk',
+      ['only-key'],
+      ['https://ok.example/bare', null],
+      ['javascript:alert(1)', { url: 'javascript:alert(1)' }],
+      ['https://name.example/feed', { url: 'https://name.example/feed', name: 42 }]
+    ] as any)).not.toThrow()
+
+    const restored = get(feeds)
+    expect(restored.size).toBe(1)
+    expect(restored.get('https://name.example/feed')).toEqual({
+      url: 'https://name.example/feed', name: ''
+    })
+  })
+
+  test('rekeys feeds by their normalized url', () => {
+    const map = Feeds.parseStored([
+      ['https://key.example/feed', { url: 'https://value.example/feed', name: 'V' }],
+      ['https://bare.example/feed', { name: 'Bare' }]
+    ])
+
+    expect([...map]).toEqual([
+      ['https://value.example/feed', { url: 'https://value.example/feed', name: 'V' }],
+      ['https://bare.example/feed', { url: 'https://bare.example/feed', name: 'Bare' }]
+    ])
+  })
+
+  test('parseStored tolerates corrupt storage', () => {
+    expect(Feeds.parseStored(undefined).size).toBe(0)
+    expect(Feeds.parseStored('junk').size).toBe(0)
+    expect(Feeds.parseStored([['https://example.com/feed', null]]).size).toBe(0)
+  })
+
+  test('parseStored reports malformed entries in strict mode', () => {
+    const issues: string[] = []
+
+    Feeds.parseStored([
+      null,
+      ['https://ok.example/feed', { url: 'javascript:alert(1)' }],
+      ['https://ok.example/good', { url: 'https://ok.example/good', name: 42 }],
+      ['https://ok.example/array', []],
+      ['https://ok.example/number', { url: 42 }]
+    ], issues)
+
+    expect(issues).toEqual([
+      'feeds[0]: expected a [key, value] pair',
+      'feeds[1]: missing or invalid http(s) url',
+      'feeds[2].name: expected a string',
+      'feeds[3]: expected a feed object',
+      'feeds[4].url: expected a string'
+    ])
+  })
 })

@@ -1,12 +1,13 @@
 <script lang="ts">
-  import { merge } from 'lodash'
   import appConfig from '../config'
   import strings from '../share/strings'
-  import { config, defaults } from '../share/config'
-  import { BACKEND_TYPES, type InstanceType } from '../lib/api/backend'
-  import Bookmarks from '../share/bookmarks'
+  import { parseConfig, config, defaults } from '../share/config'
+  import { BACKEND_TYPES, isInstanceType, type InstanceType } from '../lib/api/backend'
+  import Bookmarks, { parseBookmarks } from '../share/bookmarks'
   import { Channels } from '../share/channels'
   import { Feeds } from '../share/feeds'
+  import { isRecord } from '../util/validate'
+  import { buildConfigFile } from '../share/config-file'
   import InputNumber from './InputNumber.svelte';
   import InputSelect from './InputSelect.svelte';
   import Text from './inputs/Text.svelte';
@@ -18,9 +19,6 @@
     piped: strings.piped,
     startpage: strings.startpageBackend,
   }
-
-  const isInstanceType = (value: unknown): value is InstanceType =>
-    typeof value === 'string' && (BACKEND_TYPES as readonly string[]).includes(value)
 
   const useBackend = (instanceType: InstanceType) => {
     backendUse = { value: instanceType, label: backendLabel[instanceType] }
@@ -39,12 +37,7 @@
   let importInput: HTMLInputElement
 
   let exportConfig = () => {
-    const data = {
-      config: $config,
-      bookmarks: Bookmarks.serialize(),
-      channels: Channels.serialize(),
-      feeds: Feeds.serialize()
-    }
+    const data = buildConfigFile()
     const json = JSON.stringify(data, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -62,16 +55,42 @@
 
     file.text()
       .then(text => JSON.parse(text))
-      .then(imported => {
-        const importedConfig = merge({}, defaults, imported.config)
-        if (!isInstanceType(importedConfig.instanceType)) {
-          importedConfig.instanceType = defaults.instanceType
+      .then((imported: unknown) => {
+        const payload = isRecord(imported) ? imported : {}
+        const issues: string[] = []
+
+        // Strict import: validate and normalize every section first, collecting
+        // all problems. A single malformed entry rejects the whole payload, so
+        // no store is ever left half-applied. Sections that are absent are left
+        // untouched.
+        const nextConfig = payload.config === undefined
+          ? undefined
+          : parseConfig(payload.config, issues)
+        const nextBookmarks = payload.bookmarks === undefined
+          ? undefined
+          : parseBookmarks(payload.bookmarks, issues)
+        const nextChannels = payload.channels === undefined
+          ? undefined
+          : Channels.parseStored(payload.channels, issues)
+        const nextFeeds = payload.feeds === undefined
+          ? undefined
+          : Feeds.parseStored(payload.feeds, issues)
+
+        if (issues.length) {
+          console.error('Config import rejected', issues)
+          importError = issues.length === 1
+            ? `${strings.importFailed}: ${issues[0]}`
+            : `${strings.importFailed}: ${issues[0]} (+${issues.length - 1} more)`
+          return
         }
-        config.set(importedConfig)
-        useBackend(importedConfig.instanceType)
-        if (imported.bookmarks) Bookmarks.restore(imported.bookmarks)
-        if (imported.channels) Channels.restore(imported.channels)
-        if (imported.feeds) Feeds.restore(imported.feeds)
+
+        if (nextConfig) {
+          config.set(nextConfig)
+          useBackend(nextConfig.instanceType)
+        }
+        if (nextBookmarks) Bookmarks.restore(nextBookmarks)
+        if (nextChannels) Channels.restore(nextChannels)
+        if (nextFeeds) Feeds.restore(nextFeeds)
       })
       .catch(() => {
         importError = strings.importFailed

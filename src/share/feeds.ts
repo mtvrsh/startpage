@@ -1,5 +1,6 @@
 import { get, writable } from 'svelte/store'
 import { LocalStorage } from '../util/storage'
+import { readPairs } from '../util/validate'
 import { config } from './config'
 import { fetchFeed } from '../util/feed'
 
@@ -154,20 +155,57 @@ export class Feeds extends LocalStorage {
     return [...get(feeds)]
   }
 
-  static restore(data: [string, Feed][]) {
-    const restored = Array.isArray(data)
-      ? data.map(([url, feed]) => [url, { url: feed?.url || url, name: feed?.name || '' }] as [string, Feed])
-      : []
-
-    feeds.set(new Map(restored))
+  static restore(data: unknown) {
+    feeds.set(data instanceof Map ? new Map(data) : this.parseStored(data))
     entries.set([])
     feedStates.set(new Map())
   }
+
+  /**
+   * Validates a serialized/imported feed list. Never throws: malformed pairs
+   * are skipped, URLs must be http(s) (the proxy/fetch target), and entries are
+   * re-keyed by the normalized URL so key === url holds. Shared by hydration
+   * and restore.
+   */
+  static parseStored(raw: unknown, issues?: string[]): Map<string, Feed> {
+    const entries = readPairs(raw, 'feeds', issues, (key, value, path) => {
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        issues?.push(`${path}: expected a feed object`)
+        return undefined
+      }
+
+      const candidate = value as Record<string, unknown>
+      if (candidate.url !== undefined && typeof candidate.url !== 'string') {
+        issues?.push(`${path}.url: expected a string`)
+      }
+
+      // A missing/blank url falls back to the serialized key, which is where it
+      // came from; strictly malformed values are reported above.
+      const candidateUrl = typeof candidate.url === 'string' && candidate.url.trim()
+        ? candidate.url
+        : key
+      const url = this.#normalizeUrl(candidateUrl)
+      if (!url) {
+        issues?.push(`${path}: missing or invalid http(s) url`)
+        return undefined
+      }
+
+      if (candidate.name !== undefined && typeof candidate.name !== 'string') {
+        issues?.push(`${path}.name: expected a string`)
+      }
+
+      return [url, {
+        url,
+        name: typeof candidate.name === 'string' ? candidate.name : ''
+      }] as [string, Feed]
+    })
+
+    return new Map(entries)
+  }
 }
 
-const stored = Feeds.get()
-const initial: [string, Feed][] = Array.isArray(stored) ? stored : []
+const initial = Feeds.parseStored(Feeds.get())
 
-export const feeds = writable<Map<string, Feed>>(new Map(initial))
+export const feeds = writable<Map<string, Feed>>(initial)
 export const entries = writable<FeedEntry[]>([])
 export const feedStates = writable<Map<string, FeedState>>(new Map())
