@@ -4,6 +4,7 @@ import humanizeDuration from 'humanize-duration'
 import type { Backend } from './backend'
 import type { Channel } from '../../share/channels'
 import type { SearchChannelsResult } from '../../util/piped'
+import { isChannelId } from '../../util/youtube'
 
 function getText(obj: any): string {
   if (!obj) return ''
@@ -39,8 +40,11 @@ export class StartpageBackend implements Backend {
 
   async fetchChannel(id: string, reload = false): Promise<Channel> {
     const { backendUrl, feedFetchAll } = get(config)
+    // The uploads playlist id only exists for real `UC…` channel ids; handles
+    // and legacy keys have to go through the channel endpoint.
+    const fetchAll = feedFetchAll && isChannelId(id)
     const response = await this.request(
-      feedFetchAll
+      fetchAll
         ? `${backendUrl}/playlists/UU${id.slice(2)}`
         : `${backendUrl}/channels/${id}`,
       reload
@@ -48,10 +52,10 @@ export class StartpageBackend implements Backend {
     if (!response.ok) throw new Error(`Failed to fetch channel ${id}`)
 
     const data: any = await response.json()
-    const feedItems: any[] = feedFetchAll ? data.items : data
+    const feedItems: any[] = fetchAll ? data.items : data
     if (!feedItems?.length) throw new Error(`No videos found for ${id}`)
 
-    const author = feedFetchAll ? data.author : feedItems[0].author
+    const author = fetchAll ? data.author : feedItems[0].author
 
     const videos = feedItems.map(video => {
       const duration = this.formatDuration(video.duration, video.is_live)

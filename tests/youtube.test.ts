@@ -1,5 +1,21 @@
 import { describe, expect, test } from 'vitest'
-import { getDirectThumbnail } from '../src/util/youtube'
+import { getDirectThumbnail, isChannelId } from '../src/util/youtube'
+
+describe('isChannelId', () => {
+  test('accepts UC ids with 22 characters after the prefix', () => {
+    expect(isChannelId('UC1234567890abcdefghijkl')).toBe(true)
+    expect(isChannelId('UC_x5XG1OV2P6uZZ5FSM9Ttw')).toBe(true)
+  })
+
+  test('rejects handles, playlists, and near-miss ids', () => {
+    expect(isChannelId('@foo')).toBe(false)
+    expect(isChannelId('PL1234567890abcdefghijkl')).toBe(false)
+    expect(isChannelId('UC1234567890abcdefghijk')).toBe(false)
+    expect(isChannelId('UC1234567890abcdefghijklm')).toBe(false)
+    expect(isChannelId('legacyFoo')).toBe(false)
+    expect(isChannelId('')).toBe(false)
+  })
+})
 
 describe('getDirectThumbnail', () => {
   test('rewrites a Piped proxied thumbnail to its direct YouTube host', () => {

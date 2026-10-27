@@ -1,7 +1,7 @@
 import { get } from 'svelte/store'
 import { config } from '../../share/config'
 import { Piped } from '../../util/piped'
-import { getDirectThumbnail } from '../../util/youtube'
+import { getDirectThumbnail, isChannelId } from '../../util/youtube'
 import humanizeDuration from 'humanize-duration'
 import type { Backend } from './backend'
 import type { Channel } from '../../share/channels'
@@ -18,8 +18,8 @@ export class PipedBackend implements Backend {
   }
 
   async fetchChannel(id: string, reload = Piped.RELOAD): Promise<Channel> {
-    const endpoint = get(config).feedFetchAll
-      ? `/playlists/UU${id.toString().slice(2)}`
+    const endpoint = get(config).feedFetchAll && isChannelId(id)
+      ? `/playlists/UU${id.slice(2)}`
       : `/channels/tabs?data=${encodeURIComponent(JSON.stringify({ id: `${id}`, contentFilters: ['videos'] }))}`
 
     const response = await Piped.get(endpoint, reload)

@@ -12,6 +12,13 @@ function isTrustedHost(host: string): boolean {
   )
 }
 
+// Channel ids are `UC` plus 22 base64url characters. Only those can be
+// rewritten into the channel's uploads playlist (`UU` + the same suffix);
+// handles and legacy keys must use the regular channel endpoint.
+export function isChannelId(id: string): boolean {
+  return /^UC[\w-]{22}$/.test(id)
+}
+
 export function getDirectThumbnail(url: string): string {
   try {
     const parsed = new URL(url)
