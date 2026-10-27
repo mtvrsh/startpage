@@ -31,17 +31,32 @@ export function parseStoredBookmarks(): Map<URL, Bookmark> {
 
   const pairs: [URL, Bookmark][] = []
   for (const value of parsed) {
-    if (
-      Array.isArray(value) && value.length === 2
-      && typeof value[0] === 'string'
-      && value[1] !== null && typeof value[1] === 'object'
-      && typeof value[1].url === 'string'
-      && typeof value[1].name === 'string'
-    )
-      pairs.push([value[0], value[1]])
+    if (!Array.isArray(value) || value.length !== 2) continue
+
+    const [url, bookmark] = value
+    if (typeof url !== 'string') continue
+
+    const parsedBookmark = parseStoredBookmark(bookmark)
+    if (parsedBookmark) pairs.push([url, parsedBookmark])
   }
 
   return new Map(pairs)
+}
+
+// Validates one stored/exported bookmark value. Malformed defaults are
+// dropped, missing tag/name degrade to '' so downstream consumers
+// (grouping, localeCompare) never see undefined.
+function parseStoredBookmark(bookmark: unknown): Bookmark | undefined {
+  if (bookmark === null || typeof bookmark !== 'object') return undefined
+
+  const candidate = bookmark as Record<string, unknown>
+  if (typeof candidate.url !== 'string') return undefined
+
+  return {
+    url: candidate.url,
+    tag: typeof candidate.tag === 'string' ? candidate.tag : '',
+    name: typeof candidate.name === 'string' ? candidate.name : ''
+  }
 }
 
 export default class Bookmarks {
@@ -99,6 +114,18 @@ export default class Bookmarks {
   }
 
   static restore(data: [URL, Bookmark][]) {
-    bookmarks.set(new Map(data.filter(([url]) => hasSafeScheme(url))))
+    const pairs: [URL, Bookmark][] = []
+
+    for (const value of Array.isArray(data) ? data : []) {
+      if (!Array.isArray(value) || value.length !== 2) continue
+
+      const [url, bookmarkValue] = value
+      if (typeof url !== 'string') continue
+
+      const bookmark = parseStoredBookmark(bookmarkValue)
+      if (bookmark && hasSafeScheme(url)) pairs.push([url, bookmark])
+    }
+
+    bookmarks.set(new Map(pairs))
   }
 }
