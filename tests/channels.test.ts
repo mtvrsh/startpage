@@ -1,7 +1,8 @@
-import { test, expect, describe } from 'vitest'
+import { test, expect, describe, vi, afterEach } from 'vitest'
 import { get } from 'svelte/store'
 import { Channels, channels } from '../src/share/channels'
 import type { Channel } from '../src/share/channels'
+import { status } from '../src/share/status'
 
 const t = test.extend({
   id: 'myId',
@@ -246,6 +247,20 @@ describe('restore re-keys channels by parsed url', () => {
     expect(restoreUrl('https://youtube.com/@foo/')).toBe('@foo')
   })
 
+  t('parses schemeless youtube urls', () => {
+    expect(restoreUrl('youtube.com/@foo')).toBe('@foo')
+    expect(restoreUrl('www.youtube.com/channel/UC123')).toBe('UC123')
+    expect(restoreUrl('youtube.com/playlist?list=PL123')).toBe('PL123')
+  })
+
+  t('recognizes bare handles as channels', () => {
+    expect(restoreUrl('@foo')).toBe('@foo')
+  })
+
+  t('ignores list= on other hosts', () => {
+    expect(restoreUrl('https://evil.example/?list=PL999')).toBe('https://evil.example/?list=PL999')
+  })
+
   t('rejects video urls and keeps the original url', () => {
     const url = 'https://youtube.com/watch?v=abc123'
     expect(restoreUrl(url)).toBe(url)
@@ -253,5 +268,144 @@ describe('restore re-keys channels by parsed url', () => {
 
   t('keeps the original url for unparseable urls', () => {
     expect(restoreUrl('https://example.com/foo')).toBe('https://example.com/foo')
+  })
+})
+
+describe('restore validation', () => {
+  t('skips entries of unexpected shape without throwing', () => {
+    const url = 'https://ok.example/one'
+    expect(() => Channels.restore(
+      [1, [url], [url, null], [42, { url }], [url, { url: 1 }]] as any
+    )).not.toThrow()
+    expect(get(channels).size).toBe(0)
+  })
+
+  t('degrades missing name/displayName to empty strings', () => {
+    Channels.restore([['key', { url: 'https://ok.example/bare' }]] as any)
+
+    expect(get(channels).get('key')).toEqual({
+      url: 'https://ok.example/bare', name: '', displayName: '', videos: []
+    })
+  })
+
+  t('drops entries with unsafe urls', () => {
+    Channels.restore([['javascript:alert(1)', { url: 'javascript:alert(1)', name: 'x', displayName: 'x' }]] as any)
+
+    expect(get(channels).size).toBe(0)
+  })
+})
+
+describe('refetch', () => {
+  const video = { url: '/watch?v=1', title: 't', thumbnail: '', duration: 60, uploaded: Date.now() - 1000, uploadedDate: '1 day ago' }
+  const handleChannel: Channel = { url: 'https://youtube.com/@foo', name: 'n', displayName: 'n', videos: [] }
+  let fetchMock: ReturnType<typeof vi.fn>
+
+  afterEach(() => vi.unstubAllGlobals())
+
+  function stubFetch() {
+    fetchMock = vi.fn(async (input: any) => {
+      const url = String(input)
+      const body = url.includes('/playlists/')
+        ? { name: 'Playlist name', relatedStreams: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }] }
+        : { content: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }] }
+      return { ok: true, json: async () => body }
+    })
+    vi.stubGlobal('fetch', fetchMock)
+  }
+
+  async function refetchChannel(key: string, stored: Channel) {
+    Channels.restore([])
+    Channels.addExisting(key, stored)
+    stubFetch()
+
+    Channels.refetch()
+    await vi.waitFor(() => {
+      if (get(status).feed.fetching.now.length) throw new Error('still fetching')
+    })
+    return fetchMock.mock.calls.map(call => String(call[0]))
+  }
+
+  t('refetches channels stored behind @handle keys as channels', async () => {
+    const calls = await refetchChannel('@foo', handleChannel)
+
+    expect(calls.some(u => u.includes('/channels/tabs'))).toBe(true)
+    expect(calls.some(u => u.includes('/playlists/'))).toBe(false)
+  })
+
+  t('refetches channels stored behind legacy keys as channels', async () => {
+    const calls = await refetchChannel('legacyFoo', {
+      url: 'https://youtube.com/channel/UCreal', name: 'n', displayName: 'n', videos: []
+    })
+
+    expect(calls.some(u => u.includes('/channels/tabs'))).toBe(true)
+  })
+
+  t('refetches playlists as playlists', async () => {
+    const calls = await refetchChannel('PL1', {
+      url: 'https://youtube.com/playlist?list=PL1', name: 'p', displayName: 'p', videos: []
+    })
+
+    expect(calls.some(u => u.includes('/playlists/PL1'))).toBe(true)
+  })
+
+  t('classifies a channel key when the stored url is missing', async () => {
+    const calls = await refetchChannel('@foo', { ...handleChannel, url: '' })
+
+    expect(calls.some(u => u.includes('/channels/tabs'))).toBe(true)
+    expect(calls.some(u => u.includes('/playlists/'))).toBe(false)
+  })
+
+  t('keeps per-channel progress when one channel fails', async () => {
+    Channels.restore([])
+    Channels.addExisting('UCa', { url: 'https://youtube.com/channel/UCa', name: 'a', displayName: 'a', videos: [] })
+    Channels.addExisting('UCb', { url: 'https://youtube.com/channel/UCb', name: 'b', displayName: 'b', videos: [] })
+    stubFetch()
+    const goodFetch = globalThis.fetch as any
+    globalThis.fetch = vi.fn(async (input: any) => {
+      if (String(input).includes('UCa')) throw new Error('boom')
+      return goodFetch(input)
+    }) as any
+
+    Channels.refetch()
+    await vi.waitFor(() => {
+      // Once UCb (the healthy one) completes, UCa's failed entry is already gone
+      const now = get(status).feed.fetching.now.filter((id: string) => id !== 'UCa')
+      if (now.includes('UCb')) throw new Error('still fetching')
+    })
+
+    expect(get(status).feed.fetching.now).toEqual([])
+    expect(get(status).feed.fetching.max).toBe(0)
+    expect(get(channels).get('UCb')!.videos.length).toBe(1)
+  })
+})
+
+describe('add validation', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  t('rejects empty input without fetching', async () => {
+    const fetchSpy = vi.fn()
+    vi.stubGlobal('fetch', fetchSpy)
+
+    await expect(Channels.add('')).rejects.toThrow()
+    await expect(Channels.add('   ')).rejects.toThrow()
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  t('fetches bare handles as channels', async () => {
+    const fetchSpy = vi.fn(async (_input: unknown) => ({ ok: true, json: async () => ({ content: [] }) }))
+    vi.stubGlobal('fetch', fetchSpy)
+
+    await expect(Channels.add('@foo')).rejects.toThrow()
+
+    expect(fetchSpy.mock.calls.map(call => String(call[0]))[0]).toContain('/channels/tabs')
+  })
+
+  t('fetches schemeless urls', async () => {
+    const fetchSpy = vi.fn(async (_input: unknown) => ({ ok: true, json: async () => ({ content: [] }) }))
+    vi.stubGlobal('fetch', fetchSpy)
+
+    await expect(Channels.add('youtube.com/@foo')).rejects.toThrow()
+
+    expect(fetchSpy.mock.calls.map(call => String(call[0]))[0]).toContain('/channels/tabs')
   })
 })

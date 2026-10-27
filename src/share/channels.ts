@@ -158,6 +158,13 @@ export class Channels extends LocalStorage {
         id: fallbackId
       }
 
+    // Missing stored url: parse the map key itself, falling back to the legacy
+    // heuristics for keys #parse cannot understand. Only the kind is trusted
+    // from the parse — the id stays the map key.
+    const parsed = this.#tryParse(fallbackId)
+    if (parsed)
+      return { kind: parsed.kind, id: fallbackId }
+
     return { kind: this.#isPlaylist(fallbackId) ? 'playlist' : 'channel', id: fallbackId }
   }
 
@@ -188,6 +195,9 @@ export class Channels extends LocalStorage {
   }
 
   static #parseRef(raw: string): ChannelRef | undefined {
+    if (!raw)
+      return undefined
+
     // Bare ids: 'UC…' channel ids or playlist ids (also legacy 'x=list=…' keys)
     if (!raw.includes('/')) {
       if (raw.includes('=')) {
@@ -195,10 +205,17 @@ export class Channels extends LocalStorage {
         return id ? { kind: 'playlist', id } : undefined
       }
 
-      return raw.startsWith('UC')
+      // 'UC…' channel ids and '@handle' handles are channels; anything else
+      // is assumed to be an opaque playlist id.
+      return raw.startsWith('UC') || raw.startsWith('@')
         ? { kind: 'channel', id: raw }
         : { kind: 'playlist', id: raw }
     }
+
+    // Schemeless youtube urls ('youtube.com/@foo') were accepted by the earlier
+    // split-based parser, so normalize them instead of rejecting.
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw))
+      raw = `https://${raw.replace(/^\/\//, '')}`
 
     let parsedUrl: URL
     try {
@@ -207,13 +224,15 @@ export class Channels extends LocalStorage {
       return undefined
     }
 
+    // Validate the host before honoring any query parameters: a `list=` on a
+    // non-YouTube host must not smuggle a playlist id in.
+    const hostname = parsedUrl.hostname.replace(/^(?:www|m)\./i, '')
+    if (!/(^|\.)youtube\.com$/.test(hostname))
+      return undefined
+
     const list = parsedUrl.searchParams.get('list')
     if (list)
       return { kind: 'playlist', id: list }
-
-    const hostname = parsedUrl.hostname.replace(/^www\./i, '')
-    if (!/(^|\.)youtube\.com$/.test(hostname))
-      return undefined
 
     // A single video is never a channel or playlist
     if (/\/(watch|shorts\/[^/]+)\/?$/.test(parsedUrl.pathname))
@@ -248,10 +267,32 @@ export class Channels extends LocalStorage {
     }])
   }
 
-  static restore(data: [string, { url: string; name: string; displayName: string }][]) {
-    const entries = data
-      .filter(([url, channel]) => hasSafeScheme(url) && hasSafeScheme(channel.url))
-      .map(([url, channel]) => [this.#tryParse(url)?.id || url, { ...channel, videos: [] }] as [string, Channel])
+  static restore(data: [string, { url: string; name: string; displayName: string }][] | unknown) {
+    const entries: [string, Channel][] = []
+
+    for (const value of Array.isArray(data) ? data : []) {
+      // Imported data is untrusted: skip malformed pairs instead of throwing
+      // mid-import (which would leave earlier stores already replaced).
+      if (!Array.isArray(value) || value.length !== 2) continue
+
+      const [key, channelValue] = value
+      if (typeof key !== 'string' || typeof channelValue !== 'object' || channelValue === null) continue
+
+      const candidate = channelValue as Record<string, unknown>
+      if (typeof candidate.url !== 'string') continue
+
+      if (!hasSafeScheme(key) || !hasSafeScheme(candidate.url)) continue
+
+      const channel: Channel = {
+        url: candidate.url,
+        name: typeof candidate.name === 'string' ? candidate.name : '',
+        displayName: typeof candidate.displayName === 'string' ? candidate.displayName : '',
+        videos: []
+      }
+
+      entries.push([this.#tryParse(key)?.id || key, channel])
+    }
+
     channels.set(new Map(entries))
   }
 }
