@@ -19,9 +19,19 @@
     startpage: strings.startpageBackend,
   }
 
+  const isInstanceType = (value: unknown): value is InstanceType =>
+    typeof value === 'string' && (BACKEND_TYPES as readonly string[]).includes(value)
+
+  const useBackend = (instanceType: InstanceType) => {
+    backendUse = { value: instanceType, label: backendLabel[instanceType] }
+  }
+
+  const initialBackend: InstanceType = isInstanceType($config.instanceType)
+    ? $config.instanceType
+    : defaults.instanceType
   let backendUse = $state({
-    value: $config.instanceType,
-    label: backendLabel[$config.instanceType as InstanceType],
+    value: initialBackend,
+    label: backendLabel[initialBackend],
   })
   $effect(() => {
     $config.instanceType = backendUse.value
@@ -53,7 +63,12 @@
     file.text()
       .then(text => JSON.parse(text))
       .then(imported => {
-        config.set(merge({}, defaults, imported.config))
+        const importedConfig = merge({}, defaults, imported.config)
+        if (!isInstanceType(importedConfig.instanceType)) {
+          importedConfig.instanceType = defaults.instanceType
+        }
+        config.set(importedConfig)
+        useBackend(importedConfig.instanceType)
         if (imported.bookmarks) Bookmarks.restore(imported.bookmarks)
         if (imported.channels) Channels.restore(imported.channels)
         if (imported.feeds) Feeds.restore(imported.feeds)
