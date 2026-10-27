@@ -125,14 +125,31 @@ describe('exported fetch handler', () => {
     expect([...res.headers.keys()].filter(k => k === 'access-control-allow-origin')).toHaveLength(1)
   })
 
-  test('200 responses from Innertube-backed routes carry CORS headers', async () => {
-    // A channel with no videos short-circuits to a bare `[]` json() response
-    // that never saw the cors headers before the central application.
+  test('500 responses from Innertube-backed routes carry CORS headers', async () => {
+    // Innertube create() is mocked to fail, so these Streamed 500 json()
+    // responses never saw the cors headers before the central application.
     for (const path of ['/channels/UC1234567890abcdefghijklm', '/raw/channels/UC1234567890abcdefghijklm']) {
       const res = await worker(request(path), env(okLimit))
-      expect(res.status).toBe(500) // Innertube create() is mocked to fail
+      expect(res.status).toBe(500)
       expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
     }
+  })
+
+  test('200 responses from Innertube-backed routes carry CORS headers', async () => {
+    // json()-built paths previously skipped withCors entirely, so this guards
+    // successful (not just failing) responses.
+    vi.resetModules()
+    vi.doMock('../startpage-api/node_modules/youtubei.js/dist/src/platform/cf-worker.js', () => ({
+      Innertube: {
+        create: async () => ({ getSearchSuggestions: async () => ['alpha'] }),
+      },
+    }))
+    const { handleRequest: working } = await import('../startpage-api/src/router')
+
+    const res = await working(request('/suggestions?q=x'), env(okLimit))
+    expect(res.status).toBe(200)
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
+    expect(res.headers.get('vary')).toBe('Origin')
   })
 
   describe('input validation', () => {
