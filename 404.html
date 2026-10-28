@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Redirecting ..</title>
+  </head>
+  <body>
+    <script>
+      /*
+       * Github Pages single page application redirect handler
+       */
+
+      const root = '/startpage'
+
+      localStorage.redirect = window.location.pathname.replace(root, '')
+
+      window.location.href = root
+    </script>
+  </body>
+</html>
