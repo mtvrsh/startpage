@@ -95,7 +95,15 @@
       selectedId={app.feedFilter}
       allId={strings.allKebabCase}
       onselect={id => app.feedFilter = id}
-      onremove={url => Feeds.remove(url)}
+      onremove={url => {
+        Feeds.remove(url)
+
+        // The removed feed can be the active filter; its id would dangle
+        // (the toggler would fall back to the All label while the body stays
+        // filtered by the removed feed).
+        if (app.feedFilter === url)
+          app.feedFilter = strings.allKebabCase
+      }}
       onrename={(url, value) => Feeds.rename(url, value)}
       renameLabel={strings.renameFeed}
       renameHint={strings.renameFeedHint}

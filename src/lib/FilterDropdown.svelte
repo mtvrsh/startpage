@@ -81,7 +81,7 @@
   }
 
   let commitRename = (id: string, value: string) => {
-    if (onrename) onrename(id, value)
+    if (onrename && renamingId === id) onrename(id, value)
     renamingId = ''
     renameValue = ''
   }
@@ -149,7 +149,7 @@
               <span
                 class="filter__state"
                 class:filter__state--error={item.error}
-                title={item.error || allLabel}
+                title={item.error}
               ></span>
             {/if}
 
