@@ -66,14 +66,14 @@
   .home__navigation {
     display: grid;
     grid-auto-flow: column;
-    gap: var(--gap-0);
-    padding: var(--gap-0);
     color: var(--color-surface-fg);
     background: var(--color-surface);
   }
 
   .home__navigation-button {
-    padding: var(--gap-2);
+    // Match the compact column header actions (e.g. the bookmark "+").
+    height: 1.5rem;
+    padding: 0 var(--gap-1);
     color: var(--color-accent);
     background: inherit;
     border: none;
@@ -81,14 +81,17 @@
 
   .home__navigation-button:hover,
   .home__navigation-button:focus {
-    background: var(--color-surface-light);
+    color: var(--color-accent-fg);
+    background: var(--color-accent);
     outline: none;
     cursor: pointer;
   }
 
+  // Selected tab: same "open/active" tint as the column "+" while its form
+  // is open, so hover and selection stay distinguishable.
   .home__navigation-button.focus {
     color: var(--color-accent-fg);
-    background: var(--color-accent);
+    background: var(--color-accent-light);
   }
 
   @include breakpoint-xl {

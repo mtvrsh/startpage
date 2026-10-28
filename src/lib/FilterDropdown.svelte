@@ -192,9 +192,11 @@
       max-width: 100%;
       font-size: $font-size-ui;
 
+      // Open state: same "active" tint as the column "+" while its form is
+      // open, so it stays distinct from hover/focus.
       &.focus {
         color: var(--color-accent-fg);
-        background: var(--color-accent);
+        background: var(--color-accent-light);
       }
     }
 
@@ -227,18 +229,27 @@
     }
 
     &__item {
+      position: relative;
       display: flex;
       align-items: stretch;
       background: var(--color-surface);
+
+      // Selected row: mark it with a foreground-colored bar. Drawing it on
+      // the row keeps it visible while the rename editor covers the label
+      // button.
+      &.active::before {
+        position: absolute;
+        inset: 0 auto 0 0;
+        z-index: 1;
+        width: .2rem;
+        content: '';
+        background: var(--color-accent);
+      }
 
       // Match the select button's hover/focus background while the delete
       // action is inactive; the global hover/focus rules still make it red.
       &:hover > .column__remove:not(:hover):not(:focus),
       &:focus-within > .column__remove:not(:hover):not(:focus) {
-        background: var(--color-surface-light);
-      }
-
-      &.active .filter__select {
         background: var(--color-surface-light);
       }
     }
