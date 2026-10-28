@@ -98,7 +98,7 @@
 
     .home__content {
       display: grid;
-      grid-template-columns: 36rem minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .home__content-item {
