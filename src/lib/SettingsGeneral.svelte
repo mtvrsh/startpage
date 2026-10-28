@@ -319,7 +319,7 @@
           transform: translateY(-50%);
           padding-right: $gap-2;
           font-size: $font-size-column-title;
-          color: var(--color-fg-inactive);
+          color: var(--color-accent);
           background: var(--color-bg);
           user-select: none;
         }
