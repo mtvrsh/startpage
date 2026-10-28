@@ -1,6 +1,6 @@
 import { test, expect, describe, vi, afterEach } from 'vitest'
 import { get } from 'svelte/store'
-import { Channels, channels } from '../src/share/channels'
+import { Channels, channels, channelStates } from '../src/share/channels'
 import type { Channel } from '../src/share/channels'
 import { status } from '../src/share/status'
 
@@ -57,6 +57,13 @@ describe('remove', () => {
 
     Channels.remove(id)
     expect(get(channels).has(id)).toBe(false)
+  })
+
+  t('clears the recorded error state', ({id}) => {
+    channelStates.update(states => new Map(states).set(id, { error: 'boom' }))
+
+    Channels.remove(id)
+    expect(get(channelStates).has(id)).toBe(false)
   })
 })
 
@@ -463,6 +470,32 @@ describe('refetch', () => {
     expect(get(status).feed.fetching.now).toEqual([])
     expect(get(status).feed.fetching.max).toBe(0)
     expect(get(channels).get('UCb')!.videos.length).toBe(1)
+    expect(get(channelStates).get('UCb')!.error).toBe('')
+    expect(get(channelStates).get('UCa')!.error).toBe('boom')
+  })
+
+  t('a later success clears the recorded error', async () => {
+    Channels.restore([])
+    Channels.addExisting('UCa', { url: 'https://youtube.com/channel/UCa', name: 'a', displayName: 'a', videos: [] })
+    stubFetch()
+
+    // First attempt fails, the forced reload after it must succeed.
+    let fail = true
+    globalThis.fetch = vi.fn(async (input: any) => {
+      if (fail && String(input).includes('UCa')) {
+        fail = false
+        throw new Error('boom')
+      }
+      return (fetchMock as any)(input)
+    }) as any
+
+    await Channels.refetch()
+    expect(get(channelStates).get('UCa')!.error).toBe('boom')
+
+    await Channels.refetch({ reload: true })
+    // Loading is not stored here (it comes from status.feed.fetching.now);
+    // the state only holds the error.
+    expect(get(channelStates).get('UCa')).toEqual({ error: '' })
   })
 
   t('skips a null channel value instead of throwing', async () => {

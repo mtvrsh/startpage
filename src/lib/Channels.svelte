@@ -1,6 +1,6 @@
 <script lang="ts">
   import strings from '../share/strings'
-  import { Channels, channels } from '../share/channels'
+  import { Channels, channels, channelStates } from '../share/channels'
   import { config } from '../share/config'
   import { app } from './state/app.svelte'
   import ChannelsFilter from './ChannelsFilter.svelte'
@@ -17,6 +17,12 @@
 
   let selected = $derived(
     $channels.get(app.filter)
+  )
+
+  let selectedError = $derived(
+    app.filter === strings.allKebabCase
+      ? undefined
+      : $channelStates.get(app.filter)?.error
   )
 
   let feed = $derived(
@@ -123,6 +129,8 @@
         </li>
       {/each}
     </ul>
+  {:else if selectedError}
+    <Empty message={`${strings.feedLoadFailed}: ${selectedError}`} error />
   {:else}
     <Empty message={strings.noVideosFound} />
   {/if}

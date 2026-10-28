@@ -30,7 +30,7 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 ### State Management
 - **`src/share/config.ts`** - `config` store (writable), `Config` class extends `LocalStorage`
 - **`src/share/status.ts`** - `status` store (writable), `Status` class extends `LocalStorage`
-- **`src/share/channels.ts`** - `channels` store (`Map<string, Channel>`), `Channels` class extends `LocalStorage`
+- **`src/share/channels.ts`** - `channels` store (`Map<string, Channel>`) + memory-only `channelStates` (`{ error }` per channel id from the latest fetch; loading comes from `status.feed.fetching.now`), `Channels` class extends `LocalStorage`
 - **`src/share/bookmarks.ts`** - `bookmarks` store (`Map<string, Bookmark>`), `Bookmarks` class (manual localStorage sync, NOT `LocalStorage`)
 - **`src/share/feeds.ts`** - `feeds` store (`Map<string, Feed>`, Atom/RSS subscriptions persisted as `[url, Feed][]`) + in-memory `entries` and `feedStates` caches, `Feeds` class extends `LocalStorage`
 - **`src/lib/state/app.svelte.ts`** - `$state` app object (route, filter)
@@ -60,8 +60,8 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 - `SearchPalette.svelte` - Floating channel search/add palette, opened by the configurable `s` keybind or the dock; searches via the active backend, adds channel/playlist URLs, closes after adding
 - `Column.svelte` - Shared compact column shell (header, actions, add toggle, form slot, scrolling body)
 - `Channels.svelte` - Video feed column; calls `Channels.refetch()` on mount, inline channel URL add form
-- `FilterDropdown.svelte` - Shared header dropdown used by both feed columns (toggle button, "All" row, rows with inline rename and remove, optional loading/error state dot)
-- `ChannelsFilter.svelte` - Thin wrapper passing channels to `FilterDropdown`
+- `FilterDropdown.svelte` - Shared header dropdown used by both feed columns (toggle button, "All" row, rows with inline rename and remove, optional loading/error state square; failing items also put a red square on the collapsed toggler)
+- `ChannelsFilter.svelte` - Thin wrapper passing channels (with fetch errors from `channelStates` and loading from `status.feed.fetching.now`) to `FilterDropdown`
 - `ChannelsSync.svelte` - Header sync button
 - `Bookmarks.svelte` - Bookmarks column grouped by tag, inline add form, inline edit form (name/tag/URL via right-click or long-press), per-entry remove
 - `Feeds.svelte` - Atom/RSS reader column; merges entries from all subscriptions, filterable by feed via `FilterDropdown` in the header (inline rename right-click/long-press, remove per feed). Parsing lives in `src/util/feed.ts` (Atom, RSS 2.0, RSS 1.0/RDF); entry summaries are text-only, never `{@html}`, and hidden unless `feedShowSummary` is enabled; per-feed loading/error states show as a dot in the dropdown, failing feeds also put a red dot on the collapsed toggler (tooltip lists their names), and selecting a failing feed shows its error in the entries area.

@@ -63,8 +63,27 @@ export class Channels extends LocalStorage {
           this.update(ref.id, {videos: channel.videos})
         else
           channels.update(channelMap => channelMap.set(ref.id, channel))
+
+        // A success clears the previous failure; a channel removed while its
+        // request was in flight gets no new state.
+        if (get(channels).has(ref.id))
+          this.#setState(ref.id, '')
       }
-    ).finally(() => this.#clearFetching(ref.id))
+    ).catch(error => {
+      if (get(channels).has(ref.id))
+        this.#setState(
+          ref.id,
+          error instanceof Error ? error.message : String(error)
+        )
+
+      // Rethrow so add()'s form rejection and refetch()'s swallow keep their
+      // current behavior; only the recording is added.
+      throw error
+    }).finally(() => this.#clearFetching(ref.id))
+  }
+
+  static #setState(id: string, error: string) {
+    channelStates.update(states => new Map(states).set(id, { error }))
   }
 
   static #clearFetching(id: string) {
@@ -92,6 +111,11 @@ export class Channels extends LocalStorage {
     channels.update(channelMap => {
       channelMap.delete(id)
       return channelMap
+    })
+    channelStates.update(states => {
+      const next = new Map(states)
+      next.delete(id)
+      return next
     })
   }
 
@@ -298,6 +322,7 @@ export class Channels extends LocalStorage {
 
   static restore(data: unknown) {
     channels.set(data instanceof Map ? new Map(data) : this.parseStored(data))
+    channelStates.set(new Map())
   }
 
   /**
@@ -407,3 +432,7 @@ const TAB_SEGMENTS = new Set([
 
 const stored = Channels.get()
 export const channels = writable<Map<string, Channel>>(Channels.parseStored(stored))
+// Memory-only, like feeds' parsed entries: the latest fetch attempt's error
+// per channel id. Loading lives in status.feed.fetching.now, so this map only
+// tracks failures.
+export const channelStates = writable<Map<string, { error: string }>>(new Map())

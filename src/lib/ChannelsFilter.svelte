@@ -1,6 +1,7 @@
 <script lang="ts">
   import strings from '../share/strings'
-  import { Channels, channels } from '../share/channels'
+  import { Channels, channels, channelStates } from '../share/channels'
+  import { status } from '../share/status'
   import { app } from './state/app.svelte'
   import FilterDropdown from './FilterDropdown.svelte'
 
@@ -10,6 +11,9 @@
       .map(([id, { name, displayName }]) => ({
         id,
         label: displayName || name,
+        // Refetch progress already tracks per-channel loading globally.
+        loading: $status.feed.fetching.now.includes(id),
+        error: $channelStates.get(id)?.error,
         placeholder: name
       }))
   )

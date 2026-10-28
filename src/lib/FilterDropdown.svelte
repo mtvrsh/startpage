@@ -256,17 +256,24 @@
       }
     }
 
-    // Small state square: dim for loading, red for an error.
+    // Small state square: dim for loading, red for an error. The span copies
+    // .column__remove's horizontal padding so its slot matches the button's
+    // footprint; the square itself is drawn by ::before.
     &__state {
       flex: none;
-      align-self: center;
-      width: .45rem;
-      margin-left: $gap-0;
-      margin-right: $gap-1;
-      aspect-ratio: 1;
-      background: var(--color-fg-inactive);
+      display: flex;
+      align-self: stretch;
+      align-items: center;
+      padding: 0 $gap-1;
 
-      &--error {
+      &::before {
+        width: .45rem;
+        aspect-ratio: 1;
+        content: '';
+        background: var(--color-fg-inactive);
+      }
+
+      &--error::before {
         background: var(--color-error);
       }
     }
