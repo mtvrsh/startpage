@@ -74,7 +74,7 @@
       width: 2rem;
       height: 2rem;
       padding: 0;
-      font-size: .85rem;
+      font-size: $font-size-item-title;
       color: var(--color-accent);
       background: var(--color-surface);
       border: none;

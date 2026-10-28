@@ -266,9 +266,9 @@
     &__tag {
       padding: 0 $gap-1;
       overflow: hidden;
-      font-size: .75rem;
+      font-size: $font-size-body;
       font-weight: bold;
-      color: var(--color-accent);
+      color: var(--color-fg-inactive);
       white-space: nowrap;
       text-overflow: ellipsis;
       user-select: none;
@@ -299,7 +299,8 @@
       min-width: 0;
       padding: $gap-0 $gap-1;
       overflow: hidden;
-      font-size: .85rem;
+      font-size: $font-size-item-title;
+      font-weight: bold;
       white-space: nowrap;
       text-overflow: ellipsis;
       user-select: none;

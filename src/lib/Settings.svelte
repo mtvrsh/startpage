@@ -56,7 +56,7 @@
 
     &__title {
       overflow: hidden;
-      font-size: .8rem;
+      font-size: $font-size-column-title;
       color: var(--color-accent);
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -67,7 +67,7 @@
       width: 1.5rem;
       height: 1.5rem;
       padding: 0;
-      font-size: 1rem;
+      font-size: $font-size-icon;
       line-height: 1;
       color: var(--color-accent);
       background: var(--color-surface);

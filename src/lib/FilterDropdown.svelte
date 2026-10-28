@@ -240,7 +240,7 @@
       padding: $gap-1;
       overflow: hidden;
       font: inherit;
-      font-size: .8rem;
+      font-size: $font-size-column-title;
       color: var(--color-surface-fg);
       text-align: left;
       white-space: nowrap;
@@ -283,7 +283,7 @@
       min-width: 0;
       padding: $gap-1;
       font: inherit;
-      font-size: .8rem;
+      font-size: $font-size-column-title;
       color: var(--color-surface-fg);
       background: var(--color-bg);
       border: none;

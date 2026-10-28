@@ -326,7 +326,7 @@
 
     &__error {
       padding: var(--gap-1);
-      font-size: .75rem;
+      font-size: $font-size-body;
       color: var(--color-error);
       border-bottom: $border var(--color-surface);
     }
@@ -364,7 +364,7 @@
     &__name {
       min-width: 0;
       overflow: hidden;
-      font-size: .85rem;
+      font-size: $font-size-item-title;
       white-space: nowrap;
       text-overflow: ellipsis;
     }

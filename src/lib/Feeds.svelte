@@ -190,7 +190,7 @@
       border-bottom: $border var(--color-surface);
 
       &-title {
-        font-size: .85rem;
+        font-size: $font-size-item-title;
         font-weight: bold;
         @include line-clamp(2);
         overflow: hidden;
@@ -203,7 +203,7 @@
 
       &-summary {
         margin-top: $gap-0;
-        font-size: .75rem;
+        font-size: $font-size-body;
         color: var(--color-fg-inactive);
         @include line-clamp(3);
         overflow: hidden;
@@ -214,7 +214,7 @@
         justify-content: space-between;
         gap: $gap-1;
         margin-top: $gap-0;
-        font-size: .7rem;
+        font-size: $font-size-meta;
         color: var(--color-fg-inactive);
       }
 

@@ -317,7 +317,7 @@
           top: 50%;
           transform: translateY(-50%);
           padding-right: $gap-2;
-          font-size: .8rem;
+          font-size: $font-size-column-title;
           color: var(--color-accent);
           background: var(--color-bg);
           user-select: none;
@@ -330,7 +330,7 @@
     }
 
     &__version {
-      font-size: .8rem;
+      font-size: $font-size-column-title;
       color: var(--color-fg-inactive);
     }
   }

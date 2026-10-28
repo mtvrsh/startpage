@@ -6,6 +6,16 @@ $gap-4: 1.25rem;
 
 $font-bold: bold;
 
+// Typography scale: metadata/body < column title < item title < icon < large.
+// Every font size must come from this scale; an inherited body size would vary
+// by browser because the default monospace size is not standardized.
+$font-size-meta:         .75rem;  // feed/video metadata, tooltip
+$font-size-body:         .75rem;  // body base, small text, errors, tags
+$font-size-column-title: .8rem;   // column/settings titles, inputs, selects
+$font-size-item-title:   .85rem;  // item titles (columns, search palette, dock)
+$font-size-icon:         1rem;    // remove/+/close glyphs
+$font-size-large:        2rem;    // thumbnail placeholder
+
 $border-size: .1rem;
 $border-type: solid;
 $border: $border-size $border-type;

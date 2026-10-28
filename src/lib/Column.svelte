@@ -99,9 +99,8 @@
     &__title {
       min-width: 0;
       overflow: hidden;
-      font-size: .8rem;
-      font-weight: bold;
-      color: var(--color-accent);
+      font-size: $font-size-item-title;
+      color: var(--color-fg-inactive);
       white-space: nowrap;
       text-overflow: ellipsis;
       user-select: none;
@@ -118,7 +117,7 @@
       width: 1.5rem;
       padding: 0;
       justify-content: center;
-      font-size: 1rem;
+      font-size: $font-size-icon;
 
       &.open {
         color: var(--color-accent-fg);

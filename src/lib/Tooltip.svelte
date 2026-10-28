@@ -38,7 +38,7 @@
       display: none;
       padding: $gap-0;
       text-wrap: nowrap;
-      font-size: .7em;
+      font-size: $font-size-meta;
       font-style: normal;
 
       &::before {

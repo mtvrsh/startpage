@@ -164,7 +164,7 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 2rem;
+          font-size: $font-size-large;
         }
 
         &.themed {
@@ -193,13 +193,20 @@
 
       &-name {
         grid-area: n;
-        font-size: .75rem;
+        font-size: $font-size-item-title;
 
         @include line-clamp(3);
 
         &-url:visited {
           color: var(--color-visited);
         }
+      }
+
+      &-user,
+      &-date,
+      &-duration {
+        font-size: $font-size-meta;
+        color: var(--color-fg-inactive);
       }
 
       &-user {
