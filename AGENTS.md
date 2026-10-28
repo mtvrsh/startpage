@@ -60,10 +60,11 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 - `SearchPalette.svelte` - Floating channel search/add palette, opened by the configurable `s` keybind or the dock; searches via the active backend, adds channel/playlist URLs, closes after adding
 - `Column.svelte` - Shared compact column shell (header, actions, add toggle, form slot, scrolling body)
 - `Channels.svelte` - Video feed column; calls `Channels.refetch()` on mount, inline channel URL add form
-- `ChannelsFilter.svelte` - Header dropdown to filter the feed by channel; rows support inline rename (right-click or long-press, Enter/blur saves, Escape cancels) and remove (`×`)
+- `FilterDropdown.svelte` - Shared header dropdown used by both feed columns (toggle button, "All" row, rows with inline rename and remove, optional loading/error state dot)
+- `ChannelsFilter.svelte` - Thin wrapper passing channels to `FilterDropdown`
 - `ChannelsSync.svelte` - Header sync button
 - `Bookmarks.svelte` - Bookmarks column grouped by tag, inline add form, inline edit form (name/tag/URL via right-click or long-press), per-entry remove
-- `Feeds.svelte` - Atom/RSS reader column; merges entries from all subscriptions, inline add/remove and rename (click, right-click, or long-press). Parsing lives in `src/util/feed.ts` (Atom, RSS 2.0, RSS 1.0/RDF); entry summaries are text-only, never `{@html}`, and hidden unless `feedShowSummary` is enabled
+- `Feeds.svelte` - Atom/RSS reader column; merges entries from all subscriptions, filterable by feed via `FilterDropdown` in the header (inline rename right-click/long-press, remove per feed). Parsing lives in `src/util/feed.ts` (Atom, RSS 2.0, RSS 1.0/RDF); entry summaries are text-only, never `{@html}`, and hidden unless `feedShowSummary` is enabled; per-feed loading/error states show as a dot in the dropdown, failing feeds also put a red dot on the collapsed toggler (tooltip lists their names), and selecting a failing feed shows its error in the entries area.
 - `Dock.svelte` - Fixed search/settings buttons (also handles the `,` settings keybind)
 - `Closeable.svelte` - Wrapper for dropdowns/menus, closes on configurable key (default Escape) or click-outside, has `onClose` callback
 

@@ -58,7 +58,7 @@ export default {
   renameChannel: 'Rename channel',
   renameChannelHint: 'Right-click or long-press to rename',
   renameFeed: 'Rename feed',
-  renameFeedHint: 'Right-click to rename',
+  renameFeedHint: 'Right-click or long-press to rename',
   requiredFields: 'All fields are required',
   save: 'Save',
   saveHint: 'Press Enter to save changes',

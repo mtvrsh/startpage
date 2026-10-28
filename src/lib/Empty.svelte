@@ -1,8 +1,8 @@
 <script lang="ts">
-  let { message } = $props()
+  let { message, error = false }: { message: string, error?: boolean } = $props()
 </script>
 
-<p class="message">
+<p class="message" class:error>
   {message}
 </p>
 
@@ -17,5 +17,9 @@
     padding: var(--gap-1);
     color: var(--color-fg-inactive);
     user-select: none;
+  }
+
+  .error {
+    color: var(--color-error);
   }
 </style>

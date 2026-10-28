@@ -1,29 +1,38 @@
 <script lang="ts">
-  import { flushSync } from 'svelte'
   import strings from '../share/strings'
   import { config } from '../share/config'
-  import { Feeds, entries, feedStates, feeds, type Feed } from '../share/feeds'
+  import { Feeds, entries, feedStates, feeds } from '../share/feeds'
+  import { app } from './state/app.svelte'
   import Column from './Column.svelte'
   import Empty from './Empty.svelte'
-  import { editGesture } from './gestures'
-  import { inlineRename } from './inline-rename'
+  import FilterDropdown from './FilterDropdown.svelte'
 
   let adding = $state(false)
   let url = $state('')
   let name = $state('')
   let errorUrl = $state(false)
   let errorMessage = $state('')
-  let renamingUrl = $state('')
-  let renameValue = $state('')
 
   Feeds.refetch()
 
   const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
 
-  let subscriptions = $derived(
-    [...$feeds.values()].sort((a, b) =>
-      (a.name || a.url).localeCompare(b.name || b.url)
-    )
+  let items = $derived(
+    [...$feeds.values()]
+      .sort((a, b) =>
+        (a.name || a.url).localeCompare(b.name || b.url)
+      )
+      .map(feed => {
+        const state = $feedStates.get(feed.url)
+
+        return {
+          id: feed.url,
+          label: feed.name || feed.url,
+          loading: !!state?.loading,
+          error: state?.error,
+          placeholder: feed.url
+        }
+      })
   )
 
   let visibleEntries = $derived.by(() => {
@@ -32,6 +41,9 @@
     return [...$entries]
       .sort((a, b) =>
         b.published - a.published || a.title.localeCompare(b.title)
+      )
+      .filter(entry =>
+        app.feedFilter === strings.allKebabCase || entry.feedUrl === app.feedFilter
       )
       .filter(entry => {
         const key = entry.url || `${entry.feedUrl}\u0000${entry.title}`
@@ -66,35 +78,29 @@
       })
   }
 
+  let selectedError = $derived(
+    app.feedFilter === strings.allKebabCase
+      ? undefined
+      : $feedStates.get(app.feedFilter)?.error
+  )
+
   let formatDate = (timestamp: number) =>
     timestamp ? dateFormat.format(timestamp) : ''
-
-  let startRename = (feed: Feed) => {
-    renamingUrl = feed.url
-    renameValue = feed.name
-
-    // Flush before the input mounts so focus happens inside the gesture
-    // (needed for the mobile keyboard).
-    flushSync()
-  }
-
-  let commitRename = (url: string, value: string) => {
-    if (renamingUrl !== url) return
-
-    Feeds.rename(url, value)
-    renamingUrl = ''
-    renameValue = ''
-  }
-
-  let cancelRename = (url: string) => {
-    if (renamingUrl !== url) return
-
-    renamingUrl = ''
-    renameValue = ''
-  }
 </script>
 
 <Column title={strings.feeds} bind:adding addTitle={strings.addFeed}>
+  {#snippet actions()}
+    <FilterDropdown
+      {items}
+      selectedId={app.feedFilter}
+      allId={strings.allKebabCase}
+      onselect={id => app.feedFilter = id}
+      onremove={url => Feeds.remove(url)}
+      onrename={(url, value) => Feeds.rename(url, value)}
+      renameLabel={strings.renameFeed}
+      renameHint={strings.renameFeedHint}
+    />
+  {/snippet}
   {#snippet form()}
     <form onsubmit={submit}>
       <input
@@ -118,50 +124,7 @@
     </form>
   {/snippet}
 
-  {#if subscriptions.length}
-    <ul class="feeds__subscriptions">
-      {#each subscriptions as feed (feed.url)}
-        {@const state = $feedStates.get(feed.url)}
-        <li class="feeds__subscription">
-          {#if renamingUrl === feed.url}
-            <input
-              class="feeds__subscription-input"
-              bind:value={renameValue}
-              placeholder={feed.url}
-              aria-label={strings.renameFeed}
-              use:inlineRename={{
-                onSave: value => commitRename(feed.url, value),
-                onCancel: () => cancelRename(feed.url)
-              }}
-            >
-          {:else}
-            <button
-              class="feeds__subscription-name"
-              type="button"
-              title={`${feed.url} - ${strings.renameFeedHint}`}
-              use:editGesture={{ onEdit: () => startRename(feed), clickToEdit: true }}
-            >
-              {feed.name || feed.url}
-            </button>
-          {/if}
-          {#if state?.loading}
-            <span class="feeds__state">{strings.loading}</span>
-          {:else if state?.error}
-            <span class="feeds__state feeds__state--error" title={state.error}>
-              {strings.feedLoadFailed}
-            </span>
-          {/if}
-          <button
-            class="column__remove"
-            type="button"
-            title={strings.remove}
-            aria-label={`${strings.remove} ${feed.name || feed.url}`}
-            onclick={() => Feeds.remove(feed.url)}
-          >×</button>
-        </li>
-      {/each}
-    </ul>
-
+  {#if items.length}
     {#if visibleEntries.length}
       <ul class="feeds__entries">
         {#each visibleEntries as entry (entry.feedUrl + '\u0000' + (entry.url || entry.title))}
@@ -195,7 +158,9 @@
           </li>
         {/each}
       </ul>
-    {:else if !subscriptions.some(feed => $feedStates.get(feed.url)?.loading)}
+    {:else if selectedError}
+      <Empty message={`${strings.feedLoadFailed}: ${selectedError}`} error />
+    {:else if !items.some(item => $feedStates.get(item.id)?.loading)}
       <Empty message={strings.noEntriesFound} />
     {/if}
   {:else}
@@ -208,77 +173,6 @@
   @use 'scss/variables' as *;
 
   .feeds {
-    &__subscriptions {
-      display: flex;
-      flex-wrap: wrap;
-      flex-shrink: 0;
-      gap: $gap-0;
-      padding: $gap-1;
-      border-bottom: $border var(--color-surface);
-    }
-
-    &__subscription {
-      display: flex;
-      align-items: center;
-      gap: $gap-0;
-      max-width: 100%;
-      padding-left: $gap-1;
-      font-size: .75rem;
-      color: var(--color-surface-fg);
-      background: var(--color-surface);
-
-      // Match the subscription/name background while the row is hovered or
-      // focused; the button's own hover/focus rules still turn it red.
-      &:hover > .column__remove:not(:hover):not(:focus),
-      &:focus-within > .column__remove:not(:hover):not(:focus) {
-        background: inherit;
-      }
-    }
-
-    &__subscription-name {
-      min-width: 0;
-      padding: 0;
-      overflow: hidden;
-      font: inherit;
-      color: inherit;
-      text-align: left;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      background: none;
-      border: none;
-      cursor: pointer;
-
-      &:hover,
-      &:focus-visible {
-        color: var(--color-accent);
-      }
-
-      &:focus-visible {
-        outline: $outline var(--color-accent);
-      }
-    }
-
-    &__subscription-input {
-      width: 10rem;
-      min-width: 0;
-      max-width: 100%;
-      padding: 0 $gap-0;
-      font: inherit;
-      color: var(--color-surface-fg);
-      background: var(--color-bg);
-      border: none;
-      outline: $outline var(--color-accent);
-    }
-
-    &__state {
-      flex-shrink: 0;
-      color: var(--color-fg-inactive);
-
-      &--error {
-        color: var(--color-error);
-      }
-    }
-
     &__entries {
       flex-shrink: 0;
     }

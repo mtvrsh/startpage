@@ -9,5 +9,7 @@ export const app = $state({
   // Same sentinel as the "All" entry in the channel filter dropdown, so an
   // unfiltered boot looks identical to picking "All" (which hides that row).
   filter: strings.allKebabCase,
+  // Same sentinel as `filter`; applies to the reader column's feed dropdown.
+  feedFilter: strings.allKebabCase,
   searchOpen: false
 })
