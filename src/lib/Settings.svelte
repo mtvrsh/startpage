@@ -57,7 +57,7 @@
     &__title {
       overflow: hidden;
       font-size: $font-size-column-title;
-      color: var(--color-accent);
+      color: var(--color-fg-inactive);
       white-space: nowrap;
       text-overflow: ellipsis;
       user-select: none;
@@ -76,8 +76,8 @@
 
       &:hover,
       &:focus {
-        color: var(--color-accent-fg);
-        background: var(--color-accent);
+        color: var(--color-error-fg);
+        background: var(--color-error);
         outline: none;
       }
     }

@@ -1,8 +1,36 @@
+@use 'variables' as *;
+
+// One look for every text-entry control: tan field, dark text, muted hint and
+// an accent ring on focus. Contexts only add sizing (width/flex) and error
+// variants on top.
+@mixin input-base {
+  padding: $gap-1;
+  font: inherit;
+  font-size: $font-size-column-title;
+  color: var(--color-fg);
+  background: var(--color-surface);
+  border: none;
+  border-bottom: $border transparent;
+
+  &::placeholder {
+    color: var(--color-fg-inactive);
+    opacity: 1;
+  }
+
+  &:focus {
+    outline: $outline var(--color-accent);
+  }
+}
+
 @mixin line-clamp($lines) {
   @supports (-webkit-line-clamp: $lines) {
     white-space: initial;
     display: -webkit-box;
     -webkit-line-clamp: $lines;
     -webkit-box-orient: vertical;
+    // The clamp box ends at the last line box, and overflow: hidden then cuts
+    // anything below it. Monospace ascender + descender (~1.36em) is taller
+    // than the inherited 1.3 line-height, so descenders (g, j) got clipped.
+    line-height: 1.4;
   }
 }

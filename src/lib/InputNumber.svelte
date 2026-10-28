@@ -21,23 +21,17 @@
 <label for={id}>{label}</label>
 <input type="number" bind:value={value} onchange={normalize} {id} {min} {max}>
 
-<style>
+<style lang="scss">
+  @use 'scss/mixins' as *;
+
   label {
     user-select: none;
   }
 
   input {
+    @include input-base;
     width: 3.5rem;
+    // Asymmetric padding leaves room for the number spinners.
     padding: .5rem .25rem .5rem .5rem;
-    color: var(--color-accent);
-    background-color: var(--color-bg);
-    border: none;
-    outline: none;
-  }
-
-  input:hover,
-  input:focus {
-    color: var(--color-fg);
-    background-color: var(--color-accent);
   }
 </style>

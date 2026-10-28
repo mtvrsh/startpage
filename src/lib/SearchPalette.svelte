@@ -260,6 +260,7 @@
 
 <style lang="scss">
   @use 'scss/variables' as *;
+  @use 'scss/mixins' as *;
 
   .palette {
     position: fixed;
@@ -269,12 +270,13 @@
     align-items: flex-start;
     justify-content: center;
     padding: 12vh var(--gap-2) var(--gap-2);
+    font-size: $font-size-ui;
 
     &__backdrop {
       position: absolute;
       inset: 0;
       padding: 0;
-      background: rgb(0 0 0 / .45);
+      background: $overlay-backdrop;
       border: none;
       cursor: default;
     }
@@ -308,11 +310,7 @@
     &__input {
       flex: 1;
       min-width: 0;
-      padding: var(--gap-1);
-      font: inherit;
-      color: var(--color-fg);
-      background: var(--color-surface);
-      border: none;
+      @include input-base;
 
       // Hide X button in searchbox in Chromium
       &::-webkit-search-cancel-button {
@@ -340,7 +338,7 @@
       align-items: center;
       gap: var(--gap-1);
       padding: var(--gap-0) var(--gap-1);
-      color: var(--color-surface-fg);
+      color: var(--color-accent);
       text-decoration: none;
 
       &:hover,

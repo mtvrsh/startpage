@@ -124,11 +124,11 @@
     <form onsubmit={submit}>
       <input
         class="column__input"
-        class:error={errorUrl}
-        bind:value={url}
-        placeholder={strings.url}
-        aria-label={strings.url}
-        aria-invalid={errorUrl}
+        class:error={errorName}
+        bind:value={name}
+        placeholder={strings.name}
+        aria-label={strings.name}
+        aria-invalid={errorName}
       >
       <input
         class="column__input"
@@ -140,11 +140,11 @@
       >
       <input
         class="column__input"
-        class:error={errorName}
-        bind:value={name}
-        placeholder={strings.name}
-        aria-label={strings.name}
-        aria-invalid={errorName}
+        class:error={errorUrl}
+        bind:value={url}
+        placeholder={strings.url}
+        aria-label={strings.url}
+        aria-invalid={errorUrl}
       >
       <button class="column__submit" type="submit">{strings.add}</button>
     </form>
@@ -264,10 +264,9 @@
     }
 
     &__tag {
-      padding: 0 $gap-1;
+      padding: 0;
       overflow: hidden;
       font-size: $font-size-body;
-      font-weight: bold;
       color: var(--color-fg-inactive);
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -297,10 +296,9 @@
     &__link {
       flex: 0 1 auto;
       min-width: 0;
-      padding: $gap-0 $gap-1;
+      padding: $gap-0 0;
       overflow: hidden;
       font-size: $font-size-item-title;
-      font-weight: bold;
       white-space: nowrap;
       text-overflow: ellipsis;
       user-select: none;
@@ -333,7 +331,7 @@
     &__edit-cancel {
       padding: $gap-1;
       font: inherit;
-      font-weight: bold;
+      font-size: $font-size-column-title;
       color: var(--color-accent);
       background: var(--color-surface);
       border: none;

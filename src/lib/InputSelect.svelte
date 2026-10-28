@@ -31,22 +31,15 @@
   {/each}
 </select>
 
-<style>
+<style lang="scss">
+  @use 'scss/mixins' as *;
+
   label {
     user-select: none;
   }
 
   select {
-    padding: .5rem;
-    color: var(--color-accent);
-    background-color: var(--color-bg);
-    border: none;
-    outline: none;
-  }
-
-  select:hover,
-  select:focus {
-    color: var(--color-fg);
+    @include input-base;
     cursor: pointer;
   }
 </style>

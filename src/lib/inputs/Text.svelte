@@ -8,18 +8,10 @@
 <input class="text" bind:value {...args}>
 
 <style lang="scss">
-  @use '../scss/variables' as *;
-  
-  .text {
-    padding: $gap-1;
-    color: var(--color-fg);
-    background: var(--color-surface);
-    border: none;
-    border-bottom: $border transparent;
+  @use '../scss/mixins' as *;
 
-    &:focus {
-      outline: $outline var(--color-accent);
-    }
+  .text {
+    @include input-base;
 
     &:disabled {
       color: var(--color-fg-inactive);

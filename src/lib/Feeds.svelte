@@ -191,7 +191,6 @@
 
       &-title {
         font-size: $font-size-item-title;
-        font-weight: bold;
         @include line-clamp(2);
         overflow: hidden;
 

@@ -124,26 +124,33 @@
 
         {#each items as item (item.id)}
           <li class="filter__item" class:active={selectedId === item.id}>
-            {#if renamingId === item.id}
-              <input
-                class="filter__rename"
-                bind:value={renameValue}
-                placeholder={item.placeholder}
-                aria-label={renameLabel}
-                use:inlineRename={{
-                  onSave: value => commitRename(item.id, value),
-                  onCancel: () => cancelRename(item.id)
-                }}
-              >
-            {:else}
+            <!-- The select button stays mounted while renaming: it holds the
+                 row's width, so swapping it for the editor would resize the
+                 whole dropdown to the input's intrinsic width. The editor
+                 overlays it instead. -->
+            <span class="filter__label">
               <button
                 class="filter__select"
+                class:hidden={renamingId === item.id}
                 type="button"
                 title={renameHint ? `${item.label} - ${renameHint}` : item.label}
                 onclick={() => select(item.id)}
                 use:editGesture={{ onEdit: () => startRename(item.id, item.label) }}
               >{item.label}</button>
-            {/if}
+
+              {#if renamingId === item.id}
+                <input
+                  class="filter__rename"
+                  bind:value={renameValue}
+                  placeholder={item.placeholder}
+                  aria-label={renameLabel}
+                  use:inlineRename={{
+                    onSave: value => commitRename(item.id, value),
+                    onCancel: () => cancelRename(item.id)
+                  }}
+                >
+              {/if}
+            </span>
 
             {#if item.loading || item.error}
               <span
@@ -171,6 +178,7 @@
 
 <style lang="scss">
   @use 'scss/variables' as *;
+  @use 'scss/mixins' as *;
 
   .filter {
     position: relative;
@@ -182,6 +190,7 @@
       align-items: center;
       gap: $gap-0;
       max-width: 100%;
+      font-size: $font-size-ui;
 
       &.focus {
         color: var(--color-accent-fg);
@@ -230,8 +239,15 @@
       }
 
       &.active .filter__select {
-        color: var(--color-accent);
+        background: var(--color-surface-light);
       }
+    }
+
+    &__label {
+      position: relative;
+      display: flex;
+      flex: 1;
+      min-width: 0;
     }
 
     &__select {
@@ -241,13 +257,18 @@
       overflow: hidden;
       font: inherit;
       font-size: $font-size-column-title;
-      color: var(--color-surface-fg);
+      color: var(--color-accent);
       text-align: left;
       white-space: nowrap;
       text-overflow: ellipsis;
       background: inherit;
       border: none;
       cursor: pointer;
+
+      // Still occupies its row while the rename editor overlays it.
+      &.hidden {
+        visibility: hidden;
+      }
 
       &:hover,
       &:focus {
@@ -279,17 +300,15 @@
     }
 
     &__rename {
-      flex: 1;
-      min-width: 0;
-      padding: $gap-1;
-      font: inherit;
-      font-size: $font-size-column-title;
-      color: var(--color-surface-fg);
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      @include input-base;
+      // Inline editor inside a surface-colored dropdown: flip to the page
+      // background so the field still reads as a field. The dropdown clips
+      // outer outlines, so draw the editable ring inside.
       background: var(--color-bg);
-      border: none;
       outline: $outline var(--color-accent);
-      // The dropdown clips outlines at its edges, so draw this one inside the
-      // input to keep the whole ring visible.
       outline-offset: -$outline-size;
     }
   }

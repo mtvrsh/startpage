@@ -146,10 +146,15 @@
     padding: $gap-0;
 
     &__item {
-      height: 5.875rem;
+      min-height: 5.875rem;
       display: grid;
       gap: $gap-1;
-      grid-template-rows: 3lh 1fr 1fr;
+      // The title row absorbs the leftover height, so the duration + channel
+      // row cluster sits at the bottom of the thumbnail. `3lh` used to resolve
+      // against the item's own (metadata) line box, which is shorter than the
+      // larger title line box and clipped the third line mid-glyph, so the
+      // title row is `1fr` and grows with its clamped lines.
+      grid-template-rows: 1fr auto auto;
       grid-template-columns: 10.5rem 1fr auto;
       grid-template-areas:
       't n n'

@@ -88,7 +88,8 @@ Adding a new backend:
 - Variables: `src/lib/scss/_variables.scss` (gaps, z-index, etc.)
 - Themes: `src/lib/scss/_themes.scss` (Gruvbox color palette)
 - Breakpoints: `src/lib/scss/_breakpoints.scss`
-- Mixins: `src/lib/scss/_mixins.scss` (line-clamp)
+- Mixins: `src/lib/scss/_mixins.scss` (`line-clamp`, `input-base`)
+- All text-entry controls (column forms, bookmark edit, search palette, dropdown rename, settings text/number/select) include `input-base`; contexts only add sizing and error/disabled variants. The rename input flips to `--color-bg` because it sits on a `--color-surface` dropdown.
 - Components use `@use 'scss/variables' as *;` (Vite resolves via `src/lib/scss/`)
 - Global layout/control primitives live in `src/app.scss` (`Column` chrome form controls, `.button`)
 
@@ -97,6 +98,7 @@ Adding a new backend:
 ### Inline editing
 - Editable labels use the `editGesture` action (`src/lib/gestures.ts`): right-click on desktop or long-press on touch. Feeds additionally rename on a normal click.
 - Single-field renames use the `inlineRename` action (`src/lib/inline-rename.ts`): Enter/blur saves, Escape (keyup) cancels. Focus is flushed synchronously so mobile keyboards open from the gesture.
+- In `FilterDropdown`, the rename editor is absolutely positioned over the still-mounted label button (which keeps its width with `visibility: hidden`). Do not swap the button out for the input: the dropdown is shrink-to-fit, so a bare `<input>` (default ~20ch intrinsic width) resizes the whole list when the rename starts.
 - Bookmarks edit name, tag, and URL inline. URL changes are re-keyed through `Bookmarks.replace()` and rejected when the new URL already exists.
 
 ### Service Worker

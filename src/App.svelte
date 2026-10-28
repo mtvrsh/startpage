@@ -161,7 +161,7 @@
       position: absolute;
       inset: 0;
       padding: 0;
-      background: rgb(0 0 0 / .55);
+      background: $overlay-backdrop;
       border: none;
       cursor: default;
     }

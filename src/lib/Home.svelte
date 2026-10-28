@@ -74,8 +74,7 @@
 
   .home__navigation-button {
     padding: var(--gap-2);
-    font-weight: bold;
-    color: inherit;
+    color: var(--color-accent);
     background: inherit;
     border: none;
   }
@@ -88,7 +87,8 @@
   }
 
   .home__navigation-button.focus {
-    color: var(--color-accent);
+    color: var(--color-accent-fg);
+    background: var(--color-accent);
   }
 
   @include breakpoint-xl {
