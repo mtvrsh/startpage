@@ -8,10 +8,10 @@
   import { Feeds } from '../share/feeds'
   import { isRecord } from '../util/validate'
   import { buildConfigFile } from '../share/config-file'
-  import InputNumber from './InputNumber.svelte';
-  import InputSelect from './InputSelect.svelte';
-  import Text from './inputs/Text.svelte';
-  import ToggleSwitch from './inputs/ToggleSwitch.svelte';
+  import InputNumber from './InputNumber.svelte'
+  import InputSelect from './InputSelect.svelte'
+  import Text from './inputs/Text.svelte'
+  import ToggleSwitch from './inputs/ToggleSwitch.svelte'
 
   let importError = $state('')
 
@@ -53,8 +53,9 @@
     const file = importInput.files?.[0]
     if (!file) return
 
-    file.text()
-      .then(text => JSON.parse(text))
+    file
+      .text()
+      .then((text) => JSON.parse(text))
       .then((imported: unknown) => {
         const payload = isRecord(imported) ? imported : {}
         const issues: string[] = []
@@ -63,24 +64,23 @@
         // all problems. A single malformed entry rejects the whole payload, so
         // no store is ever left half-applied. Sections that are absent are left
         // untouched.
-        const nextConfig = payload.config === undefined
-          ? undefined
-          : parseConfig(payload.config, issues)
-        const nextBookmarks = payload.bookmarks === undefined
-          ? undefined
-          : parseBookmarks(payload.bookmarks, issues)
-        const nextChannels = payload.channels === undefined
-          ? undefined
-          : Channels.parseStored(payload.channels, issues)
-        const nextFeeds = payload.feeds === undefined
-          ? undefined
-          : Feeds.parseStored(payload.feeds, issues)
+        const nextConfig =
+          payload.config === undefined ? undefined : parseConfig(payload.config, issues)
+        const nextBookmarks =
+          payload.bookmarks === undefined ? undefined : parseBookmarks(payload.bookmarks, issues)
+        const nextChannels =
+          payload.channels === undefined
+            ? undefined
+            : Channels.parseStored(payload.channels, issues)
+        const nextFeeds =
+          payload.feeds === undefined ? undefined : Feeds.parseStored(payload.feeds, issues)
 
         if (issues.length) {
           console.error('Config import rejected', issues)
-          importError = issues.length === 1
-            ? `${strings.importFailed}: ${issues[0]}`
-            : `${strings.importFailed}: ${issues[0]} (+${issues.length - 1} more)`
+          importError =
+            issues.length === 1
+              ? `${strings.importFailed}: ${issues[0]}`
+              : `${strings.importFailed}: ${issues[0]} (+${issues.length - 1} more)`
           return
         }
 
@@ -126,7 +126,8 @@
           id="settings-instance-type"
           label={strings.backendType}
           bind:use={backendUse}
-          options={BACKEND_TYPES.map(t => ({ value: t, label: backendLabel[t] }))} />
+          options={BACKEND_TYPES.map((t) => ({ value: t, label: backendLabel[t] }))}
+        />
       </li>
 
       {#if $config.instanceType === 'startpage'}
@@ -140,7 +141,8 @@
             id={strings.instanceId}
             label={strings.instance}
             bind:use={$config.instance}
-            bind:options={$config.instances} />
+            bind:options={$config.instances}
+          />
         </li>
       {/if}
     </ul>
@@ -176,7 +178,8 @@
           id={strings.feedCacheKebabCase}
           label={strings.feedCache}
           min={0}
-          bind:value={$config.cacheLifetimeInMinutes} />
+          bind:value={$config.cacheLifetimeInMinutes}
+        />
       </li>
 
       <li class="general__group-list-item">
@@ -184,7 +187,8 @@
           id={strings.feedLimitKebabCase}
           label={strings.feedLimit}
           min={0}
-          bind:value={$config.feedLimit} />
+          bind:value={$config.feedLimit}
+        />
       </li>
 
       {@render separator(strings.customProtocol)}
@@ -199,22 +203,26 @@
       <li>
         <label
           class="general__group-list-item"
-          class:disabled={!$config.feedProtocolEnabledForVideos}>
+          class:disabled={!$config.feedProtocolEnabledForVideos}
+        >
           {strings.useInTitles}
           <ToggleSwitch
             bind:checked={$config.feedProtocolEnabledForVideosInTitles}
-            disabled={!$config.feedProtocolEnabledForVideos} />
+            disabled={!$config.feedProtocolEnabledForVideos}
+          />
         </label>
       </li>
 
       <li>
         <label
           class="general__group-list-item"
-          class:disabled={!$config.feedProtocolEnabledForVideos}>
+          class:disabled={!$config.feedProtocolEnabledForVideos}
+        >
           {strings.customProtocolName}
           <Text
             bind:value={$config.feedProtocolName}
-            disabled={!$config.feedProtocolEnabledForVideos} />
+            disabled={!$config.feedProtocolEnabledForVideos}
+          />
         </label>
       </li>
     </ul>
@@ -236,7 +244,8 @@
           id="reader-limit"
           label={strings.readerLimit}
           min={0}
-          bind:value={$config.readerLimit} />
+          bind:value={$config.readerLimit}
+        />
       </li>
 
       <li class="general__group-list-item">
@@ -309,7 +318,7 @@
 
       &-separator {
         position: relative;
-        height: .08rem;
+        height: 0.08rem;
         margin: $gap-4 $gap-1;
         background: var(--color-accent);
 

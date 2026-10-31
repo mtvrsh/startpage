@@ -3,12 +3,7 @@
     "servers": {
       "firefox-devtools": {
         "type": "local",
-        "command": [
-          "npx",
-          "@mozilla/firefox-devtools-mcp",
-          "--tool-preset",
-          "developer"
-        ]
+        "command": ["npx", "@mozilla/firefox-devtools-mcp", "--tool-preset", "developer"]
       },
       "cloudflare": {
         "type": "remote",

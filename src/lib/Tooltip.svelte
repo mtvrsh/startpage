@@ -1,14 +1,10 @@
 <script lang="ts">
-  let {
-    text,
-    type = 'error',
-    children
-  } = $props();
+  let { text, type = 'error', children } = $props()
 </script>
 
 <button class="tooltip">
   {@render children()}
-  <p class={["tooltip__text", type].join(' ')}>{text}</p>
+  <p class={['tooltip__text', type].join(' ')}>{text}</p>
 </button>
 
 <style lang="scss">
@@ -29,10 +25,10 @@
     }
 
     &__text {
-      $arrow-size: .5lh;
+      $arrow-size: 0.5lh;
 
       position: absolute;
-      top: calc(100% + $arrow-size + .1rem);
+      top: calc(100% + $arrow-size + 0.1rem);
       left: calc(50% - $arrow-size);
       z-index: 1;
       display: none;

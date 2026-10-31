@@ -19,10 +19,8 @@
 
   let items = $derived(
     [...$feeds.values()]
-      .sort((a, b) =>
-        (a.name || a.url).localeCompare(b.name || b.url)
-      )
-      .map(feed => {
+      .sort((a, b) => (a.name || a.url).localeCompare(b.name || b.url))
+      .map((feed) => {
         const state = $feedStates.get(feed.url)
 
         return {
@@ -30,22 +28,20 @@
           label: feed.name || feed.url,
           loading: !!state?.loading,
           error: state?.error,
-          placeholder: feed.url
+          placeholder: feed.url,
         }
-      })
+      }),
   )
 
   let visibleEntries = $derived.by(() => {
     const seen = new Set<string>()
 
     return [...$entries]
-      .sort((a, b) =>
-        b.published - a.published || a.title.localeCompare(b.title)
+      .sort((a, b) => b.published - a.published || a.title.localeCompare(b.title))
+      .filter(
+        (entry) => app.feedFilter === strings.allKebabCase || entry.feedUrl === app.feedFilter,
       )
-      .filter(entry =>
-        app.feedFilter === strings.allKebabCase || entry.feedUrl === app.feedFilter
-      )
-      .filter(entry => {
+      .filter((entry) => {
         const key = entry.url || `${entry.feedUrl}\u0000${entry.title}`
         if (seen.has(key)) return false
 
@@ -72,20 +68,17 @@
         name = ''
         adding = false
       })
-      .catch(error => {
+      .catch((error) => {
         errorUrl = true
         errorMessage = error instanceof Error ? error.message : String(error)
       })
   }
 
   let selectedError = $derived(
-    app.feedFilter === strings.allKebabCase
-      ? undefined
-      : $feedStates.get(app.feedFilter)?.error
+    app.feedFilter === strings.allKebabCase ? undefined : $feedStates.get(app.feedFilter)?.error,
   )
 
-  let formatDate = (timestamp: number) =>
-    timestamp ? dateFormat.format(timestamp) : ''
+  let formatDate = (timestamp: number) => (timestamp ? dateFormat.format(timestamp) : '')
 </script>
 
 <Column title={strings.feeds} bind:adding addTitle={strings.addFeed}>
@@ -94,15 +87,14 @@
       {items}
       selectedId={app.feedFilter}
       allId={strings.allKebabCase}
-      onselect={id => app.feedFilter = id}
-      onremove={url => {
+      onselect={(id) => (app.feedFilter = id)}
+      onremove={(url) => {
         Feeds.remove(url)
 
         // The removed feed can be the active filter; its id would dangle
         // (the toggler would fall back to the All label while the body stays
         // filtered by the removed feed).
-        if (app.feedFilter === url)
-          app.feedFilter = strings.allKebabCase
+        if (app.feedFilter === url) app.feedFilter = strings.allKebabCase
       }}
       onrename={(url, value) => Feeds.rename(url, value)}
       renameLabel={strings.renameFeed}
@@ -118,13 +110,13 @@
         placeholder={strings.feedUrl}
         aria-label={strings.feedUrl}
         aria-invalid={errorUrl}
-      >
+      />
       <input
         class="column__input"
         bind:value={name}
         placeholder={strings.feedName}
         aria-label={strings.feedName}
-      >
+      />
       <button class="column__submit" type="submit">{strings.add}</button>
       {#if errorMessage}
         <p class="column__error">{errorMessage}</p>
@@ -138,11 +130,7 @@
         {#each visibleEntries as entry (entry.feedUrl + '\u0000' + (entry.url || entry.title))}
           <li class="feeds__entry">
             {#if entry.url}
-              <a
-                class="feeds__entry-title"
-                href={entry.url}
-                title={entry.title}
-              >{entry.title}</a>
+              <a class="feeds__entry-title" href={entry.url} title={entry.title}>{entry.title}</a>
             {:else}
               <span class="feeds__entry-title" title={entry.title}>
                 {entry.title}
@@ -168,7 +156,7 @@
       </ul>
     {:else if selectedError}
       <Empty message={`${strings.feedLoadFailed}: ${selectedError}`} error />
-    {:else if !items.some(item => $feedStates.get(item.id)?.loading)}
+    {:else if !items.some((item) => $feedStates.get(item.id)?.loading)}
       <Empty message={strings.noEntriesFound} />
     {/if}
   {:else}

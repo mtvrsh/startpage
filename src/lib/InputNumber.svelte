@@ -1,11 +1,5 @@
 <script>
-  let {
-    id,
-    label,
-    min = undefined,
-    max = undefined,
-    value = $bindable()
-  } = $props()
+  let { id, label, min = undefined, max = undefined, value = $bindable() } = $props()
 
   // `min`/`max` only constrain the spinner and form validation; typed values
   // still reach the store. Normalize on change so out-of-range numbers (a
@@ -19,7 +13,7 @@
 </script>
 
 <label for={id}>{label}</label>
-<input type="number" bind:value={value} onchange={normalize} {id} {min} {max}>
+<input type="number" bind:value onchange={normalize} {id} {min} {max} />
 
 <style lang="scss">
   @use 'scss/mixins' as *;
@@ -32,6 +26,6 @@
     @include input-base;
     width: 3.5rem;
     // Asymmetric padding leaves room for the number spinners.
-    padding: .5rem .25rem .5rem .5rem;
+    padding: 0.5rem 0.25rem 0.5rem 0.5rem;
   }
 </style>

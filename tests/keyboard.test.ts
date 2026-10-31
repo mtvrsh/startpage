@@ -1,11 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { isTypedCharacter } from '../src/util/keyboard'
 
-function eventFor(
-  target: HTMLElement,
-  key: string,
-  init: KeyboardEventInit = {}
-) {
+function eventFor(target: HTMLElement, key: string, init: KeyboardEventInit = {}) {
   const event = new KeyboardEvent('keydown', { key, bubbles: true, ...init })
   // KeyboardEvent.target is read-only and only set while dispatching.
   Object.defineProperty(event, 'target', { value: target, configurable: true })

@@ -5,8 +5,7 @@
 
   let closeButton: HTMLButtonElement | undefined = $state()
 
-  let close = () =>
-    app.route.path = strings.paths.home
+  let close = () => (app.route.path = strings.paths.home)
 
   $effect(() => {
     closeButton?.focus()
@@ -23,8 +22,8 @@
       title={strings.close}
       aria-label={strings.close}
       bind:this={closeButton}
-      onclick={close}
-    >×</button>
+      onclick={close}>×</button
+    >
   </header>
 
   <div class="settings__list">

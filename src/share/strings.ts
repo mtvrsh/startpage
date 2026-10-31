@@ -79,7 +79,7 @@ export default {
     channels: '/settings/channels',
     home: '/',
     notFound: '/not-found',
-    settings: '/settings'
+    settings: '/settings',
   },
-  version: 'Version'
+  version: 'Version',
 }

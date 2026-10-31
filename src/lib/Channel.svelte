@@ -1,11 +1,7 @@
 <script lang="ts">
-
 </script>
 
-<div class="channel">
-
-</div>
+<div class="channel"></div>
 
 <style lang="scss">
-
 </style>

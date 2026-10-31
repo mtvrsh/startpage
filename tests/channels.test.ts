@@ -17,7 +17,7 @@ const t = test.extend({
         uploaded: 2137,
         uploadedDate: 'myUploadedDate',
         duration: '',
-        thumbnail: ''
+        thumbnail: '',
       },
       {
         url: 'mySecondVideoUrl',
@@ -25,14 +25,14 @@ const t = test.extend({
         uploaded: 2138,
         uploadedDate: 'mySecondUploadedDate',
         duration: '',
-        thumbnail: ''
-      }
-    ]
-  }
+        thumbnail: '',
+      },
+    ],
+  },
 })
 
 describe('update', () => {
-  t('merges values into existing channel', ({id, channel}) => {
+  t('merges values into existing channel', ({ id, channel }) => {
     Channels.addExisting(id, channel)
     Channels.update(id, { displayName: 'newName' })
 
@@ -41,7 +41,7 @@ describe('update', () => {
     expect(result?.name).toBe(channel.name)
   })
 
-  t('is a no-op when channel was removed (partial fetch race)', ({id, channel}) => {
+  t('is a no-op when channel was removed (partial fetch race)', ({ id, channel }) => {
     Channels.addExisting(id, channel)
     Channels.remove(id)
     Channels.update(id, { videos: channel.videos })
@@ -51,7 +51,7 @@ describe('update', () => {
 })
 
 describe('remove', () => {
-  t('removes channel from store', ({id, channel}) => {
+  t('removes channel from store', ({ id, channel }) => {
     Channels.addExisting(id, channel)
     expect(get(channels).has(id)).toBe(true)
 
@@ -59,8 +59,8 @@ describe('remove', () => {
     expect(get(channels).has(id)).toBe(false)
   })
 
-  t('clears the recorded error state', ({id}) => {
-    channelStates.update(states => new Map(states).set(id, { error: 'boom' }))
+  t('clears the recorded error state', ({ id }) => {
+    channelStates.update((states) => new Map(states).set(id, { error: 'boom' }))
 
     Channels.remove(id)
     expect(get(channelStates).has(id)).toBe(false)
@@ -68,7 +68,7 @@ describe('remove', () => {
 })
 
 describe('addExisting', () => {
-  t('adds channel to store', ({id, channel}) => {
+  t('adds channel to store', ({ id, channel }) => {
     Channels.addExisting(id, channel)
 
     const result = get(channels).get(id)
@@ -77,45 +77,53 @@ describe('addExisting', () => {
 })
 
 const expectedVideos = (channel: Channel) =>
-  channel.videos.map(video => ({
+  channel.videos.map((video) => ({
     ...video,
     channelUrl: channel.url,
     channelName: channel.name,
-    channelDisplayName: channel.displayName
+    channelDisplayName: channel.displayName,
   }))
 
-t('toArray(Map<string, Channel>) returns ChannelVideo[]', ({id, channel}) => {
+t('toArray(Map<string, Channel>) returns ChannelVideo[]', ({ id, channel }) => {
   expect(Channels.toArray(new Map([[id, channel]]))).toEqual(expectedVideos(channel))
 })
 
-t('toArray([string, Channel]) returns ChannelVideo[]', ({id, channel}) => {
+t('toArray([string, Channel]) returns ChannelVideo[]', ({ id, channel }) => {
   expect(Channels.toArray([id, channel])).toEqual(expectedVideos(channel))
 })
 
-t('BY_UPLOADED sorts ChannelVideo[] by <uploaded> descending', ({id, channel}) => {
+t('BY_UPLOADED sorts ChannelVideo[] by <uploaded> descending', ({ id, channel }) => {
   const actual = Channels.toArray([id, channel]).sort(Channels.BY_UPLOADED)
 
-  expect(actual).toEqual(
-    [
-      { ...channel.videos[1], channelUrl: channel.url, channelName: channel.name, channelDisplayName: channel.displayName },
-      { ...channel.videos[0], channelUrl: channel.url, channelName: channel.name, channelDisplayName: channel.displayName }
-    ]
-  )
+  expect(actual).toEqual([
+    {
+      ...channel.videos[1],
+      channelUrl: channel.url,
+      channelName: channel.name,
+      channelDisplayName: channel.displayName,
+    },
+    {
+      ...channel.videos[0],
+      channelUrl: channel.url,
+      channelName: channel.name,
+      channelDisplayName: channel.displayName,
+    },
+  ])
 })
 
 describe('BY_CHANNEL_DISPLAY_NAME', () => {
-  t('sorts ChannelVideo[] by channelDisplayName ascending', ({channel}) => {
+  t('sorts ChannelVideo[] by channelDisplayName ascending', ({ channel }) => {
     const videoA = {
       ...channel.videos[0],
       channelUrl: channel.url,
       channelDisplayName: 'Alpha',
-      channelName: 'alpha'
+      channelName: 'alpha',
     }
     const videoB = {
       ...channel.videos[0],
       channelUrl: channel.url,
       channelDisplayName: 'Beta',
-      channelName: 'beta'
+      channelName: 'beta',
     }
 
     const items = [videoB, videoA]
@@ -125,18 +133,18 @@ describe('BY_CHANNEL_DISPLAY_NAME', () => {
     expect(items[1].channelDisplayName).toBe('Beta')
   })
 
-  t('falls back to channelName when channelDisplayName is empty', ({channel}) => {
+  t('falls back to channelName when channelDisplayName is empty', ({ channel }) => {
     const videoA = {
       ...channel.videos[0],
       channelUrl: channel.url,
       channelDisplayName: '',
-      channelName: 'Charlie'
+      channelName: 'Charlie',
     }
     const videoB = {
       ...channel.videos[0],
       channelUrl: channel.url,
       channelDisplayName: '',
-      channelName: 'Delta'
+      channelName: 'Delta',
     }
 
     const items = [videoB, videoA]
@@ -148,13 +156,13 @@ describe('BY_CHANNEL_DISPLAY_NAME', () => {
 })
 
 describe('BY_NAME', () => {
-  t('sorts [string, Channel][] by displayName ascending', ({channel}) => {
+  t('sorts [string, Channel][] by displayName ascending', ({ channel }) => {
     const channelA: Channel = { ...channel, displayName: 'Alpha', name: 'alpha' }
     const channelB: Channel = { ...channel, displayName: 'Beta', name: 'beta' }
 
     const items: [string, Channel][] = [
       ['idB', channelB],
-      ['idA', channelA]
+      ['idA', channelA],
     ]
 
     items.sort(Channels.BY_NAME)
@@ -163,13 +171,13 @@ describe('BY_NAME', () => {
     expect(items[1][1].displayName).toBe('Beta')
   })
 
-  t('falls back to name when displayName is empty', ({channel}) => {
+  t('falls back to name when displayName is empty', ({ channel }) => {
     const channelA: Channel = { ...channel, displayName: '', name: 'Echo' }
     const channelB: Channel = { ...channel, displayName: '', name: 'Foxtrot' }
 
     const items: [string, Channel][] = [
       ['idB', channelB],
-      ['idA', channelA]
+      ['idA', channelA],
     ]
 
     items.sort(Channels.BY_NAME)
@@ -180,17 +188,20 @@ describe('BY_NAME', () => {
 })
 
 describe('serialize', () => {
-  t('returns array without videos', ({id, channel}) => {
+  t('returns array without videos', ({ id, channel }) => {
     Channels.addExisting(id, channel)
 
     const serialized = Channels.serialize()
 
     expect(serialized).toEqual([
-      [id, {
-        url: channel.url,
-        name: channel.name,
-        displayName: channel.displayName
-      }]
+      [
+        id,
+        {
+          url: channel.url,
+          name: channel.name,
+          displayName: channel.displayName,
+        },
+      ],
     ])
     expect(serialized[0][1]).not.toHaveProperty('videos')
   })
@@ -199,11 +210,14 @@ describe('serialize', () => {
 describe('restore', () => {
   t('restores channels from serialized data', () => {
     const data: [string, { url: string; name: string; displayName: string }][] = [
-      ['restoredId', {
-        url: 'https://restored.url',
-        name: 'restoredName',
-        displayName: 'restoredDisplayName'
-      }]
+      [
+        'restoredId',
+        {
+          url: 'https://restored.url',
+          name: 'restoredName',
+          displayName: 'restoredDisplayName',
+        },
+      ],
     ]
 
     Channels.restore(data)
@@ -214,11 +228,11 @@ describe('restore', () => {
       url: 'https://restored.url',
       name: 'restoredName',
       displayName: 'restoredDisplayName',
-      videos: []
+      videos: [],
     })
   })
 
-  t('clears existing channels on restore', ({id, channel}) => {
+  t('clears existing channels on restore', ({ id, channel }) => {
     Channels.addExisting(id, channel)
 
     Channels.restore([['newId', { url: 'https://new.url', name: 'new', displayName: 'new' }]])
@@ -281,9 +295,9 @@ describe('restore re-keys channels by parsed url', () => {
 describe('restore validation', () => {
   t('skips entries of unexpected shape without throwing', () => {
     const url = 'https://ok.example/one'
-    expect(() => Channels.restore(
-      [1, [url], [url, null], [42, { url }], [url, { url: 1 }]] as any
-    )).not.toThrow()
+    expect(() =>
+      Channels.restore([1, [url], [url, null], [42, { url }], [url, { url: 1 }]] as any),
+    ).not.toThrow()
     expect(get(channels).size).toBe(0)
   })
 
@@ -291,12 +305,17 @@ describe('restore validation', () => {
     Channels.restore([['key', { url: 'https://ok.example/bare' }]] as any)
 
     expect(get(channels).get('key')).toEqual({
-      url: 'https://ok.example/bare', name: '', displayName: '', videos: []
+      url: 'https://ok.example/bare',
+      name: '',
+      displayName: '',
+      videos: [],
     })
   })
 
   t('drops entries with unsafe urls', () => {
-    Channels.restore([['javascript:alert(1)', { url: 'javascript:alert(1)', name: 'x', displayName: 'x' }]] as any)
+    Channels.restore([
+      ['javascript:alert(1)', { url: 'javascript:alert(1)', name: 'x', displayName: 'x' }],
+    ] as any)
 
     expect(get(channels).size).toBe(0)
   })
@@ -310,7 +329,7 @@ describe('hydration validation', () => {
       [url],
       [url, null],
       ['javascript:alert(1)', { url: 'javascript:alert(1)' }],
-      [url, { url, name: 42, displayName: null }]
+      [url, { url, name: 42, displayName: null }],
     ] as any)
 
     expect([...map]).toEqual([['@ok', { url, name: '', displayName: '', videos: [] }]])
@@ -325,13 +344,24 @@ describe('hydration validation', () => {
   t('parseStored keeps valid cached videos and drops malformed ones', () => {
     const url = 'https://youtube.com/@ok'
     const video = {
-      url: '/watch?v=1', title: 't', thumbnail: 'i', duration: '1m',
-      uploaded: 1, uploadedDate: 'now'
+      url: '/watch?v=1',
+      title: 't',
+      thumbnail: 'i',
+      duration: '1m',
+      uploaded: 1,
+      uploadedDate: 'now',
     }
-    const map = Channels.parseStored([[
-      url,
-      { url, name: 'ok', displayName: 'Ok', videos: [video, { ...video, uploaded: 'nope' }, null] }
-    ]])
+    const map = Channels.parseStored([
+      [
+        url,
+        {
+          url,
+          name: 'ok',
+          displayName: 'Ok',
+          videos: [video, { ...video, uploaded: 'nope' }, null],
+        },
+      ],
+    ])
 
     expect(map.get('@ok')?.videos).toEqual([video])
   })
@@ -344,15 +374,15 @@ describe('hydration validation', () => {
   t('parseStored reports malformed entries in strict mode', () => {
     const issues: string[] = []
 
-    Channels.parseStored([
-      null,
-      ['@ok', { url: 'https://youtube.com/@ok', name: 42, videos: {} }]
-    ], issues)
+    Channels.parseStored(
+      [null, ['@ok', { url: 'https://youtube.com/@ok', name: 42, videos: {} }]],
+      issues,
+    )
 
     expect(issues).toEqual([
       'channels[0]: expected a [key, value] pair',
       'channels[1].videos: expected an array',
-      'channels[1].name: expected a string'
+      'channels[1].name: expected a string',
     ])
   })
 
@@ -360,7 +390,10 @@ describe('hydration validation', () => {
     const map = Channels.parseStored([['@legacy', { name: 'n', displayName: 'N' }]])
 
     expect(map.get('@legacy')).toEqual({
-      url: '', name: 'n', displayName: 'N', videos: []
+      url: '',
+      name: 'n',
+      displayName: 'N',
+      videos: [],
     })
   })
 
@@ -375,23 +408,38 @@ describe('hydration validation', () => {
   t('parseStored reports unsafe urls in strict mode', () => {
     const issues: string[] = []
 
-    Channels.parseStored([
-      ['javascript:alert(1)', { url: 'https://youtube.com/@ok' }],
-      ['@ok', { url: 'javascript:alert(1)' }],
-      ['@bad', { url: 42 }]
-    ], issues)
+    Channels.parseStored(
+      [
+        ['javascript:alert(1)', { url: 'https://youtube.com/@ok' }],
+        ['@ok', { url: 'javascript:alert(1)' }],
+        ['@bad', { url: 42 }],
+      ],
+      issues,
+    )
 
     expect(issues).toEqual([
       'channels[0]: unsafe id',
       'channels[1].url: expected a safe url',
-      'channels[2].url: expected a safe url'
+      'channels[2].url: expected a safe url',
     ])
   })
 })
 
 describe('refetch', () => {
-  const video = { url: '/watch?v=1', title: 't', thumbnail: '', duration: 60, uploaded: Date.now() - 1000, uploadedDate: '1 day ago' }
-  const handleChannel: Channel = { url: 'https://youtube.com/@foo', name: 'n', displayName: 'n', videos: [] }
+  const video = {
+    url: '/watch?v=1',
+    title: 't',
+    thumbnail: '',
+    duration: 60,
+    uploaded: Date.now() - 1000,
+    uploadedDate: '1 day ago',
+  }
+  const handleChannel: Channel = {
+    url: 'https://youtube.com/@foo',
+    name: 'n',
+    displayName: 'n',
+    videos: [],
+  }
   let fetchMock: ReturnType<typeof vi.fn>
 
   afterEach(() => vi.unstubAllGlobals())
@@ -400,7 +448,10 @@ describe('refetch', () => {
     fetchMock = vi.fn(async (input: any) => {
       const url = String(input)
       const body = url.includes('/playlists/')
-        ? { name: 'Playlist name', relatedStreams: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }] }
+        ? {
+            name: 'Playlist name',
+            relatedStreams: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }],
+          }
         : { content: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }] }
       return { ok: true, json: async () => body }
     })
@@ -416,43 +467,59 @@ describe('refetch', () => {
     await vi.waitFor(() => {
       if (get(status).feed.fetching.now.length) throw new Error('still fetching')
     })
-    return fetchMock.mock.calls.map(call => String(call[0]))
+    return fetchMock.mock.calls.map((call) => String(call[0]))
   }
 
   t('refetches channels stored behind @handle keys as channels', async () => {
     const calls = await refetchChannel('@foo', handleChannel)
 
-    expect(calls.some(u => u.includes('/channels/tabs'))).toBe(true)
-    expect(calls.some(u => u.includes('/playlists/'))).toBe(false)
+    expect(calls.some((u) => u.includes('/channels/tabs'))).toBe(true)
+    expect(calls.some((u) => u.includes('/playlists/'))).toBe(false)
   })
 
   t('refetches channels stored behind legacy keys as channels', async () => {
     const calls = await refetchChannel('legacyFoo', {
-      url: 'https://youtube.com/channel/UCreal', name: 'n', displayName: 'n', videos: []
+      url: 'https://youtube.com/channel/UCreal',
+      name: 'n',
+      displayName: 'n',
+      videos: [],
     })
 
-    expect(calls.some(u => u.includes('/channels/tabs'))).toBe(true)
+    expect(calls.some((u) => u.includes('/channels/tabs'))).toBe(true)
   })
 
   t('refetches playlists as playlists', async () => {
     const calls = await refetchChannel('PL1', {
-      url: 'https://youtube.com/playlist?list=PL1', name: 'p', displayName: 'p', videos: []
+      url: 'https://youtube.com/playlist?list=PL1',
+      name: 'p',
+      displayName: 'p',
+      videos: [],
     })
 
-    expect(calls.some(u => u.includes('/playlists/PL1'))).toBe(true)
+    expect(calls.some((u) => u.includes('/playlists/PL1'))).toBe(true)
   })
 
   t('classifies a channel key when the stored url is missing', async () => {
     const calls = await refetchChannel('@foo', { ...handleChannel, url: '' })
 
-    expect(calls.some(u => u.includes('/channels/tabs'))).toBe(true)
-    expect(calls.some(u => u.includes('/playlists/'))).toBe(false)
+    expect(calls.some((u) => u.includes('/channels/tabs'))).toBe(true)
+    expect(calls.some((u) => u.includes('/playlists/'))).toBe(false)
   })
 
   t('keeps per-channel progress when one channel fails', async () => {
     Channels.restore([])
-    Channels.addExisting('UCa', { url: 'https://youtube.com/channel/UCa', name: 'a', displayName: 'a', videos: [] })
-    Channels.addExisting('UCb', { url: 'https://youtube.com/channel/UCb', name: 'b', displayName: 'b', videos: [] })
+    Channels.addExisting('UCa', {
+      url: 'https://youtube.com/channel/UCa',
+      name: 'a',
+      displayName: 'a',
+      videos: [],
+    })
+    Channels.addExisting('UCb', {
+      url: 'https://youtube.com/channel/UCb',
+      name: 'b',
+      displayName: 'b',
+      videos: [],
+    })
     stubFetch()
     const goodFetch = globalThis.fetch as any
     globalThis.fetch = vi.fn(async (input: any) => {
@@ -476,7 +543,12 @@ describe('refetch', () => {
 
   t('a later success clears the recorded error', async () => {
     Channels.restore([])
-    Channels.addExisting('UCa', { url: 'https://youtube.com/channel/UCa', name: 'a', displayName: 'a', videos: [] })
+    Channels.addExisting('UCa', {
+      url: 'https://youtube.com/channel/UCa',
+      name: 'a',
+      displayName: 'a',
+      videos: [],
+    })
     stubFetch()
 
     // First attempt fails, the forced reload after it must succeed.
@@ -501,7 +573,12 @@ describe('refetch', () => {
   t('skips a null channel value instead of throwing', async () => {
     Channels.restore([])
     Channels.addExisting('UCbad', null as any)
-    Channels.addExisting('UCok', { url: 'https://youtube.com/channel/UCok', name: 'ok', displayName: 'ok', videos: [] })
+    Channels.addExisting('UCok', {
+      url: 'https://youtube.com/channel/UCok',
+      name: 'ok',
+      displayName: 'ok',
+      videos: [],
+    })
     stubFetch()
 
     expect(() => Channels.refetch()).not.toThrow()
@@ -513,14 +590,31 @@ describe('refetch', () => {
 
   t('joins an in-flight refetch instead of duplicating requests', async () => {
     Channels.restore([])
-    Channels.addExisting('UCa', { url: 'https://youtube.com/channel/UCa', name: 'a', displayName: 'a', videos: [] })
-    Channels.addExisting('UCb', { url: 'https://youtube.com/channel/UCb', name: 'b', displayName: 'b', videos: [] })
+    Channels.addExisting('UCa', {
+      url: 'https://youtube.com/channel/UCa',
+      name: 'a',
+      displayName: 'a',
+      videos: [],
+    })
+    Channels.addExisting('UCb', {
+      url: 'https://youtube.com/channel/UCb',
+      name: 'b',
+      displayName: 'b',
+      videos: [],
+    })
 
     let release!: () => void
-    const pending = new Promise<void>(resolve => { release = resolve })
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
     fetchMock = vi.fn(async () => {
       await pending
-      return { ok: true, json: async () => ({ content: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }] }) }
+      return {
+        ok: true,
+        json: async () => ({
+          content: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }],
+        }),
+      }
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -545,13 +639,25 @@ describe('refetch', () => {
 
   t('schedules a forced reload after the run in flight instead of dropping it', async () => {
     Channels.restore([])
-    Channels.addExisting('UCa', { url: 'https://youtube.com/channel/UCa', name: 'a', displayName: 'a', videos: [] })
+    Channels.addExisting('UCa', {
+      url: 'https://youtube.com/channel/UCa',
+      name: 'a',
+      displayName: 'a',
+      videos: [],
+    })
 
     let release!: () => void
-    const pending = new Promise<void>(resolve => { release = resolve })
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
     fetchMock = vi.fn(async () => {
       await pending
-      return { ok: true, json: async () => ({ content: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }] }) }
+      return {
+        ok: true,
+        json: async () => ({
+          content: [{ ...video, uploaderUrl: '/channel/UCup', uploaderName: 'up' }],
+        }),
+      }
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -583,20 +689,26 @@ describe('add validation', () => {
   })
 
   t('fetches bare handles as channels', async () => {
-    const fetchSpy = vi.fn(async (_input: unknown) => ({ ok: true, json: async () => ({ content: [] }) }))
+    const fetchSpy = vi.fn(async (_input: unknown) => ({
+      ok: true,
+      json: async () => ({ content: [] }),
+    }))
     vi.stubGlobal('fetch', fetchSpy)
 
     await expect(Channels.add('@foo')).rejects.toThrow()
 
-    expect(fetchSpy.mock.calls.map(call => String(call[0]))[0]).toContain('/channels/tabs')
+    expect(fetchSpy.mock.calls.map((call) => String(call[0]))[0]).toContain('/channels/tabs')
   })
 
   t('fetches schemeless urls', async () => {
-    const fetchSpy = vi.fn(async (_input: unknown) => ({ ok: true, json: async () => ({ content: [] }) }))
+    const fetchSpy = vi.fn(async (_input: unknown) => ({
+      ok: true,
+      json: async () => ({ content: [] }),
+    }))
     vi.stubGlobal('fetch', fetchSpy)
 
     await expect(Channels.add('youtube.com/@foo')).rejects.toThrow()
 
-    expect(fetchSpy.mock.calls.map(call => String(call[0]))[0]).toContain('/channels/tabs')
+    expect(fetchSpy.mock.calls.map((call) => String(call[0]))[0]).toContain('/channels/tabs')
   })
 })

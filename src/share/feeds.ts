@@ -32,26 +32,27 @@ export class Feeds extends LocalStorage {
   static #refetching: Promise<void> | null = null
 
   static saveOnUpdate() {
-    feeds.subscribe(feedMap => super.set([...feedMap]))
+    feeds.subscribe((feedMap) => super.set([...feedMap]))
   }
 
   static add(url: string, name = ''): Promise<void> {
     const normalized = this.#normalizeUrl(url)
-    if (!normalized)
-      return Promise.reject(new Error('Invalid feed URL'))
+    if (!normalized) return Promise.reject(new Error('Invalid feed URL'))
 
-    feeds.update(feedMap => new Map(feedMap).set(normalized, { url: normalized, name: name.trim() }))
+    feeds.update((feedMap) =>
+      new Map(feedMap).set(normalized, { url: normalized, name: name.trim() }),
+    )
     return this.refresh(normalized, { reload: true })
   }
 
   static remove(url: string) {
-    feeds.update(feedMap => {
+    feeds.update((feedMap) => {
       const next = new Map(feedMap)
       next.delete(url)
       return next
     })
-    entries.update(list => list.filter(entry => entry.feedUrl !== url))
-    feedStates.update(states => {
+    entries.update((list) => list.filter((entry) => entry.feedUrl !== url))
+    feedStates.update((states) => {
       const next = new Map(states)
       next.delete(url)
       return next
@@ -59,7 +60,7 @@ export class Feeds extends LocalStorage {
   }
 
   static update(url: string, partial: Partial<Feed>) {
-    feeds.update(feedMap => {
+    feeds.update((feedMap) => {
       const feed = feedMap.get(url)
       if (!feed) return feedMap
 
@@ -74,24 +75,22 @@ export class Feeds extends LocalStorage {
     this.update(url, { name: nextName })
 
     const feedName = nextName || this.#hostname(url)
-    entries.update(list => list.map(entry =>
-      entry.feedUrl === url ? { ...entry, feedName } : entry
-    ))
+    entries.update((list) =>
+      list.map((entry) => (entry.feedUrl === url ? { ...entry, feedName } : entry)),
+    )
   }
 
   static refetch({ reload = false } = {}): Promise<void> {
     // Overlapping calls join the run in flight; a forced reload is chained
     // after it instead of being silently dropped.
     if (Feeds.#refetching)
-      return reload
-        ? Feeds.#refetching.then(() => this.refetch({ reload }))
-        : Feeds.#refetching
+      return reload ? Feeds.#refetching.then(() => this.refetch({ reload })) : Feeds.#refetching
 
-    const run = Promise.all(
-      [...get(feeds).keys()].map(url => this.refresh(url, { reload }))
-    )
+    const run = Promise.all([...get(feeds).keys()].map((url) => this.refresh(url, { reload })))
       .then(() => {})
-      .finally(() => { Feeds.#refetching = null })
+      .finally(() => {
+        Feeds.#refetching = null
+      })
 
     Feeds.#refetching = run
     return run
@@ -107,47 +106,46 @@ export class Feeds extends LocalStorage {
     this.#setState(url, {
       loading: true,
       error: '',
-      fetchedAt: current?.fetchedAt ?? 0
+      fetchedAt: current?.fetchedAt ?? 0,
     })
 
     return fetchFeed(url, {
       reload,
-      timeoutInMs: get(config).timeoutInSeconds * 1000
+      timeoutInMs: get(config).timeoutInSeconds * 1000,
     })
-      .then(parsed => {
+      .then((parsed) => {
         // The feed may have been removed while its request was in flight.
         if (!get(feeds).has(url)) return
 
         const feed = get(feeds).get(url)
         const name = feed?.name || parsed.title || this.#hostname(url)
 
-        if (feed && !feed.name)
-          this.update(url, { name })
+        if (feed && !feed.name) this.update(url, { name })
 
-        entries.update(list => [
-          ...list.filter(entry => entry.feedUrl !== url),
-          ...parsed.entries.map(entry => ({
+        entries.update((list) => [
+          ...list.filter((entry) => entry.feedUrl !== url),
+          ...parsed.entries.map((entry) => ({
             ...entry,
             feedUrl: url,
-            feedName: name
-          }))
+            feedName: name,
+          })),
         ])
 
         this.#setState(url, { loading: false, error: '', fetchedAt: Date.now() })
       })
-      .catch(error => {
+      .catch((error) => {
         if (!get(feeds).has(url)) return
 
         this.#setState(url, {
           loading: false,
           error: error instanceof Error ? error.message : String(error),
-          fetchedAt: 0
+          fetchedAt: 0,
         })
       })
   }
 
   static #setState(url: string, state: FeedState) {
-    feedStates.update(states => new Map(states).set(url, state))
+    feedStates.update((states) => new Map(states).set(url, state))
   }
 
   static #normalizeUrl(value: string): string {
@@ -197,9 +195,8 @@ export class Feeds extends LocalStorage {
 
       // A missing/blank url falls back to the serialized key, which is where it
       // came from; strictly malformed values are reported above.
-      const candidateUrl = typeof candidate.url === 'string' && candidate.url.trim()
-        ? candidate.url
-        : key
+      const candidateUrl =
+        typeof candidate.url === 'string' && candidate.url.trim() ? candidate.url : key
       const url = this.#normalizeUrl(candidateUrl)
       if (!url) {
         issues?.push(`${path}: missing or invalid http(s) url`)
@@ -210,10 +207,13 @@ export class Feeds extends LocalStorage {
         issues?.push(`${path}.name: expected a string`)
       }
 
-      return [url, {
+      return [
         url,
-        name: typeof candidate.name === 'string' ? candidate.name : ''
-      }] as [string, Feed]
+        {
+          url,
+          name: typeof candidate.name === 'string' ? candidate.name : '',
+        },
+      ] as [string, Feed]
     })
 
     return new Map(entries)

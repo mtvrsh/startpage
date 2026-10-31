@@ -33,7 +33,10 @@ const PRIVATE_HOST_SUFFIXES = [
 ]
 
 export class ProxyError extends Error {
-  constructor(message: string, readonly status: number) {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
     super(message)
     this.name = 'ProxyError'
   }
@@ -42,42 +45,39 @@ export class ProxyError extends Error {
 function parseIpv4(hostname: string): number[] | null {
   const parts = hostname.split('.')
   // Canonical dotted-quad only: no leading zeros, 1-3 digits per octet.
-  if (parts.length !== 4 || !parts.every(part => /^(0|[1-9]\d{0,2})$/.test(part)))
-    return null
+  if (parts.length !== 4 || !parts.every((part) => /^(0|[1-9]\d{0,2})$/.test(part))) return null
 
   const numbers = parts.map(Number)
-  return numbers.every(number => number <= 255) ? numbers : null
+  return numbers.every((number) => number <= 255) ? numbers : null
 }
 
 function isPrivateIpv4(octets: number[]): boolean {
   const [a, b, c] = octets
 
-  return a === 0
-    || a === 10
-    || a === 127
-    || (a === 100 && b >= 64 && b <= 127)
-    || (a === 169 && b === 254)
-    || (a === 172 && b >= 16 && b <= 31)
-    || (a === 192 && b === 168)
-    || (a === 192 && b === 0)
-    || (a === 192 && b === 88 && c === 99)
-    || (a === 198 && (b === 18 || b === 19))
-    || (a === 198 && b === 51 && c === 100)
-    || (a === 203 && b === 0 && c === 113)
-    || a >= 224
+  return (
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    (a === 192 && b === 0) ||
+    (a === 192 && b === 88 && c === 99) ||
+    (a === 198 && (b === 18 || b === 19)) ||
+    (a === 198 && b === 51 && c === 100) ||
+    (a === 203 && b === 0 && c === 113) ||
+    a >= 224
+  )
 }
 
 function isPrivateIpv6(hostname: string): boolean {
-  if (hostname === '::' || hostname === '::1')
-    return true
+  if (hostname === '::' || hostname === '::1') return true
 
   const firstGroup = hostname.split(':')[0]
-  if (/^f[cd][0-9a-f]{2}$/.test(firstGroup))
-    return true
-  if (/^fe[89ab][0-9a-f]$/.test(firstGroup))
-    return true
-  if (/^ff[0-9a-f]{2}$/.test(firstGroup))
-    return true
+  if (/^f[cd][0-9a-f]{2}$/.test(firstGroup)) return true
+  if (/^fe[89ab][0-9a-f]$/.test(firstGroup)) return true
+  if (/^ff[0-9a-f]{2}$/.test(firstGroup)) return true
 
   // NAT64 well-known prefix (64:ff9b::/96), 6to4 (2002::/16) and Teredo
   // (2001::/32) embed or relay an IPv4 address (e.g. 64:ff9b::7f00:1 =
@@ -85,15 +85,20 @@ function isPrivateIpv6(hostname: string): boolean {
   // vectors and no legitimate public feed is served through such literals,
   // so block the ranges wholesale.
   const groups = hostname.split(':')
-  if (groups[0] === '64' && groups[1] === 'ff9b'
-    || groups[0] === '2002'
-    || groups[0] === '2001'
-      && (groups[1] === '' ? hostname.includes('::') : /^0{1,4}$/.test(groups[1])))
+  if (
+    (groups[0] === '64' && groups[1] === 'ff9b') ||
+    groups[0] === '2002' ||
+    (groups[0] === '2001' &&
+      (groups[1] === '' ? hostname.includes('::') : /^0{1,4}$/.test(groups[1])))
+  )
     return true
 
   // IPv4-mapped addresses.
-  if (hostname.startsWith('::ffff:') || hostname.startsWith('::ffff:0:')
-    || hostname.startsWith('0:0:0:0:0:ffff:'))
+  if (
+    hostname.startsWith('::ffff:') ||
+    hostname.startsWith('::ffff:0:') ||
+    hostname.startsWith('0:0:0:0:0:ffff:')
+  )
     return true
 
   // IPv4-compatible addresses such as ::127.0.0.1, which URL normalises
@@ -114,22 +119,17 @@ function isAmbiguousIpv4Encoding(host: string): boolean {
   // are only safe if the runtime's URL parser canonicalises them before fetch;
   // fail closed so a parser change or a non-WHATWG caller cannot turn them
   // into an SSRF.
-  if (/^\d{1,10}$/.test(host))
-    return true
+  if (/^\d{1,10}$/.test(host)) return true
 
   const labels = host.split('.')
-  if (labels.some(label => label === ''))
-    return true
-  if (labels.some(label => /^0[xX][0-9a-fA-F]+$/.test(label)))
-    return true
-  if (labels.some(label => /^0[0-9]+$/.test(label)))
-    return true
+  if (labels.some((label) => label === '')) return true
+  if (labels.some((label) => /^0[xX][0-9a-fA-F]+$/.test(label))) return true
+  if (labels.some((label) => /^0[0-9]+$/.test(label))) return true
   // Partial or out-of-range dotted quads (1-4 all-numeric labels).
-  if (labels.length >= 1 && labels.length <= 4 && labels.every(label => /^\d{1,3}$/.test(label)))
+  if (labels.length >= 1 && labels.length <= 4 && labels.every((label) => /^\d{1,3}$/.test(label)))
     return true
   // Lone hex-ish label such as "7f000001".
-  if (labels.length === 1 && /^[0-9a-fA-F]{4,}$/.test(host))
-    return true
+  if (labels.length === 1 && /^[0-9a-fA-F]{4,}$/.test(host)) return true
 
   return false
 }
@@ -139,46 +139,40 @@ function isPlausibleHostname(host: string): boolean {
   // hyphen, within DNS length limits, and at least one alphabetic label (which
   // rejects bare-numeric hosts like "2130706433" that can never be a
   // legitimately registered public hostname).
-  if (host.length === 0 || host.length > 253)
-    return false
+  if (host.length === 0 || host.length > 253) return false
 
   const labels = host.split('.')
-  if (labels.some(label => label.length === 0 || label.length > 63))
-    return false
-  if (labels.some(label => !/^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$/i.test(label)))
-    return false
-  if (!labels.some(label => /[a-z]/i.test(label)))
-    return false
+  if (labels.some((label) => label.length === 0 || label.length > 63)) return false
+  if (labels.some((label) => !/^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$/i.test(label))) return false
+  if (!labels.some((label) => /[a-z]/i.test(label))) return false
 
   return true
 }
 
 export function isPrivateHost(hostname: string): boolean {
-  const host = hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '')
-  if (!host)
+  const host = hostname
+    .toLowerCase()
+    .replace(/^\[|\]$/g, '')
+    .replace(/\.$/, '')
+  if (!host) return true
+
+  if (host === 'localhost' || PRIVATE_HOST_SUFFIXES.some((suffix) => host.endsWith(suffix)))
     return true
 
-  if (host === 'localhost' || PRIVATE_HOST_SUFFIXES.some(suffix => host.endsWith(suffix)))
-    return true
-
-  if (host.includes(':'))
-    return isPrivateIpv6(host)
+  if (host.includes(':')) return isPrivateIpv6(host)
 
   const octets = parseIpv4(host)
-  if (octets)
-    return isPrivateIpv4(octets)
+  if (octets) return isPrivateIpv4(octets)
 
   // Not a canonical dotted-quad. Fail closed on anything that looks like an
   // IPv4 numeric encoding, and on anything that is not a plausible hostname.
-  if (isAmbiguousIpv4Encoding(host))
-    return true
+  if (isAmbiguousIpv4Encoding(host)) return true
 
   return !isPlausibleHostname(host)
 }
 
 export function validateFeedUrl(raw: string): URL {
-  if (!raw || raw.length > FEED_MAX_URL_LENGTH)
-    throw new ProxyError('Invalid feed URL', 400)
+  if (!raw || raw.length > FEED_MAX_URL_LENGTH) throw new ProxyError('Invalid feed URL', 400)
 
   let url: URL
   try {
@@ -203,16 +197,14 @@ export function validateFeedUrl(raw: string): URL {
 }
 
 export function isFeedContentType(value: string | null): boolean {
-  if (!value)
-    return false
+  if (!value) return false
 
   const mime = value.split(';', 1)[0].trim().toLowerCase()
   return FEED_CONTENT_TYPES.has(mime)
 }
 
 export async function readLimited(response: Response, limit: number): Promise<Uint8Array> {
-  if (!response.body)
-    return new Uint8Array()
+  if (!response.body) return new Uint8Array()
 
   const reader = response.body.getReader()
   const chunks: Uint8Array[] = []
@@ -255,11 +247,10 @@ async function cancelBody(response: Response): Promise<void> {
 
 export async function feedProxy(
   searchParams: URLSearchParams,
-  cors: Record<string, string>
+  cors: Record<string, string>,
 ): Promise<Response> {
   const rawUrl = searchParams.get('url')
-  if (!rawUrl)
-    throw new ProxyError('url parameter is required', 400)
+  if (!rawUrl) throw new ProxyError('url parameter is required', 400)
 
   let target = validateFeedUrl(rawUrl)
   const signal = AbortSignal.timeout(FEED_TIMEOUT_MS)
@@ -276,20 +267,16 @@ export async function feedProxy(
         },
       })
     } catch (error) {
-      if (isTimeoutError(error))
-        throw new ProxyError('Feed request timed out', 504)
+      if (isTimeoutError(error)) throw new ProxyError('Feed request timed out', 504)
       throw new ProxyError('Failed to fetch feed', 502)
     }
 
-    if (!REDIRECT_STATUSES.has(response.status))
-      break
+    if (!REDIRECT_STATUSES.has(response.status)) break
 
     const location = response.headers.get('location')
     await cancelBody(response)
-    if (!location)
-      throw new ProxyError('Feed redirected without a location', 502)
-    if (redirects >= FEED_MAX_REDIRECTS)
-      throw new ProxyError('Too many redirects', 502)
+    if (!location) throw new ProxyError('Feed redirected without a location', 502)
+    if (redirects >= FEED_MAX_REDIRECTS) throw new ProxyError('Too many redirects', 502)
 
     try {
       target = validateFeedUrl(new URL(location, target).href)

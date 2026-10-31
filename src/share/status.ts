@@ -6,7 +6,7 @@ export class Status extends LocalStorage {
   static LS_NAME = 'status'
 
   static saveOnUpdate() {
-    status.subscribe(s => super.set(s))
+    status.subscribe((s) => super.set(s))
   }
 }
 
@@ -36,10 +36,10 @@ export function parseStoredStatus(raw: unknown): AppStatus {
         now: Array.isArray(fetching.now)
           ? fetching.now.filter((id): id is string => typeof id === 'string')
           : [],
-        max: countOr(fetching.max, 0)
+        max: countOr(fetching.max, 0),
       },
-      fetchedAt: countOr(feed.fetchedAt, 0)
-    }
+      fetchedAt: countOr(feed.fetchedAt, 0),
+    },
   }
 }
 

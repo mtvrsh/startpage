@@ -1,17 +1,22 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { get } from 'svelte/store'
-import Bookmarks, { bookmarks, parseBookmarks, parseStoredBookmarks, type Bookmark } from '../src/share/bookmarks'
+import Bookmarks, {
+  bookmarks,
+  parseBookmarks,
+  parseStoredBookmarks,
+  type Bookmark,
+} from '../src/share/bookmarks'
 
 const first: Bookmark = {
   url: 'https://example.com/first',
   name: 'First',
-  tag: 'one'
+  tag: 'one',
 }
 
 const second: Bookmark = {
   url: 'https://example.com/second',
   name: 'Second',
-  tag: 'two'
+  tag: 'two',
 }
 
 beforeEach(() => Bookmarks.restore([]))
@@ -25,7 +30,7 @@ describe('update', () => {
     expect(get(bookmarks).get(first.url)).toEqual({
       ...first,
       name: 'Renamed',
-      tag: 'new-tag'
+      tag: 'new-tag',
     })
   })
 
@@ -94,9 +99,12 @@ describe('parseStoredBookmarks', () => {
   })
 
   test('rekeys entries whose serialized key differs from bookmark.url', () => {
-    localStorage.setItem('bookmarks', JSON.stringify([[
-      'https://key.example', { url: 'https://value.example', name: 'B', tag: 't' }
-    ]]))
+    localStorage.setItem(
+      'bookmarks',
+      JSON.stringify([
+        ['https://key.example', { url: 'https://value.example', name: 'B', tag: 't' }],
+      ]),
+    )
 
     const map = parseStoredBookmarks()
     expect([...map.keys()]).toEqual(['https://value.example'])
@@ -106,19 +114,22 @@ describe('parseStoredBookmarks', () => {
   test('reports malformed entries in strict mode', () => {
     const issues: string[] = []
 
-    parseBookmarks([
-      null,
-      ['https://key.example', { url: 'javascript:alert(1)', name: 'x' }],
-      ['https://key.example', { url: 'https://ok.example', name: 42, tag: null }],
-      ['https://key.example', ['not', 'a', 'bookmark']]
-    ], issues)
+    parseBookmarks(
+      [
+        null,
+        ['https://key.example', { url: 'javascript:alert(1)', name: 'x' }],
+        ['https://key.example', { url: 'https://ok.example', name: 42, tag: null }],
+        ['https://key.example', ['not', 'a', 'bookmark']],
+      ],
+      issues,
+    )
 
     expect(issues).toEqual([
       'bookmarks[0]: expected a [key, value] pair',
       'bookmarks[1]: unsafe url',
       'bookmarks[2].tag: expected a string',
       'bookmarks[2].name: expected a string',
-      'bookmarks[3]: expected a bookmark object'
+      'bookmarks[3]: expected a bookmark object',
     ])
   })
 
@@ -135,7 +146,9 @@ describe('parseStoredBookmarks', () => {
 
 describe('restore rekeys by bookmark url', () => {
   test('imports bookmarks keyed by their bookmark.url, not the serialized key', () => {
-    Bookmarks.restore([['https://key.example', { url: 'https://value.example', name: 'B', tag: 't' }]] as any)
+    Bookmarks.restore([
+      ['https://key.example', { url: 'https://value.example', name: 'B', tag: 't' }],
+    ] as any)
 
     const map = get(bookmarks)
     expect([...map.keys()]).toEqual(['https://value.example'])
@@ -145,7 +158,11 @@ describe('restore rekeys by bookmark url', () => {
     Bookmarks.restore([['javascript:alert(1)', { url: 'https://ok.example' }]] as any)
 
     expect(get(bookmarks).has('https://ok.example')).toBe(true)
-    expect(get(bookmarks).get('https://ok.example')).toEqual({ url: 'https://ok.example', name: '', tag: '' })
+    expect(get(bookmarks).get('https://ok.example')).toEqual({
+      url: 'https://ok.example',
+      name: '',
+      tag: '',
+    })
   })
 
   test('drops entries whose bookmark.url has an unsafe scheme', () => {

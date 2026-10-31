@@ -23,8 +23,9 @@
   let editNameInput = $state<HTMLInputElement>()
 
   let groups = $derived(
-    [...Map.groupBy([...$bookmarks.values()], bookmark => bookmark.tag)]
-      .sort(([tagA], [tagB]) => tagA.localeCompare(tagB))
+    [...Map.groupBy([...$bookmarks.values()], (bookmark) => bookmark.tag)].sort(([tagA], [tagB]) =>
+      tagA.localeCompare(tagB),
+    ),
   )
 
   let submit = (event: SubmitEvent) => {
@@ -32,25 +33,20 @@
 
     errorUrl = errorTag = errorName = false
 
-    if (!url.trim())
-      errorUrl = true
+    if (!url.trim()) errorUrl = true
 
-    if (url.trim() && !hasSafeScheme(url.trim()))
-      errorUrl = true
+    if (url.trim() && !hasSafeScheme(url.trim())) errorUrl = true
 
-    if (!tag.trim())
-      errorTag = true
+    if (!tag.trim()) errorTag = true
 
-    if (!name.trim())
-      errorName = true
+    if (!name.trim()) errorName = true
 
-    if (errorUrl || errorTag || errorName)
-      return
+    if (errorUrl || errorTag || errorName) return
 
     Bookmarks.set({
       url: url.trim(),
       tag: tag.trim(),
-      name: name.trim()
+      name: name.trim(),
     })
 
     url = tag = name = ''
@@ -113,10 +109,9 @@
     cancelEdit()
   }
 
-  let clearEditError = () => editError = ''
+  let clearEditError = () => (editError = '')
 
-  let remove = (bookmarkUrl: string) =>
-    Bookmarks.delete(bookmarkUrl)
+  let remove = (bookmarkUrl: string) => Bookmarks.delete(bookmarkUrl)
 </script>
 
 <Column title={strings.bookmarks} bind:adding addTitle={strings.addBookmark}>
@@ -129,7 +124,7 @@
         placeholder={strings.name}
         aria-label={strings.name}
         aria-invalid={errorName}
-      >
+      />
       <input
         class="column__input"
         class:error={errorTag}
@@ -137,7 +132,7 @@
         placeholder={strings.tag}
         aria-label={strings.tag}
         aria-invalid={errorTag}
-      >
+      />
       <input
         class="column__input"
         class:error={errorUrl}
@@ -145,7 +140,7 @@
         placeholder={strings.url}
         aria-label={strings.url}
         aria-invalid={errorUrl}
-      >
+      />
       <button class="column__submit" type="submit">{strings.add}</button>
     </form>
   {/snippet}
@@ -158,10 +153,7 @@
 
           <ul class="bookmarks__items">
             {#each items as bookmark (bookmark.url)}
-              <li
-                class="bookmarks__item"
-                class:editing={editingUrl === bookmark.url}
-              >
+              <li class="bookmarks__item" class:editing={editingUrl === bookmark.url}>
                 {#if editingUrl === bookmark.url}
                   <form
                     class="bookmarks__edit"
@@ -178,7 +170,7 @@
                       placeholder={strings.name}
                       aria-label={strings.name}
                       aria-invalid={!!editError}
-                    >
+                    />
                     <input
                       class="column__input"
                       class:error={!!editError}
@@ -188,7 +180,7 @@
                       placeholder={strings.tag}
                       aria-label={strings.tag}
                       aria-invalid={!!editError}
-                    >
+                    />
                     <input
                       class="column__input"
                       class:error={!!editError}
@@ -198,7 +190,7 @@
                       placeholder={strings.url}
                       aria-label={strings.url}
                       aria-invalid={!!editError}
-                    >
+                    />
                     {#if editError}
                       <p class="column__error">{editError}</p>
                     {/if}
@@ -206,11 +198,9 @@
                       <button class="column__submit bookmarks__edit-save" type="submit">
                         {strings.save}
                       </button>
-                      <button
-                        class="bookmarks__edit-cancel"
-                        type="button"
-                        onclick={cancelEdit}
-                      >{strings.cancel}</button>
+                      <button class="bookmarks__edit-cancel" type="button" onclick={cancelEdit}
+                        >{strings.cancel}</button
+                      >
                     </div>
                   </form>
                 {:else}
@@ -218,15 +208,15 @@
                     <span
                       class="bookmarks__link bookmarks__link--unsafe"
                       title={`${strings.unsafeScheme} - ${strings.editBookmarkHint}`}
-                      use:editGesture={{ onEdit: () => startEdit(bookmark) }}
-                    >{bookmark.name}</span>
+                      use:editGesture={{ onEdit: () => startEdit(bookmark) }}>{bookmark.name}</span
+                    >
                   {:else}
                     <a
                       class="bookmarks__link"
                       href={bookmark.url}
                       title={`${bookmark.url} - ${strings.editBookmarkHint}`}
-                      use:editGesture={{ onEdit: () => startEdit(bookmark) }}
-                    >{bookmark.name}</a>
+                      use:editGesture={{ onEdit: () => startEdit(bookmark) }}>{bookmark.name}</a
+                    >
                   {/if}
 
                   <button
@@ -234,8 +224,8 @@
                     type="button"
                     title={strings.remove}
                     aria-label={`${strings.remove} ${bookmark.name}`}
-                    onclick={() => remove(bookmark.url)}
-                  >×</button>
+                    onclick={() => remove(bookmark.url)}>×</button
+                  >
                 {/if}
               </li>
             {/each}
@@ -306,7 +296,7 @@
     }
 
     &__link--unsafe {
-      opacity: .6;
+      opacity: 0.6;
     }
 
     &__edit {

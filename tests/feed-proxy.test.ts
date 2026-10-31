@@ -15,10 +15,10 @@ afterEach(() => {
 
 describe('validateFeedUrl', () => {
   test('accepts public http and https URLs on default ports', () => {
-    expect(validateFeedUrl('https://dustri.org/b/atom.xml').href)
-      .toBe('https://dustri.org/b/atom.xml')
-    expect(validateFeedUrl('http://example.com:80/feed').href)
-      .toBe('http://example.com/feed')
+    expect(validateFeedUrl('https://dustri.org/b/atom.xml').href).toBe(
+      'https://dustri.org/b/atom.xml',
+    )
+    expect(validateFeedUrl('http://example.com:80/feed').href).toBe('http://example.com/feed')
   })
 
   test('rejects non-standard ports', () => {
@@ -153,9 +153,10 @@ describe('readLimited', () => {
     return {
       body: {
         getReader: () => ({
-          read: async () => index < chunks.length
-            ? { done: false, value: chunks[index++] }
-            : { done: true, value: undefined },
+          read: async () =>
+            index < chunks.length
+              ? { done: false, value: chunks[index++] }
+              : { done: true, value: undefined },
           cancel: async () => {},
         }),
       },
@@ -163,27 +164,25 @@ describe('readLimited', () => {
   }
 
   test('joins chunks within the limit', async () => {
-    const body = await readLimited(stream([
-      new Uint8Array([1, 2]),
-      new Uint8Array([3, 4]),
-    ]), 4)
+    const body = await readLimited(stream([new Uint8Array([1, 2]), new Uint8Array([3, 4])]), 4)
 
     expect(Array.from(body)).toEqual([1, 2, 3, 4])
   })
 
   test('rejects bodies over the limit', async () => {
-    await expect(readLimited(stream([
-      new Uint8Array([1, 2, 3]),
-      new Uint8Array([4, 5, 6]),
-    ]), 4)).rejects.toMatchObject({ status: 413 })
+    await expect(
+      readLimited(stream([new Uint8Array([1, 2, 3]), new Uint8Array([4, 5, 6])]), 4),
+    ).rejects.toMatchObject({ status: 413 })
   })
 })
 
 describe('feedProxy', () => {
   test('returns the upstream XML with CORS and cache headers', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response('<feed/>', {
-      headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' },
-    }))
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response('<feed/>', {
+        headers: { 'Content-Type': 'application/atom+xml; charset=utf-8' },
+      }),
+    )
     vi.stubGlobal('fetch', fetchMock)
 
     const response = await feedProxy(
@@ -203,30 +202,37 @@ describe('feedProxy', () => {
   })
 
   test('requires the url parameter', async () => {
-    await expect(feedProxy(new URLSearchParams(), CORS))
-      .rejects.toMatchObject({ status: 400 })
+    await expect(feedProxy(new URLSearchParams(), CORS)).rejects.toMatchObject({ status: 400 })
   })
 
   test('rejects non-XML upstream responses', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html/>', {
-      headers: { 'Content-Type': 'text/html' },
-    })))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response('<html/>', {
+          headers: { 'Content-Type': 'text/html' },
+        }),
+      ),
+    )
 
-    await expect(feedProxy(
-      new URLSearchParams({ url: 'https://example.com/' }),
-      CORS,
-    )).rejects.toMatchObject({ status: 415 })
+    await expect(
+      feedProxy(new URLSearchParams({ url: 'https://example.com/' }), CORS),
+    ).rejects.toMatchObject({ status: 415 })
   })
 
   test('revalidates redirect targets', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, {
-      status: 302,
-      headers: { Location: 'http://127.0.0.1/feed' },
-    })))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(null, {
+          status: 302,
+          headers: { Location: 'http://127.0.0.1/feed' },
+        }),
+      ),
+    )
 
-    await expect(feedProxy(
-      new URLSearchParams({ url: 'https://example.com/feed' }),
-      CORS,
-    )).rejects.toMatchObject({ status: 403 })
+    await expect(
+      feedProxy(new URLSearchParams({ url: 'https://example.com/feed' }), CORS),
+    ).rejects.toMatchObject({ status: 403 })
   })
 })

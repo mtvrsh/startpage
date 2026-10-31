@@ -1,4 +1,4 @@
-import { writable, get } from 'svelte/store';
+import { writable, get } from 'svelte/store'
 import { LocalStorage } from '../util/storage'
 import { hasSafeScheme } from '../util/scheme'
 import { readPairs } from '../util/validate'
@@ -7,29 +7,29 @@ import { status } from './status'
 import { backend } from '../lib/api/backend'
 
 export interface Channel {
-  url: string;
-  name: string;
-  displayName: string;
-  videos: Video[];
+  url: string
+  name: string
+  displayName: string
+  videos: Video[]
 }
 
 export interface Video {
-  url: string;
-  title: string;
-  thumbnail: string;
-  duration: string;
-  uploaded: number;
-  uploadedDate: string;
+  url: string
+  title: string
+  thumbnail: string
+  duration: string
+  uploaded: number
+  uploadedDate: string
 }
 
 export interface ChannelVideo extends Video {
-  channelUrl: string;
-  channelName: string;
-  channelDisplayName: string;
+  channelUrl: string
+  channelName: string
+  channelDisplayName: string
 }
 
 type ChannelRef = {
-  kind: 'channel' | 'playlist',
+  kind: 'channel' | 'playlist'
   id: string
 }
 
@@ -42,7 +42,7 @@ export class Channels extends LocalStorage {
   static #refetching: Promise<void> | null = null
 
   static saveOnUpdate() {
-    channels.subscribe(channelMap => super.set([...channelMap]))
+    channels.subscribe((channelMap) => super.set([...channelMap]))
   }
 
   static add(url: string, partial = false, reload = false): Promise<void> {
@@ -55,64 +55,59 @@ export class Channels extends LocalStorage {
 
   static #fetch(ref: ChannelRef, partial = false, reload = false): Promise<void> {
     return (
-        ref.kind === 'playlist'
-      ? get(backend).fetchPlaylist(ref.id, reload)
-      : get(backend).fetchChannel(ref.id, reload)
-    ).then(channel => {
-        if (partial)
-          this.update(ref.id, {videos: channel.videos})
-        else
-          channels.update(channelMap => channelMap.set(ref.id, channel))
+      ref.kind === 'playlist'
+        ? get(backend).fetchPlaylist(ref.id, reload)
+        : get(backend).fetchChannel(ref.id, reload)
+    )
+      .then((channel) => {
+        if (partial) this.update(ref.id, { videos: channel.videos })
+        else channels.update((channelMap) => channelMap.set(ref.id, channel))
 
         // A success clears the previous failure; a channel removed while its
         // request was in flight gets no new state.
+        if (get(channels).has(ref.id)) this.#setState(ref.id, '')
+      })
+      .catch((error) => {
         if (get(channels).has(ref.id))
-          this.#setState(ref.id, '')
-      }
-    ).catch(error => {
-      if (get(channels).has(ref.id))
-        this.#setState(
-          ref.id,
-          error instanceof Error ? error.message : String(error)
-        )
+          this.#setState(ref.id, error instanceof Error ? error.message : String(error))
 
-      // Rethrow so add()'s form rejection and refetch()'s swallow keep their
-      // current behavior; only the recording is added.
-      throw error
-    }).finally(() => this.#clearFetching(ref.id))
+        // Rethrow so add()'s form rejection and refetch()'s swallow keep their
+        // current behavior; only the recording is added.
+        throw error
+      })
+      .finally(() => this.#clearFetching(ref.id))
   }
 
   static #setState(id: string, error: string) {
-    channelStates.update(states => new Map(states).set(id, { error }))
+    channelStates.update((states) => new Map(states).set(id, { error }))
   }
 
   static #clearFetching(id: string) {
-    status.update(state => {
+    status.update((state) => {
       state.feed.fetching.now = state.feed.fetching.now.filter(
-        (channelId: string) => channelId != id
+        (channelId: string) => channelId != id,
       )
 
-      if (state.feed.fetching.now.length == 0)
-        state.feed.fetching.max = 0
+      if (state.feed.fetching.now.length == 0) state.feed.fetching.max = 0
 
       return state
     })
   }
 
   static update(id: string, channelProps: any) {
-    channels.update(channelMap => {
+    channels.update((channelMap) => {
       const channel = channelMap.get(id)
       if (!channel) return channelMap
-      return new Map(channelMap).set(id, {...channel, ...channelProps})
+      return new Map(channelMap).set(id, { ...channel, ...channelProps })
     })
   }
 
   static remove(id: string) {
-    channels.update(channelMap => {
+    channels.update((channelMap) => {
       channelMap.delete(id)
       return channelMap
     })
-    channelStates.update(states => {
+    channelStates.update((states) => {
       const next = new Map(states)
       next.delete(id)
       return next
@@ -120,38 +115,37 @@ export class Channels extends LocalStorage {
   }
 
   static addExisting(id: string, channel: Channel) {
-    channels.update(channelMap => channelMap.set(id, channel))
+    channels.update((channelMap) => channelMap.set(id, channel))
   }
 
   static toArray(selected: [string, Channel] | Map<string, Channel>): ChannelVideo[] {
-    return this.#toArray(
-      selected instanceof Map ? [...selected.entries()] : [selected]
-    )
+    return this.#toArray(selected instanceof Map ? [...selected.entries()] : [selected])
   }
 
   static #toArray(selected: Array<[string, Channel]>): ChannelVideo[] {
     return selected.flatMap(([_url, channel]) => {
       if (!channel || !Array.isArray(channel.videos)) return []
 
-      return channel.videos.map(video => ({
+      return channel.videos.map((video) => ({
         ...video,
         channelUrl: channel.url,
-        channelName : channel.name,
-        channelDisplayName : channel.displayName
+        channelName: channel.name,
+        channelDisplayName: channel.displayName,
       }))
     })
   }
 
-  static BY_UPLOADED = (videoA: Video, videoB: Video) =>
-    videoB.uploaded - videoA.uploaded
+  static BY_UPLOADED = (videoA: Video, videoB: Video) => videoB.uploaded - videoA.uploaded
 
   static BY_CHANNEL_DISPLAY_NAME = (channelA: ChannelVideo, channelB: ChannelVideo) =>
-    (channelA.channelDisplayName || channelA.channelName).localeCompare(channelB.channelDisplayName || channelB.channelName)
+    (channelA.channelDisplayName || channelA.channelName).localeCompare(
+      channelB.channelDisplayName || channelB.channelName,
+    )
 
   static BY_NAME = ([, channelA]: [string, Channel], [, channelB]: [string, Channel]) =>
     (channelA.displayName || channelA.name).localeCompare(channelB.displayName || channelB.name)
 
-  static refetch({reload = false} = {}): Promise<void> {
+  static refetch({ reload = false } = {}): Promise<void> {
     // Overlapping calls join the run in flight; a request that asked for a
     // forced reload is chained after it instead, so the intent is not
     // silently dropped (the sync button is disabled meanwhile, so this only
@@ -164,19 +158,19 @@ export class Channels extends LocalStorage {
     const forceReload = reload || !this.#isFeedFresh()
     const tasks: Promise<void>[] = []
 
-    channels.update(channelMap => {
-      status.update(state => {
-        state.feed.fetching.now = [...channelMap].map(entry => entry[0])
+    channels.update((channelMap) => {
+      status.update((state) => {
+        state.feed.fetching.now = [...channelMap].map((entry) => entry[0])
         state.feed.fetching.max = channelMap.size
         return state
       })
 
       channelMap.forEach((channel, id) => {
-        tasks.push(this.#fetch(this.#refFor(channel, id), true, forceReload)
-          .catch(() => {
+        tasks.push(
+          this.#fetch(this.#refFor(channel, id), true, forceReload).catch(() => {
             // Failed channel was already removed from fetching.now in #fetch;
             // remaining ids keep their in-flight progress
-          })
+          }),
         )
       })
 
@@ -188,18 +182,23 @@ export class Channels extends LocalStorage {
     // Settle all channels, then let the next refetch start a new run.
     const run = Promise.all(tasks)
       .then(() => {})
-      .finally(() => { Channels.#refetching = null })
+      .finally(() => {
+        Channels.#refetching = null
+      })
 
     Channels.#refetching = run
     return run
   }
 
   static #isFeedFresh() {
-    return Date.now() < (get(status).feed.fetchedAt + get(config).cacheLifetimeInMinutes * 60000)
+    return Date.now() < get(status).feed.fetchedAt + get(config).cacheLifetimeInMinutes * 60000
   }
 
   static #resetFeedFetchedAt() {
-    status.update(state => { state.feed.fetchedAt = Date.now(); return state })
+    status.update((state) => {
+      state.feed.fetchedAt = Date.now()
+      return state
+    })
   }
 
   static #refFor(channel: Channel, fallbackId: string): ChannelRef {
@@ -208,15 +207,14 @@ export class Channels extends LocalStorage {
     if (channel?.url)
       return {
         kind: this.#isPlaylist(channel.url) ? 'playlist' : 'channel',
-        id: fallbackId
+        id: fallbackId,
       }
 
     // Missing stored url: parse the map key itself, falling back to the legacy
     // heuristics for keys #parse cannot understand. Only the kind is trusted
     // from the parse — the id stays the map key.
     const parsed = this.#tryParse(fallbackId)
-    if (parsed)
-      return { kind: parsed.kind, id: fallbackId }
+    if (parsed) return { kind: parsed.kind, id: fallbackId }
 
     return { kind: this.#isPlaylist(fallbackId) ? 'playlist' : 'channel', id: fallbackId }
   }
@@ -248,8 +246,7 @@ export class Channels extends LocalStorage {
   }
 
   static #parseRef(raw: string): ChannelRef | undefined {
-    if (!raw)
-      return undefined
+    if (!raw) return undefined
 
     // Bare ids: 'UC…' channel ids or playlist ids (also legacy 'x=list=…' keys)
     if (!raw.includes('/')) {
@@ -267,8 +264,7 @@ export class Channels extends LocalStorage {
 
     // Schemeless youtube urls ('youtube.com/@foo') were accepted by the earlier
     // split-based parser, so normalize them instead of rejecting.
-    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw))
-      raw = `https://${raw.replace(/^\/\//, '')}`
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) raw = `https://${raw.replace(/^\/\//, '')}`
 
     let parsedUrl: URL
     try {
@@ -280,12 +276,10 @@ export class Channels extends LocalStorage {
     // Validate the host before honoring any query parameters: a `list=` on a
     // non-YouTube host must not smuggle a playlist id in.
     const hostname = parsedUrl.hostname.replace(/^(?:www|m)\./i, '')
-    if (!/(^|\.)youtube\.com$/.test(hostname))
-      return undefined
+    if (!/(^|\.)youtube\.com$/.test(hostname)) return undefined
 
     const list = parsedUrl.searchParams.get('list')
-    if (list)
-      return { kind: 'playlist', id: list }
+    if (list) return { kind: 'playlist', id: list }
 
     // A single video is never a channel or playlist
     if (/\/(watch|shorts\/[^/]+)\/?$/.test(parsedUrl.pathname))
@@ -300,12 +294,10 @@ export class Channels extends LocalStorage {
 
     const [first, second] = segments
 
-    if (first?.startsWith('@'))
-      return { kind: 'channel', id: first }
+    if (first?.startsWith('@')) return { kind: 'channel', id: first }
 
-    if ((first === 'channel' || first === 'c' || first === 'user')) {
-      if (!second)
-        this.#fail(raw)
+    if (first === 'channel' || first === 'c' || first === 'user') {
+      if (!second) this.#fail(raw)
       return { kind: 'channel', id: second }
     }
 
@@ -313,11 +305,14 @@ export class Channels extends LocalStorage {
   }
 
   static serialize() {
-    return [...get(channels)].map(([url, channel]) => [url, {
-      url: channel.url,
-      name: channel.name,
-      displayName: channel.displayName
-    }])
+    return [...get(channels)].map(([url, channel]) => [
+      url,
+      {
+        url: channel.url,
+        name: channel.name,
+        displayName: channel.displayName,
+      },
+    ])
   }
 
   static restore(data: unknown) {
@@ -376,7 +371,7 @@ export class Channels extends LocalStorage {
         displayName: typeof candidate.displayName === 'string' ? candidate.displayName : '',
         // Persisted feeds keep their cached videos across reloads; exported
         // files have none, so this is usually empty.
-        videos
+        videos,
       }
 
       return [this.#tryParse(key)?.id || key, channel] as [string, Channel]
@@ -392,7 +387,7 @@ export class Channels extends LocalStorage {
 function parseStoredVideos(value: unknown): Video[] {
   if (!Array.isArray(value)) return []
 
-  return value.flatMap(video => {
+  return value.flatMap((video) => {
     if (typeof video !== 'object' || video === null) return []
 
     const candidate = video as Record<string, unknown>
@@ -404,16 +399,19 @@ function parseStoredVideos(value: unknown): Video[] {
       typeof candidate.uploadedDate !== 'string' ||
       typeof candidate.uploaded !== 'number' ||
       !Number.isFinite(candidate.uploaded)
-    ) return []
+    )
+      return []
 
-    return [{
-      url: candidate.url,
-      title: candidate.title,
-      thumbnail: candidate.thumbnail,
-      duration: candidate.duration,
-      uploaded: candidate.uploaded,
-      uploadedDate: candidate.uploadedDate
-    }]
+    return [
+      {
+        url: candidate.url,
+        title: candidate.title,
+        thumbnail: candidate.thumbnail,
+        duration: candidate.duration,
+        uploaded: candidate.uploaded,
+        uploadedDate: candidate.uploadedDate,
+      },
+    ]
   })
 }
 
@@ -427,7 +425,7 @@ const TAB_SEGMENTS = new Set([
   'community',
   'about',
   'podcasts',
-  'releases'
+  'releases',
 ])
 
 const stored = Channels.get()

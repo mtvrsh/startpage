@@ -6,24 +6,20 @@
    * 2. After fetching is done, reset
    */
 
-  let max   = $state(0)
-  let now   = $derived(max - $status.feed.fetching.now.length)
-  let width = $derived(max ? Math.max(now / max * 100, 5) + 'vw' : 0)
+  let max = $state(0)
+  let now = $derived(max - $status.feed.fetching.now.length)
+  let width = $derived(max ? Math.max((now / max) * 100, 5) + 'vw' : 0)
 
-  let isFetching = () =>
-    $status.feed.fetching.max
+  let isFetching = () => $status.feed.fetching.max
 
-  let isFetchingDone = () =>
-    now === max
+  let isFetchingDone = () => now === max
 
   let resetMaxIfFetchingIsDone = () => {
-    if (isFetchingDone())
-      max = 0
+    if (isFetchingDone()) max = 0
   }
 
   $effect(() => {
-    if (isFetching())
-      max = $status.feed.fetching.max
+    if (isFetching()) max = $status.feed.fetching.max
   })
 </script>
 
@@ -40,11 +36,11 @@
 <style lang="scss">
   .progress-bar {
     position: fixed;
-    height: .2em;
+    height: 0.2em;
     background: var(--color-accent);
 
     &.animate {
-      transition: width .1618s
+      transition: width 0.1618s;
     }
   }
 </style>

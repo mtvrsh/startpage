@@ -5,11 +5,9 @@ import App from '../src/App.svelte'
 let target: HTMLDivElement
 let component: ReturnType<typeof mount>
 
-let settingsButton = () =>
-  target.querySelector<HTMLButtonElement>('button[aria-label="Settings"]')!
+let settingsButton = () => target.querySelector<HTMLButtonElement>('button[aria-label="Settings"]')!
 
-let hasSettings = () =>
-  target.querySelector('[role="dialog"]') !== null
+let hasSettings = () => target.querySelector('[role="dialog"]') !== null
 
 let historyGo = async (direction: 'back' | 'forward', path: string) => {
   history[direction]()

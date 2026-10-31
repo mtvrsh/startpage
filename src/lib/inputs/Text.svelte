@@ -1,11 +1,8 @@
 <script lang="ts">
-  let {
-    value = $bindable(),
-    ...args
-  } = $props()
+  let { value = $bindable(), ...args } = $props()
 </script>
 
-<input class="text" bind:value {...args}>
+<input class="text" bind:value {...args} />
 
 <style lang="scss">
   @use '../scss/mixins' as *;

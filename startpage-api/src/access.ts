@@ -27,7 +27,7 @@ function allowedOrigins(env: { ALLOWED_ORIGINS?: string }): Set<string> {
   return new Set(
     raw
       .split(/\s+/)
-      .map(origin => origin.replace(/\/+$/, ''))
+      .map((origin) => origin.replace(/\/+$/, ''))
       .filter(Boolean),
   )
 }
@@ -64,7 +64,10 @@ export function isAllowedOrigin(request: Request, env: { ALLOWED_ORIGINS?: strin
  * `Vary: Origin` so shared caches never serve one origin's grant to another).
  * Must not be combined with `Access-Control-Allow-Credentials`.
  */
-export function corsHeaders(request: Request, env: { ALLOWED_ORIGINS?: string }): Record<string, string> {
+export function corsHeaders(
+  request: Request,
+  env: { ALLOWED_ORIGINS?: string },
+): Record<string, string> {
   if (!isAllowedOrigin(request, env)) return {}
   const origin = requestOrigin(request)!
   return {

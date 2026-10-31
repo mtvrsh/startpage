@@ -4,58 +4,58 @@
 @use 'lib/scss/mixins' as *;
 
 :root {
-  --color-bg:               #{$gruvbox-light-bg-0};
-  --color-bg-light:         #{$gruvbox-light-bg-1};
-  --color-fg:               #{$gruvbox-light-fg-0};
-  --color-fg-light:         #{$gruvbox-light-fg-1};
-  --color-fg-inactive:      #{$gruvbox-light-bg-3};
-  --color-surface:          #{$gruvbox-light-bg-1};
-  --color-surface-fg:       #{$gruvbox-light-fg-1};
-  --color-surface-light:    #{$gruvbox-light-bg-2};
+  --color-bg: #{$gruvbox-light-bg-0};
+  --color-bg-light: #{$gruvbox-light-bg-1};
+  --color-fg: #{$gruvbox-light-fg-0};
+  --color-fg-light: #{$gruvbox-light-fg-1};
+  --color-fg-inactive: #{$gruvbox-light-bg-3};
+  --color-surface: #{$gruvbox-light-bg-1};
+  --color-surface-fg: #{$gruvbox-light-fg-1};
+  --color-surface-light: #{$gruvbox-light-bg-2};
   --color-surface-inactive: #{$gruvbox-light-bg-4};
-  --color-accent:           #{$gruvbox-light-aqua-0};
-  --color-accent-fg:        #{$gruvbox-light-fg-0};
-  --color-accent-light:     #{$gruvbox-light-aqua-1};
-  --color-error:            #{$gruvbox-light-red-0};
-  --color-error-fg:         #{$gruvbox-light-fg-0};
-  --color-visited:          #{$gruvbox-light-purple-0};
-  --color-visited-fg:       #{$gruvbox-light-fg-0};
-  --color-warrning:         #{$gruvbox-light-yellow-0};
-  --color-warrning-fg:      #{$gruvbox-light-bg-0};
+  --color-accent: #{$gruvbox-light-aqua-0};
+  --color-accent-fg: #{$gruvbox-light-fg-0};
+  --color-accent-light: #{$gruvbox-light-aqua-1};
+  --color-error: #{$gruvbox-light-red-0};
+  --color-error-fg: #{$gruvbox-light-fg-0};
+  --color-visited: #{$gruvbox-light-purple-0};
+  --color-visited-fg: #{$gruvbox-light-fg-0};
+  --color-warrning: #{$gruvbox-light-yellow-0};
+  --color-warrning-fg: #{$gruvbox-light-bg-0};
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg:               #{$gruvbox-dark-bg-0};
-    --color-bg-light:         #{$gruvbox-dark-bg-1};
-    --color-fg:               #{$gruvbox-dark-fg-0};
-    --color-fg-light:         #{$gruvbox-dark-fg-1};
-    --color-fg-inactive:      #{$gruvbox-dark-bg-3};
-    --color-surface:          #{$gruvbox-dark-bg-1};
-    --color-surface-fg:       #{$gruvbox-dark-fg-1};
-    --color-surface-light:    #{$gruvbox-dark-bg-2};
+    --color-bg: #{$gruvbox-dark-bg-0};
+    --color-bg-light: #{$gruvbox-dark-bg-1};
+    --color-fg: #{$gruvbox-dark-fg-0};
+    --color-fg-light: #{$gruvbox-dark-fg-1};
+    --color-fg-inactive: #{$gruvbox-dark-bg-3};
+    --color-surface: #{$gruvbox-dark-bg-1};
+    --color-surface-fg: #{$gruvbox-dark-fg-1};
+    --color-surface-light: #{$gruvbox-dark-bg-2};
     --color-surface-inactive: #{$gruvbox-dark-bg-4};
-    --color-accent:           #{$gruvbox-dark-aqua-0};
-    --color-accent-fg:        #{$gruvbox-dark-fg-0};
-    --color-accent-light:     #{$gruvbox-dark-aqua-1};
-    --color-error:            #{$gruvbox-dark-red-0};
-    --color-error-fg:         #{$gruvbox-dark-fg-0};
-    --color-visited:          #{$gruvbox-dark-purple-0};
-    --color-visited-fg:       #{$gruvbox-dark-fg-0};
-    --color-warrning:         #{$gruvbox-dark-yellow-0};
-    --color-warrning-fg:      #{$gruvbox-dark-bg-0};
+    --color-accent: #{$gruvbox-dark-aqua-0};
+    --color-accent-fg: #{$gruvbox-dark-fg-0};
+    --color-accent-light: #{$gruvbox-dark-aqua-1};
+    --color-error: #{$gruvbox-dark-red-0};
+    --color-error-fg: #{$gruvbox-dark-fg-0};
+    --color-visited: #{$gruvbox-dark-purple-0};
+    --color-visited-fg: #{$gruvbox-dark-fg-0};
+    --color-warrning: #{$gruvbox-dark-yellow-0};
+    --color-warrning-fg: #{$gruvbox-dark-bg-0};
   }
 }
 
 :root {
-  --gap-0: .25rem;
-  --gap-1: .5rem;
-  --gap-2: .75rem;
+  --gap-0: 0.25rem;
+  --gap-1: 0.5rem;
+  --gap-2: 0.75rem;
   --gap-3: 1rem;
   --gap-4: 1.25rem;
 
-  --border : .1rem solid;
-  --outline: .2rem solid;
+  --border: 0.1rem solid;
+  --outline: 0.2rem solid;
 }
 
 svg {
@@ -78,7 +78,8 @@ a {
   text-decoration: none;
 }
 
-a:hover, a:focus {
+a:hover,
+a:focus {
   outline: none;
   text-decoration: underline;
 }
@@ -88,16 +89,31 @@ ul {
   list-style: none;
 }
 
-ul, li, h1, h2, h3, h4, p {
+ul,
+li,
+h1,
+h2,
+h3,
+h4,
+p {
   margin: 0;
 }
 
 // Headings are structural only; the typography scale controls weight.
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: normal;
 }
 
-button, input, optgroup, select, textarea {
+button,
+input,
+optgroup,
+select,
+textarea {
   line-height: inherit;
 }
 
@@ -153,7 +169,7 @@ button, input, optgroup, select, textarea {
   color: var(--color-accent);
   background: var(--color-surface);
   cursor: default;
-  opacity: .6;
+  opacity: 0.6;
 }
 
 .column__form form {

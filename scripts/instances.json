@@ -1,15 +1,8 @@
 {
   "piped": {
-    "instances": [
-      "https://api.piped.private.coffee",
-      "https://pipedapi.wireway.ch"
-    ]
+    "instances": ["https://api.piped.private.coffee", "https://pipedapi.wireway.ch"]
   },
   "invidious": {
-    "workingInstances": [
-      "https://invidious.f5.si",
-      "https://invidious.tiekoetter.com",
-      "https://inv.zoomerville.com"
-    ]
+    "workingInstances": ["https://invidious.tiekoetter.com", "https://inv.zoomerville.com"]
   }
 }

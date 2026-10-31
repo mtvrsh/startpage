@@ -1,5 +1,5 @@
 <script lang="ts">
-  let { message, error = false }: { message: string, error?: boolean } = $props()
+  let { message, error = false }: { message: string; error?: boolean } = $props()
 </script>
 
 <p class="message" class:error>

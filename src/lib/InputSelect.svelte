@@ -1,16 +1,11 @@
 <script lang="ts">
-  let {
-    id,
-    label,
-    use = $bindable(),
-    options = $bindable()
-  } = $props()
+  let { id, label, use = $bindable(), options = $bindable() } = $props()
 
   let setUse = (e: Event) => {
     const target = e.target as HTMLSelectElement
     use = {
       value: target.options[target.selectedIndex].value,
-      label: target.options[target.selectedIndex].label
+      label: target.options[target.selectedIndex].label,
     }
   }
 </script>
@@ -24,7 +19,7 @@
 <select onchange={setUse} {id}>
   {@render option(use.value, use.label)}
 
-  {#each options as {value, label}}
+  {#each options as { value, label }}
     {#if use.value != value}
       {@render option(value, label)}
     {/if}

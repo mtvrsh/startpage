@@ -12,21 +12,25 @@ describe('parseStoredStatus', () => {
       [],
       { feed: null },
       { feed: { fetching: 'x' } },
-      { feed: { fetching: { now: 'x', max: 'y' }, fetchedAt: 'z' } }
+      { feed: { fetching: { now: 'x', max: 'y' }, fetchedAt: 'z' } },
     ]) {
       expect(parseStoredStatus(raw)).toEqual(idle)
     }
   })
 
   test('keeps well-formed values and drops non-string ids', () => {
-    expect(parseStoredStatus({
-      feed: { fetching: { now: ['a', 1, null, 'b'], max: 3 }, fetchedAt: 123 }
-    })).toEqual({ feed: { fetching: { now: ['a', 'b'], max: 3 }, fetchedAt: 123 } })
+    expect(
+      parseStoredStatus({
+        feed: { fetching: { now: ['a', 1, null, 'b'], max: 3 }, fetchedAt: 123 },
+      }),
+    ).toEqual({ feed: { fetching: { now: ['a', 'b'], max: 3 }, fetchedAt: 123 } })
   })
 
   test('clamps negative numbers', () => {
-    expect(parseStoredStatus({
-      feed: { fetching: { now: [], max: -1 }, fetchedAt: -5 }
-    })).toEqual(idle)
+    expect(
+      parseStoredStatus({
+        feed: { fetching: { now: [], max: -1 }, fetchedAt: -5 },
+      }),
+    ).toEqual(idle)
   })
 })

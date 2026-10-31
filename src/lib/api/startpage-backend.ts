@@ -9,7 +9,7 @@ import { isChannelId } from '../../util/youtube'
 function getText(obj: any): string {
   if (!obj) return ''
   if (typeof obj === 'string') return obj
-  return obj.text || (obj.runs?.map((run: any) => run.text).join('')) || ''
+  return obj.text || obj.runs?.map((run: any) => run.text).join('') || ''
 }
 
 function bestThumbnail(thumbnails: any[]): string {
@@ -23,18 +23,18 @@ export class StartpageBackend implements Backend {
   async search(query: string): Promise<SearchChannelsResult[]> {
     const { backendUrl, timeoutInSeconds } = get(config)
     const response = await fetch(`${backendUrl}/search/channels?q=${encodeURIComponent(query)}`, {
-      signal: AbortSignal.timeout(timeoutInSeconds * 1000)
+      signal: AbortSignal.timeout(timeoutInSeconds * 1000),
     })
     if (!response.ok) return []
 
     const channels: any[] = await response.json()
     if (!Array.isArray(channels)) return []
 
-    return channels.map(channel => ({
+    return channels.map((channel) => ({
       url: `https://youtube.com/channel/${channel.id}`,
       name: channel.author?.name || '',
       thumbnail: bestThumbnail(channel.author?.thumbnails) || '',
-      subscribers: 0
+      subscribers: 0,
     }))
   }
 
@@ -44,10 +44,8 @@ export class StartpageBackend implements Backend {
     // and legacy keys have to go through the channel endpoint.
     const fetchAll = feedFetchAll && isChannelId(id)
     const response = await this.request(
-      fetchAll
-        ? `${backendUrl}/playlists/UU${id.slice(2)}`
-        : `${backendUrl}/channels/${id}`,
-      reload
+      fetchAll ? `${backendUrl}/playlists/UU${id.slice(2)}` : `${backendUrl}/channels/${id}`,
+      reload,
     )
     if (!response.ok) throw new Error(`Failed to fetch channel ${id}`)
 
@@ -57,7 +55,7 @@ export class StartpageBackend implements Backend {
 
     const author = fetchAll ? data.author : feedItems[0].author
 
-    const videos = feedItems.map(video => {
+    const videos = feedItems.map((video) => {
       const duration = this.formatDuration(video.duration, video.is_live)
       const uploaded = this.getUploaded(video)
       const uploadedDate = getText(video.published)
@@ -69,7 +67,7 @@ export class StartpageBackend implements Backend {
         thumbnail: thumbnailUrl,
         duration,
         uploaded,
-        uploadedDate
+        uploadedDate,
       }
     })
 
@@ -77,7 +75,7 @@ export class StartpageBackend implements Backend {
       url: `https://youtube.com/channel/${author?.id || id}`,
       name: author?.name || '',
       displayName: author?.name || '',
-      videos
+      videos,
     }
   }
 
@@ -92,7 +90,7 @@ export class StartpageBackend implements Backend {
 
     const author = data.author || feedItems[0].author
 
-    const videos = feedItems.map(video => {
+    const videos = feedItems.map((video) => {
       const duration = this.formatDuration(video.duration, video.is_live)
       const uploaded = this.getUploaded(video)
       const uploadedDate = getText(video.published)
@@ -104,7 +102,7 @@ export class StartpageBackend implements Backend {
         thumbnail: thumbnailUrl,
         duration,
         uploaded,
-        uploadedDate
+        uploadedDate,
       }
     })
 
@@ -112,7 +110,7 @@ export class StartpageBackend implements Backend {
       url: `https://youtube.com/playlist?list=${id}`,
       name: data.name || author?.name || '',
       displayName: data.name || author?.name || '',
-      videos
+      videos,
     }
   }
 
@@ -122,7 +120,7 @@ export class StartpageBackend implements Backend {
       // reuses the browser cache. `reload` forces the network and refreshes
       // that entry for the sync button and expired local cache lifetimes.
       cache: reload ? 'reload' : 'default',
-      signal: AbortSignal.timeout(get(config).timeoutInSeconds * 1000)
+      signal: AbortSignal.timeout(get(config).timeoutInSeconds * 1000),
     })
   }
 
@@ -131,7 +129,7 @@ export class StartpageBackend implements Backend {
     if (!duration?.seconds || duration.seconds === '0') return ''
     return humanizeDuration(duration.seconds * 1000, {
       round: true,
-      units: duration.seconds >= 60 ? ['h', 'm'] : ['s']
+      units: duration.seconds >= 60 ? ['h', 'm'] : ['s'],
     })
   }
 

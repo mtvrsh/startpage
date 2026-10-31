@@ -25,26 +25,21 @@
   let focusKeybind = $derived(Config.getUsedKeybind($config.keybind.focusSearch))
   let closeKeybind = $derived($config.keybind.close)
 
-  let isUrl = $derived(
-    query.includes('youtube.com') || query.includes('youtu.be')
-  )
+  let isUrl = $derived(query.includes('youtube.com') || query.includes('youtu.be'))
 
   let suggestionsSortedBySubscribers = $derived(
-    [...suggestions].sort((channelA, channelB) => channelB.subscribers - channelA.subscribers)
+    [...suggestions].sort((channelA, channelB) => channelB.subscribers - channelA.subscribers),
   )
 
-  let open = () =>
-    app.searchOpen = true
+  let open = () => (app.searchOpen = true)
 
   let close = () => {
-    if (timeout)
-      clearTimeout(timeout)
+    if (timeout) clearTimeout(timeout)
 
     app.searchOpen = false
   }
 
-  let clearSuggestions = () =>
-    suggestions = []
+  let clearSuggestions = () => (suggestions = [])
 
   let search = () => {
     const currentQuery = query
@@ -54,34 +49,28 @@
       return
     }
 
-    $backend.search(currentQuery)
-      .then(channelResults => {
-        if (query === currentQuery)
-          suggestions = channelResults
+    $backend
+      .search(currentQuery)
+      .then((channelResults) => {
+        if (query === currentQuery) suggestions = channelResults
       })
       .catch(() => {
-        if (query === currentQuery)
-          clearSuggestions()
+        if (query === currentQuery) clearSuggestions()
       })
   }
 
   let searchDelayed = () => {
-    if (timeout)
-      clearTimeout(timeout)
+    if (timeout) clearTimeout(timeout)
 
-    if (!isUrl)
-      timeout = window.setTimeout(search, global.search.delayInMs)
+    if (!isUrl) timeout = window.setTimeout(search, global.search.delayInMs)
   }
 
   let addChannel = (url: string) => {
     Channels.add(url)
       .then(close)
-      .catch(error => {
-        errorMessage = typeof error === 'string'
-          ? error
-          : error instanceof Error
-            ? error.message
-            : String(error)
+      .catch((error) => {
+        errorMessage =
+          typeof error === 'string' ? error : error instanceof Error ? error.message : String(error)
       })
   }
 
@@ -107,14 +96,12 @@
     searchDelayed()
   }
 
-  let addChannelAndClose = (url: string) =>
-    addChannel(url)
+  let addChannelAndClose = (url: string) => addChannel(url)
 
   let handleGlobalKeybinds = (event: KeyboardEvent) => {
     // A character being typed into a field must not trigger the keybinds
     // (buttons/checkboxes/radios are fine); named keys keep working.
-    if (isTypedCharacter(event))
-      return
+    if (isTypedCharacter(event)) return
 
     if (app.searchOpen && event.key === closeKeybind) {
       event.preventDefault()
@@ -126,10 +113,8 @@
 
     event.preventDefault()
 
-    if (app.searchOpen)
-      close()
-    else
-      open()
+    if (app.searchOpen) close()
+    else open()
   }
 
   let handlePanelKeybinds = (event: KeyboardEvent) => {
@@ -207,7 +192,7 @@
           oninput={handleInput}
           bind:value={query}
           bind:this={focus.items[0]}
-        >
+        />
       </form>
 
       {#if errorMessage}
@@ -230,9 +215,7 @@
         </ul>
       {:else if suggestionsSortedBySubscribers.length}
         <ul class="palette__list">
-          {#each suggestionsSortedBySubscribers.slice(0, global.search.max) as {
-            url, name, thumbnail
-          }, index }
+          {#each suggestionsSortedBySubscribers.slice(0, global.search.max) as { url, name, thumbnail }, index}
             <li>
               <a
                 class="palette__link"
@@ -290,7 +273,7 @@
       overflow: hidden;
       background: var(--color-bg);
       border: $border var(--color-surface);
-      box-shadow: 0 1rem 3rem rgb(0 0 0 / .35);
+      box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.35);
     }
 
     &__form {

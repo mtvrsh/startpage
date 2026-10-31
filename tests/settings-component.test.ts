@@ -31,18 +31,17 @@ afterEach(() => {
   resetStores()
 })
 
-const backendSelect = () =>
-  target.querySelector<HTMLSelectElement>('#settings-instance-type')!
+const backendSelect = () => target.querySelector<HTMLSelectElement>('#settings-instance-type')!
 
 async function importConfig(data: unknown) {
   const input = target.querySelector<HTMLInputElement>('input[type="file"]')!
   const file = new File([JSON.stringify(data)], 'config.json', {
-    type: 'application/json'
+    type: 'application/json',
   })
   Object.defineProperty(input, 'files', { value: [file], configurable: true })
   input.dispatchEvent(new Event('change', { bubbles: true }))
   await tick()
-  await new Promise(resolve => setTimeout(resolve, 0))
+  await new Promise((resolve) => setTimeout(resolve, 0))
   await tick()
 }
 
@@ -83,9 +82,16 @@ describe('Settings config import', () => {
 
     await importConfig({
       config: { instanceType: 'startpage' },
-      bookmarks: [['https://key.example', { url: 'https://example.com', name: 'Example', tag: 't' }]],
-      channels: [['https://youtube.com/@ok', { url: 'https://youtube.com/@ok', name: 'ok', displayName: 'Ok' }]],
-      feeds: [null, 42, ['https://example.com/feed', null]]
+      bookmarks: [
+        ['https://key.example', { url: 'https://example.com', name: 'Example', tag: 't' }],
+      ],
+      channels: [
+        [
+          'https://youtube.com/@ok',
+          { url: 'https://youtube.com/@ok', name: 'ok', displayName: 'Ok' },
+        ],
+      ],
+      feeds: [null, 42, ['https://example.com/feed', null]],
     })
 
     expect(get(config).instanceType).toBe(defaults.instanceType)
@@ -100,7 +106,7 @@ describe('Settings config import', () => {
     config.set({ ...structuredClone(defaults), feedLimit: 12 })
 
     await importConfig({
-      config: { instance: null, instances: 5, feedLimit: 'many', keybind: 'nope' }
+      config: { instance: null, instances: 5, feedLimit: 'many', keybind: 'nope' },
     })
 
     const applied = get(config)
@@ -114,7 +120,7 @@ describe('Settings config import', () => {
   test('rejects entries with unsafe urls', async () => {
     await importConfig({
       config: { instanceType: 'startpage' },
-      bookmarks: [['javascript:alert(1)', { url: 'javascript:alert(1)', name: 'x' }]]
+      bookmarks: [['javascript:alert(1)', { url: 'javascript:alert(1)', name: 'x' }]],
     })
 
     expect(get(config).instanceType).toBe(defaults.instanceType)
@@ -135,7 +141,7 @@ describe('Settings config import', () => {
     config.set({ ...structuredClone(defaults), feedLimit: 12 })
 
     await importConfig({
-      bookmarks: [['https://key.example', { url: 'https://example.com', name: 'E', tag: 't' }]]
+      bookmarks: [['https://key.example', { url: 'https://example.com', name: 'E', tag: 't' }]],
     })
 
     expect(get(config).feedLimit).toBe(12)
@@ -144,7 +150,9 @@ describe('Settings config import', () => {
   })
 
   test('accepts cleared number fields written by the settings inputs', async () => {
-    await importConfig({ config: { feedLimit: null, readerLimit: null, cacheLifetimeInMinutes: null } })
+    await importConfig({
+      config: { feedLimit: null, readerLimit: null, cacheLifetimeInMinutes: null },
+    })
 
     expect(get(config).feedLimit).toBe(defaults.feedLimit)
     expect(get(config).readerLimit).toBe(defaults.readerLimit)

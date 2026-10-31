@@ -16,6 +16,6 @@ export function buildConfigFile() {
     config: parseConfig(get(config)),
     bookmarks: Bookmarks.serialize().filter(([, bookmark]) => hasSafeScheme(bookmark.url)),
     channels: Channels.serialize(),
-    feeds: Feeds.serialize()
+    feeds: Feeds.serialize(),
   }
 }

@@ -49,6 +49,6 @@ export const inlineRename: Action<HTMLInputElement, InlineRenameParams> = (node,
       node.removeEventListener('keydown', onKeydown)
       node.removeEventListener('keyup', onKeyup)
       node.removeEventListener('blur', onBlur)
-    }
+    },
   }
 }

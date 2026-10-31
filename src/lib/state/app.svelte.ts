@@ -4,12 +4,12 @@ import { getRedirectPathSetBy404Page } from '../../util/github'
 
 export const app = $state({
   route: {
-    path: getRedirectPathSetBy404Page() || window.location.pathname.replace(config.base, '') || '/'
+    path: getRedirectPathSetBy404Page() || window.location.pathname.replace(config.base, '') || '/',
   },
   // Same sentinel as the "All" entry in the channel filter dropdown, so an
   // unfiltered boot looks identical to picking "All" (which hides that row).
   filter: strings.allKebabCase,
   // Same sentinel as `filter`; applies to the reader column's feed dropdown.
   feedFilter: strings.allKebabCase,
-  searchOpen: false
+  searchOpen: false,
 })

@@ -34,7 +34,7 @@ const RSS = `<?xml version="1.0" encoding="utf-8"?>
 
 afterEach(() => {
   vi.unstubAllGlobals()
-  config.update(current => ({ ...current, feedProxyUrl: defaults.feedProxyUrl }))
+  config.update((current) => ({ ...current, feedProxyUrl: defaults.feedProxyUrl }))
 })
 
 const RDF = `<?xml version="1.0" encoding="utf-8"?>
@@ -63,7 +63,7 @@ describe('parseFeed', () => {
       url: 'https://example.com/blog/posts/hello.html',
       title: 'Hello & welcome',
       summary: 'A short summary.',
-      published: Date.parse('2026-01-02T03:04:05Z')
+      published: Date.parse('2026-01-02T03:04:05Z'),
     })
     expect(feed.entries[1].url).toBe('https://example.com/second')
     expect(feed.entries[1].summary).toBe('Second body')
@@ -79,7 +79,7 @@ describe('parseFeed', () => {
       url: 'https://example.com/rss-post',
       title: 'RSS post',
       summary: 'Body here',
-      published: Date.parse('2026-02-04T05:06:07Z')
+      published: Date.parse('2026-02-04T05:06:07Z'),
     })
   })
 
@@ -101,7 +101,7 @@ describe('parseFeed', () => {
           <link href="javascript:alert(1)"/>
         </entry>
       </feed>`,
-      'https://example.com/atom.xml'
+      'https://example.com/atom.xml',
     )
 
     expect(feed.entries[0].url).toBe('')
@@ -110,7 +110,7 @@ describe('parseFeed', () => {
   test('uses the hostname when the feed has no title', () => {
     const feed = parseFeed(
       `<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>One</title></entry></feed>`,
-      'https://example.com/atom.xml'
+      'https://example.com/atom.xml',
     )
 
     expect(feed.title).toBe('example.com')
@@ -121,7 +121,9 @@ describe('parseFeed', () => {
   })
 
   test('throws on unsupported documents', () => {
-    expect(() => parseFeed('<html><body>Hello</body></html>', 'https://example.com')).toThrow('Unsupported feed format')
+    expect(() => parseFeed('<html><body>Hello</body></html>', 'https://example.com')).toThrow(
+      'Unsupported feed format',
+    )
   })
 })
 
@@ -130,17 +132,17 @@ describe('fetchFeed', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      text: async () => ATOM
+      text: async () => ATOM,
     })
     vi.stubGlobal('fetch', fetchMock)
-    config.update(current => ({ ...current, feedProxyUrl: 'https://proxy.example/' }))
+    config.update((current) => ({ ...current, feedProxyUrl: 'https://proxy.example/' }))
 
     const feed = await fetchFeed('https://example.com/atom.xml')
 
     expect(feed.title).toBe('Example Atom')
     expect(fetchMock).toHaveBeenCalledWith(
       'https://proxy.example/feed?url=https%3A%2F%2Fexample.com%2Fatom.xml',
-      expect.objectContaining({ cache: 'default' })
+      expect.objectContaining({ cache: 'default' }),
     )
   })
 
@@ -148,27 +150,31 @@ describe('fetchFeed', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
-      text: async () => ATOM
+      text: async () => ATOM,
     })
     vi.stubGlobal('fetch', fetchMock)
-    config.update(current => ({ ...current, feedProxyUrl: '' }))
+    config.update((current) => ({ ...current, feedProxyUrl: '' }))
 
     await fetchFeed('https://example.com/atom.xml')
 
     expect(fetchMock).toHaveBeenCalledWith(
       'https://example.com/atom.xml',
-      expect.objectContaining({ cache: 'default' })
+      expect.objectContaining({ cache: 'default' }),
     )
   })
 
   test('uses the worker error message from a JSON error response', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: false,
-      status: 403,
-      json: async () => ({ error: 'Private network feed URLs are not allowed' })
-    }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        json: async () => ({ error: 'Private network feed URLs are not allowed' }),
+      }),
+    )
 
-    await expect(fetchFeed('https://example.com/atom.xml'))
-      .rejects.toThrow('Private network feed URLs are not allowed')
+    await expect(fetchFeed('https://example.com/atom.xml')).rejects.toThrow(
+      'Private network feed URLs are not allowed',
+    )
   })
 })

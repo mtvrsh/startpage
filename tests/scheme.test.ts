@@ -12,22 +12,19 @@ describe('hasSafeScheme', () => {
     'magnet:?xt=urn:btih:abc',
     'example.com/foo',
     '/relative/path',
-    'foo/bar?x=y:z'
-  ])('accepts %s', url => {
+    'foo/bar?x=y:z',
+  ])('accepts %s', (url) => {
     expect(hasSafeScheme(url)).toBe(true)
     expect(safeHref(url)).toBe(url)
   })
 
-  test.each([
-    'javascript:alert(1)',
-    'JaVaScRiPt:alert(1)',
-    ' javascript:alert(1)',
-    '',
-    '   '
-  ])('rejects %s', url => {
-    expect(hasSafeScheme(url)).toBe(false)
-    expect(safeHref(url)).toBeUndefined()
-  })
+  test.each(['javascript:alert(1)', 'JaVaScRiPt:alert(1)', ' javascript:alert(1)', '', '   '])(
+    'rejects %s',
+    (url) => {
+      expect(hasSafeScheme(url)).toBe(false)
+      expect(safeHref(url)).toBeUndefined()
+    },
+  )
 
   test('rejects data: URLs', () => {
     expect(hasSafeScheme('data:text/html,<script>alert(1)</script>')).toBe(false)
@@ -58,18 +55,12 @@ describe('isSafeProtocolName', () => {
     expect(isSafeProtocolName(' javascript')).toBe(false)
   })
 
-  test.each([
-    'javascript',
-    'JavaScript',
-    'data',
-    'mp v',
-    'mpv;',
-    '',
-    '   ',
-    'ja#va'
-  ])('rejects %s', name => {
-    expect(isSafeProtocolName(name)).toBe(false)
-  })
+  test.each(['javascript', 'JavaScript', 'data', 'mp v', 'mpv;', '', '   ', 'ja#va'])(
+    'rejects %s',
+    (name) => {
+      expect(isSafeProtocolName(name)).toBe(false)
+    },
+  )
 })
 
 describe('Bookmarks.restore', () => {
@@ -79,7 +70,7 @@ describe('Bookmarks.restore', () => {
     Bookmarks.restore([
       ['https://example.com/ok', { url: 'https://example.com/ok', tag: 'one', name: 'Ok' }],
       ['javascript:alert(1)', { url: 'javascript:alert(1)', tag: 'one', name: 'Bad' }],
-      ['data:text/html,x', { url: 'data:text/html,x', tag: 'one', name: 'Bad' }]
+      ['data:text/html,x', { url: 'data:text/html,x', tag: 'one', name: 'Bad' }],
     ])
 
     const restored = get(bookmarks)
@@ -94,9 +85,12 @@ describe('Channels.restore', () => {
 
   test('drops channels with unsafe schemes', () => {
     Channels.restore([
-      ['https://youtube.com/@ok', { url: 'https://youtube.com/@ok', name: 'ok', displayName: 'Ok' }],
+      [
+        'https://youtube.com/@ok',
+        { url: 'https://youtube.com/@ok', name: 'ok', displayName: 'Ok' },
+      ],
       ['https://youtube.com/@bad', { url: 'javascript:alert(1)', name: 'bad', displayName: 'Bad' }],
-      ['javascript:alert(1)', { url: 'javascript:alert(1)', name: 'bad', displayName: 'Bad' }]
+      ['javascript:alert(1)', { url: 'javascript:alert(1)', name: 'bad', displayName: 'Bad' }],
     ])
 
     const restored = get(channels)

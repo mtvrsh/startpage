@@ -9,7 +9,7 @@
     adding = $bindable(false),
     form,
     actions,
-    children
+    children,
   }: {
     title: string
     addTitle?: string
@@ -40,10 +40,7 @@
   }
 </script>
 
-<svelte:window
-  onkeyup={closeFormIfPressedCloseKey}
-  onclick={closeFormIfClickedOutside}
-/>
+<svelte:window onkeyup={closeFormIfPressedCloseKey} onclick={closeFormIfClickedOutside} />
 
 <section class="column">
   <header class="column__header">
@@ -61,8 +58,8 @@
           title={addTitle}
           aria-label={addTitle}
           aria-expanded={adding}
-          onclick={() => adding = !adding}
-        >{adding ? '−' : '+'}</button>
+          onclick={() => (adding = !adding)}>{adding ? '−' : '+'}</button
+        >
       {/if}
     </div>
   </header>

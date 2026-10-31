@@ -12,13 +12,13 @@ const VIDEO = {
   published: { text: '1 day ago' },
   uploaded: 1,
   duration: { seconds: '90' },
-  is_live: false
+  is_live: false,
 }
 
 function stubFetch(body: unknown) {
   const mock = vi.fn(async (_input: string, _init?: RequestInit) => ({
     ok: true,
-    json: async () => body
+    json: async () => body,
   }))
   vi.stubGlobal('fetch', mock)
   return mock

@@ -9,8 +9,7 @@
   let searchKeybind = $derived(Config.getUsedKeybind($config.keybind.focusSearch))
   let settingsKeybind = $derived(Config.getUsedKeybind($config.keybind.openSettings))
 
-  let openSettings = () =>
-    app.route.path = strings.paths.settings
+  let openSettings = () => (app.route.path = strings.paths.settings)
 
   let handleKeydown = (event: KeyboardEvent) => {
     if (event.key !== settingsKeybind) return
@@ -32,7 +31,7 @@
     type="button"
     title={`${strings.searchForChannel} [${searchKeybind}]`}
     aria-label={strings.searchForChannel}
-    onclick={() => app.searchOpen = true}
+    onclick={() => (app.searchOpen = true)}
   >
     <IconSearch />
   </button>
@@ -59,8 +58,8 @@
     z-index: $nav-z-index;
     display: flex;
     gap: var(--gap-0);
-    opacity: .45;
-    transition: opacity .1618s;
+    opacity: 0.45;
+    transition: opacity 0.1618s;
 
     &:hover,
     &:focus-within {
@@ -95,4 +94,3 @@
     }
   }
 </style>
-

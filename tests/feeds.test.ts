@@ -23,7 +23,7 @@ function respond(xml: string, { ok = true, status = 200 } = {}) {
   fetchMock.mockResolvedValueOnce({
     ok,
     status,
-    text: async () => xml
+    text: async () => xml,
   })
 }
 
@@ -45,14 +45,14 @@ describe('add', () => {
 
     expect(get(feeds).get('https://example.com/atom.xml')).toEqual({
       url: 'https://example.com/atom.xml',
-      name: 'Example'
+      name: 'Example',
     })
     expect(get(entries)).toHaveLength(2)
     expect(get(entries)[0]).toMatchObject({
       url: 'https://example.com/first',
       title: 'First',
       feedUrl: 'https://example.com/atom.xml',
-      feedName: 'Example'
+      feedName: 'Example',
     })
     expect(get(feedStates).get('https://example.com/atom.xml')?.error).toBe('')
   })
@@ -87,7 +87,7 @@ describe('add', () => {
     expect(get(entries)).toHaveLength(0)
     expect(get(feedStates).get('https://example.com/atom.xml')).toMatchObject({
       loading: false,
-      error: 'HTTP 404'
+      error: 'HTTP 404',
     })
   })
 })
@@ -100,7 +100,7 @@ describe('rename', () => {
     Feeds.rename('https://example.com/atom.xml', '  Renamed  ')
 
     expect(get(feeds).get('https://example.com/atom.xml')?.name).toBe('Renamed')
-    expect(get(entries).every(entry => entry.feedName === 'Renamed')).toBe(true)
+    expect(get(entries).every((entry) => entry.feedName === 'Renamed')).toBe(true)
   })
 
   test('falls back to the hostname when the name is cleared', async () => {
@@ -110,7 +110,7 @@ describe('rename', () => {
     Feeds.rename('https://example.com/atom.xml', '   ')
 
     expect(get(feeds).get('https://example.com/atom.xml')?.name).toBe('')
-    expect(get(entries).every(entry => entry.feedName === 'example.com')).toBe(true)
+    expect(get(entries).every((entry) => entry.feedName === 'example.com')).toBe(true)
   })
 })
 
@@ -160,7 +160,9 @@ describe('refetch', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
 
     let release!: () => void
-    const pending = new Promise<void>(resolve => { release = resolve })
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
     fetchMock.mockImplementationOnce(async () => {
       await pending
       return { ok: true, status: 200, text: async () => ATOM }
@@ -188,7 +190,9 @@ describe('refetch', () => {
     await Feeds.add('https://example.com/atom.xml', 'Example')
 
     let release!: () => void
-    const pending = new Promise<void>(resolve => { release = resolve })
+    const pending = new Promise<void>((resolve) => {
+      release = resolve
+    })
     fetchMock.mockImplementationOnce(async () => {
       await pending
       return { ok: true, status: 200, text: async () => ATOM }
@@ -214,7 +218,9 @@ describe('restore', () => {
     await Feeds.add('https://example.com/atom.xml', 'Example')
     expect(get(entries)).toHaveLength(2)
 
-    Feeds.restore([['https://other.example/feed', { url: 'https://other.example/feed', name: 'Other' }]])
+    Feeds.restore([
+      ['https://other.example/feed', { url: 'https://other.example/feed', name: 'Other' }],
+    ])
 
     expect(get(feeds).size).toBe(1)
     expect(get(feeds).get('https://other.example/feed')?.name).toBe('Other')
@@ -229,32 +235,35 @@ describe('restore', () => {
   })
 
   test('skips malformed entries instead of throwing', () => {
-    expect(() => Feeds.restore([
-      null,
-      42,
-      'junk',
-      ['only-key'],
-      ['https://ok.example/bare', null],
-      ['javascript:alert(1)', { url: 'javascript:alert(1)' }],
-      ['https://name.example/feed', { url: 'https://name.example/feed', name: 42 }]
-    ] as any)).not.toThrow()
+    expect(() =>
+      Feeds.restore([
+        null,
+        42,
+        'junk',
+        ['only-key'],
+        ['https://ok.example/bare', null],
+        ['javascript:alert(1)', { url: 'javascript:alert(1)' }],
+        ['https://name.example/feed', { url: 'https://name.example/feed', name: 42 }],
+      ] as any),
+    ).not.toThrow()
 
     const restored = get(feeds)
     expect(restored.size).toBe(1)
     expect(restored.get('https://name.example/feed')).toEqual({
-      url: 'https://name.example/feed', name: ''
+      url: 'https://name.example/feed',
+      name: '',
     })
   })
 
   test('rekeys feeds by their normalized url', () => {
     const map = Feeds.parseStored([
       ['https://key.example/feed', { url: 'https://value.example/feed', name: 'V' }],
-      ['https://bare.example/feed', { name: 'Bare' }]
+      ['https://bare.example/feed', { name: 'Bare' }],
     ])
 
     expect([...map]).toEqual([
       ['https://value.example/feed', { url: 'https://value.example/feed', name: 'V' }],
-      ['https://bare.example/feed', { url: 'https://bare.example/feed', name: 'Bare' }]
+      ['https://bare.example/feed', { url: 'https://bare.example/feed', name: 'Bare' }],
     ])
   })
 
@@ -267,20 +276,23 @@ describe('restore', () => {
   test('parseStored reports malformed entries in strict mode', () => {
     const issues: string[] = []
 
-    Feeds.parseStored([
-      null,
-      ['https://ok.example/feed', { url: 'javascript:alert(1)' }],
-      ['https://ok.example/good', { url: 'https://ok.example/good', name: 42 }],
-      ['https://ok.example/array', []],
-      ['https://ok.example/number', { url: 42 }]
-    ], issues)
+    Feeds.parseStored(
+      [
+        null,
+        ['https://ok.example/feed', { url: 'javascript:alert(1)' }],
+        ['https://ok.example/good', { url: 'https://ok.example/good', name: 42 }],
+        ['https://ok.example/array', []],
+        ['https://ok.example/number', { url: 42 }],
+      ],
+      issues,
+    )
 
     expect(issues).toEqual([
       'feeds[0]: expected a [key, value] pair',
       'feeds[1]: missing or invalid http(s) url',
       'feeds[2].name: expected a string',
       'feeds[3]: expected a feed object',
-      'feeds[4].url: expected a string'
+      'feeds[4].url: expected a string',
     ])
   })
 })

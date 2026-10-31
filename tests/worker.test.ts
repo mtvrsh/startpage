@@ -15,7 +15,9 @@ vi.mock('../startpage-api/node_modules/youtubei.js/dist/src/platform/cf-worker.j
 
 const ALLOWED_ORIGINS = 'https://app.example http://localhost:5173'
 
-function env(limit: { limit: (options: { key: string }) => Promise<{ success: boolean }> } | undefined) {
+function env(
+  limit: { limit: (options: { key: string }) => Promise<{ success: boolean }> } | undefined,
+) {
   return { ALLOWED_ORIGINS, FEED_LIMIT: limit } as WorkerEnv
 }
 
@@ -105,30 +107,44 @@ describe('exported fetch handler', () => {
   })
 
   test('rate limiter failures fail open', async () => {
-    const failing = { limit: async () => { throw new Error('boom') } }
+    const failing = {
+      limit: async () => {
+        throw new Error('boom')
+      },
+    }
     const res = await worker(request('/failing-route-404'), env(failing))
     expect(res.status).toBe(404)
   })
 
   test('feeds through to the feed proxy with echo-origin CORS', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response('<feed/>', {
-      headers: { 'Content-Type': 'application/atom+xml' },
-    }))
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response('<feed/>', {
+        headers: { 'Content-Type': 'application/atom+xml' },
+      }),
+    )
     vi.stubGlobal('fetch', fetchMock)
 
-    const res = await worker(request('/feed?url=https%3A%2F%2Fdustri.org%2Fb%2Fatom.xml'), env(okLimit))
+    const res = await worker(
+      request('/feed?url=https%3A%2F%2Fdustri.org%2Fb%2Fatom.xml'),
+      env(okLimit),
+    )
     expect(res.status).toBe(200)
     expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
     expect(res.headers.get('vary')).toBe('Origin')
     expect(await res.text()).toBe('<feed/>')
     // The proxy response already carries CORS; it must not be duplicated.
-    expect([...res.headers.keys()].filter(k => k === 'access-control-allow-origin')).toHaveLength(1)
+    expect([...res.headers.keys()].filter((k) => k === 'access-control-allow-origin')).toHaveLength(
+      1,
+    )
   })
 
   test('500 responses from Innertube-backed routes carry CORS headers', async () => {
     // Innertube create() is mocked to fail, so these Streamed 500 json()
     // responses never saw the cors headers before the central application.
-    for (const path of ['/channels/UC1234567890abcdefghijklm', '/raw/channels/UC1234567890abcdefghijklm']) {
+    for (const path of [
+      '/channels/UC1234567890abcdefghijklm',
+      '/raw/channels/UC1234567890abcdefghijklm',
+    ]) {
       const res = await worker(request(path), env(okLimit))
       expect(res.status).toBe(500)
       expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
@@ -157,27 +173,36 @@ describe('exported fetch handler', () => {
     vi.doMock('../startpage-api/node_modules/youtubei.js/dist/src/platform/cf-worker.js', () => ({
       Innertube: {
         create: async () => ({
-          getChannel: async (id: string) => id === 'UCnovideos000000000000000'
-            ? { has_videos: false }
-            : {
-              has_videos: true,
-              getVideos: async () => ({
-                videos: [{
-                  content_id: 'vid12345678',
-                  content_image: { image: [{ url: 'https://i.ytimg.com/vi/vid12345678/hqdefault.jpg' }] },
-                  metadata: { title: { toString: () => 'Video' } },
-                }],
-                memo: new Map(),
-              }),
-              metadata: { title: 'Channel' },
-              header: { author: { name: 'Channel', thumbnails: [] } },
-            },
+          getChannel: async (id: string) =>
+            id === 'UCnovideos000000000000000'
+              ? { has_videos: false }
+              : {
+                  has_videos: true,
+                  getVideos: async () => ({
+                    videos: [
+                      {
+                        content_id: 'vid12345678',
+                        content_image: {
+                          image: [{ url: 'https://i.ytimg.com/vi/vid12345678/hqdefault.jpg' }],
+                        },
+                        metadata: { title: { toString: () => 'Video' } },
+                      },
+                    ],
+                    memo: new Map(),
+                  }),
+                  metadata: { title: 'Channel' },
+                  header: { author: { name: 'Channel', thumbnails: [] } },
+                },
           getPlaylist: async () => ({
-            videos: [{
-              content_id: 'vid12345678',
-              content_image: { image: [{ url: 'https://i.ytimg.com/vi/vid12345678/hqdefault.jpg' }] },
-              metadata: { title: { toString: () => 'Video' } },
-            }],
+            videos: [
+              {
+                content_id: 'vid12345678',
+                content_image: {
+                  image: [{ url: 'https://i.ytimg.com/vi/vid12345678/hqdefault.jpg' }],
+                },
+                metadata: { title: { toString: () => 'Video' } },
+              },
+            ],
             memo: new Map(),
             info: { title: 'Playlist', author: { name: 'Channel' } },
           }),
@@ -255,10 +280,8 @@ describe('exported fetch handler', () => {
       for (const path of ['/channels/@foo', '/raw/channels/@foo', '/channels/@foo.bar']) {
         const res = await worker(request(path), env(okLimit))
         expect([400, 404]).not.toContain(res.status)
-        if (res.status === 500)
-          expect(await res.json()).toMatchObject({ error: 'internal error' })
-        else
-          expect(await res.json()).not.toMatchObject({ error: 'invalid channel id' })
+        if (res.status === 500) expect(await res.json()).toMatchObject({ error: 'internal error' })
+        else expect(await res.json()).not.toMatchObject({ error: 'invalid channel id' })
       }
     })
 
@@ -269,9 +292,11 @@ describe('exported fetch handler', () => {
       expect(res.status).toBe(500)
       expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example')
       expect(await res.json()).toMatchObject({ error: 'internal error' })
-      expect(consoleError.mock.calls.flat().some(line =>
-        typeof line === 'string' && line.includes('secret innertube detail')
-      )).toBe(true)
+      expect(
+        consoleError.mock.calls
+          .flat()
+          .some((line) => typeof line === 'string' && line.includes('secret innertube detail')),
+      ).toBe(true)
 
       consoleError.mockRestore()
     })

@@ -29,5 +29,5 @@ function createBackend(type: InstanceType): Backend {
 
 // Derive from instanceType only so createBackend() isn't called on every
 // config change (e.g. feedLimit, timeoutInSeconds)
-const instanceType = derived(config, $c => $c.instanceType)
-export const backend = derived(instanceType, $t => createBackend($t))
+const instanceType = derived(config, ($c) => $c.instanceType)
+export const backend = derived(instanceType, ($t) => createBackend($t))

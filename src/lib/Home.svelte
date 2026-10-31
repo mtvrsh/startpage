@@ -4,11 +4,7 @@
   import Channels from './Channels.svelte'
   import Feeds from './Feeds.svelte'
 
-  let tabs = [
-    strings.channels,
-    strings.bookmarks,
-    strings.feeds
-  ]
+  let tabs = [strings.channels, strings.bookmarks, strings.feeds]
 
   let focused = $state(0)
 </script>
@@ -32,8 +28,8 @@
         class="home__navigation-button"
         class:focus={focused == i}
         type="button"
-        onclick={() => focused = i}
-      >{tab}</button>
+        onclick={() => (focused = i)}>{tab}</button
+      >
     {/each}
   </nav>
 </main>

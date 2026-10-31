@@ -10,17 +10,20 @@ describe('store hydration from localStorage', () => {
   })
 
   test('boots with corrupt channels, feeds, config and status data', async () => {
-    localStorage.setItem('channels', JSON.stringify([
-      ['https://youtube.com/@ok', { url: 'https://youtube.com/@ok', name: 'ok', displayName: 'Ok' }],
-      ['@legacy', { name: 'legacy', displayName: 'Legacy', videos: [] }],
-      ['https://youtube.com/@bad', null],
-      [1, 2, 3],
-      'junk'
-    ]))
-    localStorage.setItem('feeds', JSON.stringify([
-      ['https://example.com/feed', null],
-      42
-    ]))
+    localStorage.setItem(
+      'channels',
+      JSON.stringify([
+        [
+          'https://youtube.com/@ok',
+          { url: 'https://youtube.com/@ok', name: 'ok', displayName: 'Ok' },
+        ],
+        ['@legacy', { name: 'legacy', displayName: 'Legacy', videos: [] }],
+        ['https://youtube.com/@bad', null],
+        [1, 2, 3],
+        'junk',
+      ]),
+    )
+    localStorage.setItem('feeds', JSON.stringify([['https://example.com/feed', null], 42]))
     localStorage.setItem('config', JSON.stringify({ instance: null, instances: 5 }))
     localStorage.setItem('status', JSON.stringify({ feed: { fetching: null } }))
 
@@ -33,7 +36,10 @@ describe('store hydration from localStorage', () => {
     // Channels stored before the url field existed survive hydration so they
     // are not silently deleted on the next save.
     expect(get(channels).get('@legacy')).toEqual({
-      url: '', name: 'legacy', displayName: 'Legacy', videos: []
+      url: '',
+      name: 'legacy',
+      displayName: 'Legacy',
+      videos: [],
     })
     expect(get(feeds).size).toBe(0)
     expect(get(config).instance).toEqual(defaults.instance)

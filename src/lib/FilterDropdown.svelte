@@ -25,7 +25,7 @@
     onremove,
     onrename,
     renameLabel,
-    renameHint
+    renameHint,
   }: {
     items: FilterItem[]
     selectedId: string
@@ -45,18 +45,13 @@
   let renamingId = $state('')
   let renameValue = $state('')
 
-  let selectedLabel = $derived(
-    items.find(item => item.id === selectedId)?.label ?? allLabel
-  )
+  let selectedLabel = $derived(items.find((item) => item.id === selectedId)?.label ?? allLabel)
 
   // Aggregate signal on the collapsed toggler: the list may never be opened,
   // so failing items are announced even then.
-  let failedLabels = $derived(
-    items.filter(item => item.error).map(item => item.label)
-  )
+  let failedLabels = $derived(items.filter((item) => item.error).map((item) => item.label))
 
-  let toggleDropdown = () =>
-    isDropdownOpen = !isDropdownOpen
+  let toggleDropdown = () => (isDropdownOpen = !isDropdownOpen)
 
   let select = (id: string) => {
     onselect(id)
@@ -114,11 +109,9 @@
       <ul class="filter__list">
         {#if allId !== undefined && selectedId !== allId}
           <li class="filter__item">
-            <button
-              class="filter__select"
-              type="button"
-              onclick={() => select(allId)}
-            >{allLabel}</button>
+            <button class="filter__select" type="button" onclick={() => select(allId)}
+              >{allLabel}</button
+            >
           </li>
         {/if}
 
@@ -136,7 +129,8 @@
                 title={renameHint ? `${item.label} - ${renameHint}` : item.label}
                 onclick={() => select(item.id)}
                 use:editGesture={{ onEdit: () => startRename(item.id, item.label) }}
-              >{item.label}</button>
+                >{item.label}</button
+              >
 
               {#if renamingId === item.id}
                 <input
@@ -145,18 +139,15 @@
                   placeholder={item.placeholder}
                   aria-label={renameLabel}
                   use:inlineRename={{
-                    onSave: value => commitRename(item.id, value),
-                    onCancel: () => cancelRename(item.id)
+                    onSave: (value) => commitRename(item.id, value),
+                    onCancel: () => cancelRename(item.id),
                   }}
-                >
+                />
               {/if}
             </span>
 
             {#if item.loading || item.error}
-              <span
-                class="filter__state"
-                class:filter__state--error={item.error}
-                title={item.error}
+              <span class="filter__state" class:filter__state--error={item.error} title={item.error}
               ></span>
             {/if}
 
@@ -166,8 +157,8 @@
                 type="button"
                 title={strings.remove}
                 aria-label={`${strings.remove} ${item.label}`}
-                onclick={(e) => remove(item.id, e)}
-              >×</button>
+                onclick={(e) => remove(item.id, e)}>×</button
+              >
             {/if}
           </li>
         {/each}
@@ -211,7 +202,7 @@
     // its tooltip; per-item dots live inside the dropdown.
     &__alert {
       flex: none;
-      width: .45rem;
+      width: 0.45rem;
       aspect-ratio: 1;
       background: var(--color-error);
     }
@@ -241,7 +232,7 @@
         position: absolute;
         inset: 0 auto 0 0;
         z-index: 1;
-        width: .2rem;
+        width: 0.2rem;
         content: '';
         background: var(--color-accent);
       }
@@ -299,7 +290,7 @@
       padding: 0 $gap-1;
 
       &::before {
-        width: .45rem;
+        width: 0.45rem;
         aspect-ratio: 1;
         content: '';
         background: var(--color-fg-inactive);

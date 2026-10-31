@@ -17,7 +17,7 @@ self-host with a large subscription list.
 
 ### Egress safety (read this if you self-host)
 
-The `/feed` endpoint fetches a caller-supplied URL — from *anyone* who can reach
+The `/feed` endpoint fetches a caller-supplied URL — from _anyone_ who can reach
 your instance, since the frontend is served from a static site — and returns up
 to 2 MB of the response body. That makes it an SSRF vector: without controls,
 an attacker can use it to probe (and read responses from) services on the host
@@ -25,10 +25,10 @@ itself, VPS cloud metadata, or LAN devices.
 
 Egress behavior differs by run mode:
 
-| Run mode | Private/loopback egress |
-|---|---|
-| Deployed to Cloudflare | Blocked by the platform's egress filter. |
-| Bare `workerd` (default config) | Blocked: `fetch()` routes through the implicit `internet` service, which is public-only. |
+| Run mode                         | Private/loopback egress                                                                                                                                           |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Deployed to Cloudflare           | Blocked by the platform's egress filter.                                                                                                                          |
+| Bare `workerd` (default config)  | Blocked: `fetch()` routes through the implicit `internet` service, which is public-only.                                                                          |
 | `wrangler dev` (local/Miniflare) | **Allowed** — loopback fetches work, and DNS names that resolve to private addresses (e.g. `192-168-0-1.nip.io`, or a crafted `hosts` entry) resolve and connect. |
 
 Note the DNS case: hostname-based checks in the worker code cannot catch a
@@ -42,9 +42,9 @@ the implicit default:
 {
   "services": [
     { "name": "internet", "network": { "allow": ["public"] } },
-    { "name": "main", "worker": { "compatibilityDate": "2026-06-20", "modules": [ /* ... */ ] } }
+    { "name": "main", "worker": { "compatibilityDate": "2026-06-20", "modules": [/* ... */] } },
   ],
-  "sockets": [{ "name": "http", "address": "*:8787", "http": [], "service": "main" }]
+  "sockets": [{ "name": "http", "address": "*:8787", "http": [], "service": "main" }],
 }
 ```
 

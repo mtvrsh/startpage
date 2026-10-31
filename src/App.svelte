@@ -19,20 +19,20 @@
     navigator.serviceWorker.register(config.base + '/sw.js')
 
   let main = $state(routes.home)
-  let router = navaid(config.base, uri => {
+  let router = navaid(config.base, (uri) => {
     main = routes.notFound
     app.route.path = uri
   })
 
   for (let [_, route] of Object.entries(routes))
-    router.on(route.path, args => {
-      main = {...route, args: {...route.args, ...args}}
+    router.on(route.path, (args) => {
+      main = { ...route, args: { ...route.args, ...args } }
       app.route.path = route.path
     })
 
   // Legacy settings tabs: channel/bookmark management now lives in the columns.
-  router.on(strings.paths.channels, () => app.route.path = strings.paths.settings)
-  router.on(strings.paths.bookmarks, () => app.route.path = strings.paths.settings)
+  router.on(strings.paths.channels, () => (app.route.path = strings.paths.settings))
+  router.on(strings.paths.bookmarks, () => (app.route.path = strings.paths.settings))
 
   // Render the requested route right away. Listening on the current URL would
   // let the route callbacks overwrite the redirect path stored by `404.html`.
@@ -43,35 +43,27 @@
 
     // `router.route` always pushes when a base is configured, so skip when the
     // location already matches; otherwise back/forward would truncate history.
-    if (router.format(location.pathname) !== path)
-      router.route(path)
+    if (router.format(location.pathname) !== path) router.route(path)
   })
 
   let title = $derived(
-    main.name
-    ? main.name.replace(/%(\w)+%/g, arg => main.args[arg.slice(1,-1)])
-    : config.name
+    main.name ? main.name.replace(/%(\w)+%/g, (arg) => main.args[arg.slice(1, -1)]) : config.name,
   )
 
-  let settingsPaths = [
-    strings.paths.settings
-  ]
+  let settingsPaths = [strings.paths.settings]
 
   let isHome = $derived(main.path === strings.paths.home)
   let isSettings = $derived(settingsPaths.includes(main.path))
 
-  let closeSettings = () =>
-    app.route.path = strings.paths.home
+  let closeSettings = () => (app.route.path = strings.paths.home)
 
   let previousFocus: HTMLElement | null = null
   let wasSettings = false
 
   $effect(() => {
-    if (isSettings && !wasSettings)
-      previousFocus = document.activeElement as HTMLElement | null
+    if (isSettings && !wasSettings) previousFocus = document.activeElement as HTMLElement | null
 
-    if (!isSettings && wasSettings)
-      previousFocus?.focus?.()
+    if (!isSettings && wasSettings) previousFocus?.focus?.()
 
     wasSettings = isSettings
 
@@ -122,12 +114,7 @@
         onclick={closeSettings}
       ></button>
 
-      <div
-        class="overlay__panel"
-        role="dialog"
-        aria-modal="true"
-        aria-label={strings.settings}
-      >
+      <div class="overlay__panel" role="dialog" aria-modal="true" aria-label={strings.settings}>
         <main.view {...main.args} />
       </div>
     </div>
@@ -174,7 +161,7 @@
       overflow: hidden;
       background: var(--color-bg);
       border: $border var(--color-surface);
-      box-shadow: 0 1rem 3rem rgb(0 0 0 / .35);
+      box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.35);
     }
   }
 </style>

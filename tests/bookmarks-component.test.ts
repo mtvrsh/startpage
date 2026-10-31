@@ -7,7 +7,7 @@ import Bookmarks, { bookmarks, type Bookmark } from '../src/share/bookmarks'
 const first: Bookmark = {
   url: 'https://example.com/first',
   name: 'First',
-  tag: 'one'
+  tag: 'one',
 }
 
 let target: HTMLDivElement
@@ -61,7 +61,7 @@ describe('Bookmarks column editor', () => {
     expect(get(bookmarks).get('https://example.com/second')).toEqual({
       url: 'https://example.com/second',
       name: 'Renamed',
-      tag: 'two'
+      tag: 'two',
     })
   })
 
@@ -80,11 +80,13 @@ describe('Bookmarks column editor', () => {
     expect(input).not.toBeNull()
 
     input!.focus()
-    input!.dispatchEvent(new KeyboardEvent('keyup', {
-      key: 'Escape',
-      bubbles: true,
-      cancelable: true
-    }))
+    input!.dispatchEvent(
+      new KeyboardEvent('keyup', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
     await tick()
 
     expect(target.querySelector('.column__form')).toBeNull()
@@ -117,7 +119,7 @@ describe('Bookmarks column editor', () => {
     let other: Bookmark = {
       url: 'https://example.com/other',
       name: 'Other',
-      tag: 'two'
+      tag: 'two',
     }
 
     Bookmarks.set(other)

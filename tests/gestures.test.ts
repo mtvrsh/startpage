@@ -13,20 +13,21 @@ let setup = (params: Partial<EditGestureParams> = {}) => {
   let result = editGesture(node, { onEdit: () => edits++, ...params })
 
   cleanup = () => {
-    if (result && typeof result === 'object')
-      result.destroy?.()
+    if (result && typeof result === 'object') result.destroy?.()
 
     node.remove()
   }
 }
 
 let pointer = (type: string, init: PointerEventInit = {}) =>
-  node.dispatchEvent(new PointerEvent(type, {
-    bubbles: true,
-    cancelable: true,
-    pointerType: 'touch',
-    ...init
-  }))
+  node.dispatchEvent(
+    new PointerEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      pointerType: 'touch',
+      ...init,
+    }),
+  )
 
 beforeEach(() => vi.useFakeTimers())
 

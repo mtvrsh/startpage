@@ -1,13 +1,9 @@
 <script lang="ts">
-  import { untrack } from "svelte";
-  import Image from "./icons/Image.svelte";
-  import Spinner from "./icons/Spinner.svelte";
+  import { untrack } from 'svelte'
+  import Image from './icons/Image.svelte'
+  import Spinner from './icons/Spinner.svelte'
 
-  let {
-    src,
-    alt,
-    ...args
-  } = $props()
+  let { src, alt, ...args } = $props()
 
   let ok: boolean | undefined = $state(undefined)
   let pv = ''
@@ -16,8 +12,7 @@
     // Skip reset loading state when src changes but has the same value.
     // Svelte doesn't update image attribute in that case.
     // Avoides endless animation screen.
-    if (src == untrack(() => pv))
-      return
+    if (src == untrack(() => pv)) return
 
     pv = src
     ok = undefined
@@ -27,11 +22,12 @@
 <img
   class="image"
   class:hidden={!ok}
-  onload={() => ok = true}
-  onerror={() => ok = false}
+  onload={() => (ok = true)}
+  onerror={() => (ok = false)}
   {src}
   {alt}
-  {...args}>
+  {...args}
+/>
 
 {#if ok === undefined}
   <Spinner />

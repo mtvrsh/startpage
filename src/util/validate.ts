@@ -7,9 +7,7 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 
 /** Finite, non-negative number, otherwise the fallback. */
 export function countOr(value: unknown, fallback: number): number {
-  return typeof value === 'number' && Number.isFinite(value)
-    ? Math.max(0, value)
-    : fallback
+  return typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : fallback
 }
 
 export function isHttpUrl(value: string): boolean {
@@ -31,7 +29,7 @@ export function readPairs<T>(
   raw: unknown,
   label: string,
   issues: string[] | undefined,
-  parse: (key: string, value: unknown, path: string) => T | undefined
+  parse: (key: string, value: unknown, path: string) => T | undefined,
 ): T[] {
   if (raw === undefined) return []
 
@@ -62,4 +60,3 @@ export function readPairs<T>(
 
   return entries
 }
-

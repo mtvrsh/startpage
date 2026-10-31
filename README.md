@@ -14,7 +14,7 @@ You can configure Startpage to open videos in a desktop app like `mpv` via
 [custom protocol](https://kb.mozillazine.org/Register_protocol).
 
 1. In `about:config` create `boolean` variable
-`network.protocol-handler.expose.mpv` with `false` value
+   `network.protocol-handler.expose.mpv` with `false` value
 
 2. Create launcher
 
@@ -25,6 +25,6 @@ mpv "${1/mpv:/}"
 ```
 
 3. In [settings](https://imjah.github.io/startpage/settings) enable
-`Open videos in app`
+   `Open videos in app`
 
 4. Click any link and select launcher from step 2

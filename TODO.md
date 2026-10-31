@@ -3,6 +3,7 @@
 ## Shorts-Only Channels: No Duration/Upload Date in UU Playlists
 
 ### Issue
+
 When `feedFetchAll` mode fetches a UU (upload) playlist for a shorts-only channel
 (e.g. `UCkQ774ot9mhH3wWMsjzGq2g` — Asmongold Shorts), YouTube returns items as
 `ShortsLockupView` renderers. These items:
@@ -16,6 +17,7 @@ When `feedFetchAll` mode fetches a UU (upload) playlist for a shorts-only channe
   (`https://i.ytimg.com/vi/{id}/hqdefault.jpg`). Works correctly.
 
 ### Why This Happens
+
 For a **regular channel** that posts some shorts, YouTube renders all items in the
 UU playlist as `LockupView` with `content_type = 'VIDEO' | 'SHORT' | 'MOVIE'`.
 These have a consistent structure with `content_id`, `content_image.image`
@@ -31,6 +33,7 @@ For a **shorts-only channel**, YouTube switches to `ShortsLockupView` renderers
 - Published date: **not present** in the raw JSON at all
 
 ### What NewPipe Extractor Does
+
 The vendored NewPipe Extractor (`3party/NewPipeExtractor/`) confirms both the
 limitation and the fix:
 
@@ -45,12 +48,14 @@ So even Piped/PipedBackend cannot provide duration or upload date for
 `ShortsLockupView` items. This is a YouTube API limitation.
 
 ### Current Workaround (in worker)
+
 - `mapPlaylistItem()` and `getChannel()`'s mapper check `v.content_id || v.entity_id`
 - For `entity_id`-only items: thumbnails are constructed via regex extraction of the
   video ID from the entity_id (works correctly)
 - Duration defaults to `{seconds:"0", text:""}` and uploaded to `0` (sorts first)
 
 ### Suggested Resolution (for future agents)
+
 Thumbnails are already resolved. The duration/date limitation is inherent to the
 YouTube API's `ShortsLockupView` renderer. No further work needed unless YouTube
 changes their API response format.
@@ -60,6 +65,7 @@ or `player` endpoint) has the full data, but fetching per-item is too expensive 
 a feed context.
 
 ### Related Files
+
 - `startpage-api/src/index.ts` — `mapPlaylistItem()` and `getChannel()` video mapper
 - `3party/NewPipeExtractor/extractor/.../YoutubeShortsLockupInfoItemExtractor.java` — NewPipe's implementation showing same limitations
 - `3party/NewPipeExtractor/extractor/.../YoutubeStreamInfoItemLockupExtractor.java` — NewPipe's LockupView extractor (has full duration/date)

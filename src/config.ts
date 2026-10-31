@@ -9,7 +9,7 @@ export default {
     delayInMs: 300,
   },
   fetching: {
-    widthInVw: 5
+    widthInVw: 5,
   },
   version: import.meta.env.VITE_GIT_COMMIT,
 }

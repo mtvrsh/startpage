@@ -1,31 +1,31 @@
 /* https://getbootstrap.com/docs/5.0/layout/breakpoints/ */
 
 @mixin breakpoint-sm {
-	@media screen and (min-width: 576px) {
-		@content
-	}
+  @media screen and (min-width: 576px) {
+    @content;
+  }
 }
 
 @mixin breakpoint-md {
-	@media screen and (min-width: 768px) {
-		@content
-	}
+  @media screen and (min-width: 768px) {
+    @content;
+  }
 }
 
 @mixin breakpoint-lg {
-	@media screen and (min-width: 992px) {
-		@content
-	}
+  @media screen and (min-width: 992px) {
+    @content;
+  }
 }
 
 @mixin breakpoint-xl {
-	@media screen and (min-width: 1200px) {
-		@content
-	}
+  @media screen and (min-width: 1200px) {
+    @content;
+  }
 }
 
 @mixin breakpoint-xxl {
-	@media screen and (min-width: 1400px) {
-		@content
-	}
+  @media screen and (min-width: 1400px) {
+    @content;
+  }
 }

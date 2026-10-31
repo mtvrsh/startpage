@@ -1,13 +1,13 @@
-import { writable, get } from 'svelte/store';
+import { writable, get } from 'svelte/store'
 import { hasSafeScheme } from '../util/scheme'
 import { readPairs } from '../util/validate'
 
 export type URL = string
 
 export interface Bookmark {
-  url: URL;
-  tag: string;
-  name: string;
+  url: URL
+  tag: string
+  name: string
 }
 
 export const bookmarks = writable<Map<URL, Bookmark>>(parseStoredBookmarks())
@@ -63,7 +63,7 @@ export function parseBookmarks(raw: unknown, issues?: string[]): Map<URL, Bookma
 function parseStoredBookmark(
   bookmark: unknown,
   path: string,
-  issues?: string[]
+  issues?: string[],
 ): Bookmark | undefined {
   if (bookmark === null || typeof bookmark !== 'object' || Array.isArray(bookmark)) {
     issues?.push(`${path}: expected a bookmark object`)
@@ -85,7 +85,7 @@ function parseStoredBookmark(
   return {
     url: candidate.url,
     tag: typeof candidate.tag === 'string' ? candidate.tag : '',
-    name: typeof candidate.name === 'string' ? candidate.name : ''
+    name: typeof candidate.name === 'string' ? candidate.name : '',
   }
 }
 
@@ -93,11 +93,11 @@ export default class Bookmarks {
   static LS_CACHE = 'bookmarks'
 
   static set(bookmark: Bookmark) {
-    bookmarks.update(v => v.set(bookmark.url, bookmark))
+    bookmarks.update((v) => v.set(bookmark.url, bookmark))
   }
 
   static update(url: URL, partial: Partial<Bookmark>) {
-    bookmarks.update(v => {
+    bookmarks.update((v) => {
       const bookmark = v.get(url)
 
       if (!bookmark) return v
@@ -112,7 +112,7 @@ export default class Bookmarks {
     if (!current.has(url)) return false
     if (bookmark.url !== url && current.has(bookmark.url)) return false
 
-    bookmarks.update(v => {
+    bookmarks.update((v) => {
       const next = new Map(v)
 
       next.delete(url)
@@ -125,17 +125,18 @@ export default class Bookmarks {
   }
 
   static delete(url: URL) {
-    bookmarks.update(v => {
+    bookmarks.update((v) => {
       v.delete(url)
       return v
     })
   }
 
   static subscribeToLocalStorage() {
-    bookmarks.subscribe(v =>
-      localStorage[this.LS_CACHE] = JSON.stringify(v, (_, value) => 
-        value instanceof Map ? [...value] : value
-      )
+    bookmarks.subscribe(
+      (v) =>
+        (localStorage[this.LS_CACHE] = JSON.stringify(v, (_, value) =>
+          value instanceof Map ? [...value] : value,
+        )),
     )
   }
 
@@ -147,8 +148,6 @@ export default class Bookmarks {
     const parsed = data instanceof Map ? new Map(data) : parseBookmarks(data)
 
     // Imported data is untrusted: only keep entries whose URL is safe to store.
-    bookmarks.set(new Map(
-      [...parsed].filter(([, bookmark]) => hasSafeScheme(bookmark.url))
-    ))
+    bookmarks.set(new Map([...parsed].filter(([, bookmark]) => hasSafeScheme(bookmark.url))))
   }
 }

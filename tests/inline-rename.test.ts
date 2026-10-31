@@ -14,13 +14,12 @@ beforeEach(() => {
   document.body.append(input)
 
   let result = inlineRename(input, {
-    onSave: value => saved.push(value),
-    onCancel: () => cancelled++
+    onSave: (value) => saved.push(value),
+    onCancel: () => cancelled++,
   })
 
   cleanup = () => {
-    if (result && typeof result === 'object')
-      result.destroy?.()
+    if (result && typeof result === 'object') result.destroy?.()
 
     input.remove()
   }
@@ -58,7 +57,9 @@ describe('inlineRename', () => {
   test('cancels on Escape keyup', () => {
     input.value = 'changed'
 
-    input.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', bubbles: true, cancelable: true }))
+    input.dispatchEvent(
+      new KeyboardEvent('keyup', { key: 'Escape', bubbles: true, cancelable: true }),
+    )
 
     expect(cancelled).toBe(1)
     expect(saved).toEqual([])

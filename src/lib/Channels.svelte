@@ -15,23 +15,17 @@
   let error = $state(false)
   let errorMessage = $state('')
 
-  let selected = $derived(
-    $channels.get(app.filter)
-  )
+  let selected = $derived($channels.get(app.filter))
 
   let selectedError = $derived(
-    app.filter === strings.allKebabCase
-      ? undefined
-      : $channelStates.get(app.filter)?.error
+    app.filter === strings.allKebabCase ? undefined : $channelStates.get(app.filter)?.error,
   )
 
   let feed = $derived(
-    Channels.toArray(
-      selected === undefined ? $channels : [app.filter, selected]
-    )
-    .sort(Channels.BY_CHANNEL_DISPLAY_NAME)
-    .sort(Channels.BY_UPLOADED)
-    .slice(0, $config.feedLimit)
+    Channels.toArray(selected === undefined ? $channels : [app.filter, selected])
+      .sort(Channels.BY_CHANNEL_DISPLAY_NAME)
+      .sort(Channels.BY_UPLOADED)
+      .slice(0, $config.feedLimit),
   )
 
   let submit = (event: SubmitEvent) => {
@@ -50,13 +44,14 @@
         url = ''
         adding = false
       })
-      .catch(reason => {
+      .catch((reason) => {
         error = true
-        errorMessage = typeof reason === 'string'
-          ? reason
-          : reason instanceof Error
-            ? reason.message
-            : String(reason)
+        errorMessage =
+          typeof reason === 'string'
+            ? reason
+            : reason instanceof Error
+              ? reason.message
+              : String(reason)
       })
   }
 
@@ -78,7 +73,7 @@
         placeholder={strings.youtubeChannelOrPlaylist}
         aria-label={strings.youtubeChannelOrPlaylist}
         aria-invalid={error}
-      >
+      />
       <button class="column__submit" type="submit">{strings.add}</button>
       {#if errorMessage}
         <p class="column__error">{errorMessage}</p>
@@ -90,18 +85,24 @@
     <ul class="feed">
       {#each feed as video}
         {@const name = video.channelDisplayName || video.channelName}
-        {@const protocol = $config.feedProtocolEnabledForVideos && isSafeProtocolName($config.feedProtocolName) ? $config.feedProtocolName : ''}
+        {@const protocol =
+          $config.feedProtocolEnabledForVideos && isSafeProtocolName($config.feedProtocolName)
+            ? $config.feedProtocolName
+            : ''}
         {@const protocolUrl = protocol && video.url.trim() ? `${protocol}:${video.url}` : ''}
         {@const safeVideoUrl = safeHref(video.url)}
         {@const thumbnailHref = protocolUrl || safeVideoUrl}
-        {@const titleHref = $config.feedProtocolEnabledForVideosInTitles ? (protocolUrl || safeVideoUrl) : safeVideoUrl}
+        {@const titleHref = $config.feedProtocolEnabledForVideosInTitles
+          ? protocolUrl || safeVideoUrl
+          : safeVideoUrl}
 
         <li class="feed__item">
           <a
             class="feed__item-thumbnail"
             class:themed={$config.feedThumbnailThemed}
             href={thumbnailHref}
-            tabindex="-1">
+            tabindex="-1"
+          >
             <div class="feed__item-thumbnail-img">
               <Image src={video.thumbnail} alt={strings.thumbnail} loading="lazy" />
             </div>
@@ -157,9 +158,9 @@
       grid-template-rows: 1fr auto auto;
       grid-template-columns: 10.5rem 1fr auto;
       grid-template-areas:
-      't n n'
-      't r r'
-      't u d';
+        't n n'
+        't r r'
+        't u d';
 
       &-thumbnail {
         grid-area: t;
@@ -176,7 +177,7 @@
           position: relative;
 
           &::after {
-            content: "";
+            content: '';
             position: absolute;
             top: 0;
             left: 0;

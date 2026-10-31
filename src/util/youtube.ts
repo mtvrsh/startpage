@@ -7,9 +7,7 @@ const TRUSTED_HOST_SUFFIXES = ['ytimg.com', 'ggpht.com', 'googleusercontent.com'
 
 function isTrustedHost(host: string): boolean {
   const normal = host.toLowerCase().replace(/\.$/, '')
-  return TRUSTED_HOST_SUFFIXES.some(suffix =>
-    normal === suffix || normal.endsWith('.' + suffix)
-  )
+  return TRUSTED_HOST_SUFFIXES.some((suffix) => normal === suffix || normal.endsWith('.' + suffix))
 }
 
 // Channel ids are `UC` plus 22 base64url characters. Only those can be

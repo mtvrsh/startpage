@@ -49,8 +49,7 @@ export const editGesture: Action<HTMLElement, EditGestureParams> = (node, params
   let suppressNextClick = () => {
     window.addEventListener('click', swallowClick, true)
 
-    if (suppressTimer !== undefined)
-      clearTimeout(suppressTimer)
+    if (suppressTimer !== undefined) clearTimeout(suppressTimer)
 
     suppressTimer = setTimeout(removeClickSuppressor, SUPPRESS_CLICK_MS)
   }
@@ -92,7 +91,8 @@ export const editGesture: Action<HTMLElement, EditGestureParams> = (node, params
   let onPointerUp = (event: PointerEvent) => {
     if (event.pointerType === 'mouse') return
 
-    let isLongPress = timerFired || (!!pressStartedAt && Date.now() - pressStartedAt >= LONG_PRESS_MS)
+    let isLongPress =
+      timerFired || (!!pressStartedAt && Date.now() - pressStartedAt >= LONG_PRESS_MS)
 
     clearPressTimer()
     timerFired = false
@@ -152,6 +152,6 @@ export const editGesture: Action<HTMLElement, EditGestureParams> = (node, params
       node.removeEventListener('pointercancel', onPointerCancel)
       node.removeEventListener('contextmenu', onContextMenu)
       node.removeEventListener('click', onClick)
-    }
+    },
   }
 }

@@ -19,7 +19,7 @@ export class PipedBackend implements Backend {
     // adding one fails to parse as a YouTube channel. Make them absolute.
     return (data.items || []).map((item: SearchChannelsResult) => ({
       ...item,
-      url: this.absoluteUrl(item.url)
+      url: this.absoluteUrl(item.url),
     }))
   }
 
@@ -30,9 +30,10 @@ export class PipedBackend implements Backend {
   }
 
   async fetchChannel(id: string, reload = Piped.RELOAD): Promise<Channel> {
-    const endpoint = get(config).feedFetchAll && isChannelId(id)
-      ? `/playlists/UU${id.slice(2)}`
-      : `/channels/tabs?data=${encodeURIComponent(JSON.stringify({ id: `${id}`, contentFilters: ['videos'] }))}`
+    const endpoint =
+      get(config).feedFetchAll && isChannelId(id)
+        ? `/playlists/UU${id.slice(2)}`
+        : `/channels/tabs?data=${encodeURIComponent(JSON.stringify({ id: `${id}`, contentFilters: ['videos'] }))}`
 
     const response = await Piped.get(endpoint, reload)
     if (!response.ok) throw new Error(`Failed to fetch channel ${id}`)
@@ -40,14 +41,13 @@ export class PipedBackend implements Backend {
     const data = await response.json()
     const streams = data.relatedStreams ?? data.content
 
-    if (!streams?.length)
-      throw new Error(`No videos found for ${id}`)
+    if (!streams?.length) throw new Error(`No videos found for ${id}`)
 
     return {
       url: 'https://youtube.com' + streams[0].uploaderUrl,
       name: streams[0].uploaderName,
       displayName: streams[0].uploaderName,
-      videos: this.mapVideos(streams)
+      videos: this.mapVideos(streams),
     }
   }
 
@@ -63,7 +63,7 @@ export class PipedBackend implements Backend {
       url: `https://youtube.com/playlist?list=${id.toString()}`,
       name: data.name,
       displayName: data.name,
-      videos: this.mapVideos(streams)
+      videos: this.mapVideos(streams),
     }
   }
 
@@ -71,7 +71,10 @@ export class PipedBackend implements Backend {
     const useDirectThumbnails = get(config).useDirectThumbnails
 
     return streams.map((video) => {
-      let duration = humanizeDuration(video.duration * 1000, { round: true, units: video.duration >= 60 ? ['h', 'm'] : ['s'] })
+      let duration = humanizeDuration(video.duration * 1000, {
+        round: true,
+        units: video.duration >= 60 ? ['h', 'm'] : ['s'],
+      })
       if (video.duration == 0) {
         duration = ''
       }
@@ -100,7 +103,7 @@ export class PipedBackend implements Backend {
         thumbnail: thumbnail,
         duration: duration,
         uploaded: uploaded,
-        uploadedDate: uploadedDate
+        uploadedDate: uploadedDate,
       }
     })
   }

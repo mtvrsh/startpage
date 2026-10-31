@@ -11,8 +11,5 @@
     "allowJs": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": [
-    "vite.config.js",
-    "src/constants.ts"
-  ]
+  "include": ["vite.config.js", "src/constants.ts"]
 }

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { BASE } from './src/constants.ts'
 
@@ -14,9 +14,9 @@ function csp() {
     transformIndexHtml(html) {
       return html.replace(
         '<meta charset="UTF-8" />',
-        `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`
+        `<meta charset="UTF-8" />\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`,
       )
-    }
+    },
   }
 }
 
@@ -27,30 +27,30 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: './index.html',
-        sw: './src/sw.js'
+        sw: './src/sw.js',
       },
       output: {
         assetFileNames: 'assets/[name].[ext]',
         chunkFileNames: 'assets/[name].js',
         entryFileNames: (chunkInfo) => {
           return chunkInfo.name === 'sw' ? 'sw.js' : 'assets/[name].js'
-        }
-      }
-    }
+        },
+      },
+    },
   },
   test: {
-    environment: 'jsdom'
+    environment: 'jsdom',
   },
   resolve: process.env.VITEST
     ? {
-      conditions: ['browser']
-    }
+        conditions: ['browser'],
+      }
     : undefined,
   css: {
     preprocessorOptions: {
       scss: {
-        api: 'modern-compiler'
-      }
-    }
-  }
-});
+        api: 'modern-compiler',
+      },
+    },
+  },
+})

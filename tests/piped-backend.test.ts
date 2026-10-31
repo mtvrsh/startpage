@@ -12,13 +12,13 @@ const STREAM = {
   uploaded: 1,
   uploadedDate: '1 day ago',
   uploaderUrl: `/channel/${CHANNEL_ID}`,
-  uploaderName: 'Channel'
+  uploaderName: 'Channel',
 }
 
 function stubFetch(body: unknown) {
   const mock = vi.fn(async (_input: string, _init?: RequestInit) => ({
     ok: true,
-    json: async () => body
+    json: async () => body,
   }))
   vi.stubGlobal('fetch', mock)
   return mock
@@ -35,21 +35,24 @@ describe('search', () => {
       items: [
         { url: `/channel/${CHANNEL_ID}`, name: 'Channel', thumbnail: '', subscribers: 1 },
         { url: 'https://youtube.com/@handle', name: 'Handle', thumbnail: '', subscribers: 0 },
-        { url: 'youtube.com/c/Legacy', name: 'Legacy', thumbnail: '', subscribers: 0 }
-      ]
+        { url: 'youtube.com/c/Legacy', name: 'Legacy', thumbnail: '', subscribers: 0 },
+      ],
     })
 
     const results = await new PipedBackend().search('query')
 
-    expect(results.map(result => result.url)).toEqual([
+    expect(results.map((result) => result.url)).toEqual([
       `https://youtube.com/channel/${CHANNEL_ID}`,
       'https://youtube.com/@handle',
-      'https://youtube.com/c/Legacy'
+      'https://youtube.com/c/Legacy',
     ])
   })
 
   test('returns no results when the instance fails', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false })))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false })),
+    )
 
     expect(await new PipedBackend().search('query')).toEqual([])
   })

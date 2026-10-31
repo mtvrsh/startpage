@@ -1,6 +1,6 @@
-$gap-0: .25rem;
-$gap-1: .5rem;
-$gap-2: .75rem;
+$gap-0: 0.25rem;
+$gap-1: 0.5rem;
+$gap-2: 0.75rem;
 $gap-3: 1rem;
 $gap-4: 1.25rem;
 
@@ -8,19 +8,19 @@ $gap-4: 1.25rem;
 // Every font size must come from this scale; an inherited body size would vary
 // by browser because the default monospace size is not standardized.
 // UI/title matches Firefox's chrome/address-bar size (~14.7px on a 16px root).
-$font-size-meta:         .75rem;  // feed/video metadata, tooltip
-$font-size-body:         .75rem;  // body base, small text, errors, tags
-$font-size-ui:           .92rem;  // titles, headers, settings, search, controls
-$font-size-column-title: $font-size-ui;  // column/settings titles, inputs, selects
-$font-size-item-title:   $font-size-ui;  // item titles (columns, search palette, dock)
-$font-size-icon:         1rem;    // remove/+/close glyphs
-$font-size-large:        2rem;    // thumbnail placeholder
+$font-size-meta: 0.75rem; // feed/video metadata, tooltip
+$font-size-body: 0.75rem; // body base, small text, errors, tags
+$font-size-ui: 0.92rem; // titles, headers, settings, search, controls
+$font-size-column-title: $font-size-ui; // column/settings titles, inputs, selects
+$font-size-item-title: $font-size-ui; // item titles (columns, search palette, dock)
+$font-size-icon: 1rem; // remove/+/close glyphs
+$font-size-large: 2rem; // thumbnail placeholder
 
-$border-size: .1rem;
+$border-size: 0.1rem;
 $border-type: solid;
 $border: $border-size $border-type;
 
-$outline-size: .2em;
+$outline-size: 0.2em;
 $outline-type: solid;
 $outline: $outline-size $outline-type;
 
@@ -29,6 +29,6 @@ $nav-z-index: 100;
 $overlay-z-index: 200;
 // Shared dim behind the search palette and the settings overlay so both
 // read as the same layer.
-$overlay-backdrop: rgb(0 0 0 / .5);
+$overlay-backdrop: rgb(0 0 0 / 0.5);
 
 $search-thumbnail-height: 2.7rem;
