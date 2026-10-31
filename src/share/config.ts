@@ -25,7 +25,7 @@ export const defaults = {
   },
   instanceType: 'piped' as InstanceType,
   instance:
-    { label: 'private.coffee', value: 'https://api.piped.private.coffee' },
+    { label: 'wireway.ch',     value: 'https://pipedapi.wireway.ch' },
   instances: [
     { label: 'wireway.ch',     value: 'https://pipedapi.wireway.ch' },
     { label: 'private.coffee', value: 'https://api.piped.private.coffee' }
