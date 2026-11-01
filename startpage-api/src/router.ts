@@ -9,9 +9,10 @@ let ytjs: Promise<Innertube> | null = null
 // cap them so junk / oversized input cannot be relayed to YouTube on every
 // request. Channel ids are either browse-style alphanumeric plus `-`/`_`
 // (UCxxxxx) or a handle (`@foo`, letters/digits/`.`/`-`/`_` per YouTube's
-// handle grammar — YouTube.js resolves handles via its NavigateAction
-// fallback); playlist ids are alphanumeric plus `-`/`_`. All are well under
-// 64 characters.
+// handle grammar); handles are resolved with resolveURL() below because
+// getChannel() browses `browseId: '@handle'`, which YouTube rejects with a 400
+// (so YouTube.js's NavigateAction fallback never gets a response to follow).
+// Playlist ids are alphanumeric plus `-`/`_`. All are well under 64 characters.
 const ID_PATTERN = /^(@[\w.-]{1,63}|[\w-]{1,64})$/
 const MAX_QUERY_LENGTH = 100
 
@@ -140,6 +141,32 @@ export function parseRelativeMs(text: string): number {
   return 0
 }
 
+// Parses the subscriber label YouTube puts on search rows ("525K
+// subscribers", "1.2M subscribers", "12,345 subscribers"). Only the palette's
+// sort order consumes the number, so an unrecognized label degrades to 0 (a
+// tie) rather than a display bug. The "subscribers" word is stripped and the
+// remainder must be a pure number, so a count that arrives with a different
+// unit — e.g. "1,234 videos" if YouTube.js un-inverts the field skeleton — is
+// not mistaken for subscribers.
+export function parseSubscriberCount(text: string): number {
+  if (!text) return 0
+  const label = text.replace(/\bsubscribers?\b/i, '').trim()
+  // Compact suffix: "525K", "12.3K subscribers".
+  const compact = label.match(/^([\d][\d.,]*)\s*([KMB])$/i)
+  if (compact) {
+    const value = parseFloat(compact[1].replace(/,/g, ''))
+    const multiplier = { K: 1000, M: 1000000, B: 1000000000 }[compact[2].toUpperCase()] || 1
+    return Math.round(value * multiplier)
+  }
+  // Plain counts, with or without grouping ("12", "1,234,567",
+  // "12,345 subscribers").
+  const plain = label.match(/^[\d.,]+$/)
+  if (plain) {
+    return Math.round(parseFloat(plain[0].replace(/,/g, '')))
+  }
+  return 0
+}
+
 async function handleSuggestions(searchParams: URLSearchParams): Promise<Response> {
   const q = searchParams.get('q')
   if (!q) return json({ error: 'query parameter is required' }, 400)
@@ -150,10 +177,27 @@ async function handleSuggestions(searchParams: URLSearchParams): Promise<Respons
   return json(suggestions)
 }
 
+// Resolves a handle (`@foo`) to the canonical browseId via YouTube's
+// navigation endpoint. `UC…` ids pass through untouched. A resolution failure
+// falls back to the raw id so failure semantics stay identical to the
+// pre-handle-fix path: an unresolvable handle still fails in getChannel()
+// (YouTube rejects a handle browseId with 400) and surfaces as the same
+// generic 500. It does not make broken resolves work — it only keeps the
+// failing component unchanged instead of adding a resolveURL-specific mode.
+async function resolveChannelId(yt: any, id: string): Promise<string> {
+  if (!id.startsWith('@')) return id
+  try {
+    const endpoint = await yt.resolveURL(`https://www.youtube.com/${id}`)
+    return endpoint?.payload?.browseId || id
+  } catch {
+    return id
+  }
+}
+
 async function rawChannel(channelId: string): Promise<Response> {
   if (isInvalidId(channelId)) return json({ error: 'invalid channel id' }, 400)
   const yt = await getYt()
-  const channel = await yt.getChannel(channelId)
+  const channel = await yt.getChannel(await resolveChannelId(yt, channelId))
   return json(channel.page)
 }
 
@@ -171,13 +215,28 @@ async function searchChannels(searchParams: URLSearchParams): Promise<Response> 
 
   const yt = await getYt()
   const results = await yt.search(q, { type: 'channel' })
-  return json(results.channels)
+  // Normalize to the same shape the frontend consumes: id, author, and a
+  // subscriber count. YouTube.js puts the handle in `subscriber_count` and the
+  // count in `video_count` (inverted), so both are read defensively.
+  const channels = (results.channels || []).map((ch: any) => {
+    const author = ch.author || {}
+    return {
+      id: ch.id || author.id || '',
+      author: {
+        id: author.id || ch.id || '',
+        name: author.name || ch.long_byline?.text || ch.short_byline?.text || '',
+        thumbnails: author.thumbnails || [],
+      },
+      subscribers: parseSubscriberCount(ch.video_count?.text || ch.subscriber_count?.text || ''),
+    }
+  })
+  return json(channels)
 }
 
 async function getChannel(channelId: string): Promise<Response> {
   if (isInvalidId(channelId)) return json({ error: 'invalid channel id' }, 400)
   const yt = await getYt()
-  const channel = await yt.getChannel(channelId)
+  const channel = await yt.getChannel(await resolveChannelId(yt, channelId))
 
   if (!channel.has_videos) {
     return json([], 200, {}, LISTING_CACHE_SECONDS)
@@ -209,6 +268,10 @@ async function getChannel(channelId: string): Promise<Response> {
   const chHeader: any = channel.header || {}
   const chName = chMeta.title || chHeader.author?.name || ''
   const chThumbs = chHeader.author?.thumbnails || chMeta.avatar || []
+  // `external_id` is the canonical UC id even for handle-resolved channels;
+  // without it the frontend would emit `youtube.com/channel/@handle` instead
+  // of `youtube.com/channel/UC…`, diverging from Piped's canonical output.
+  const chId = chMeta.external_id || chHeader.author?.id || channelId
 
   const result = videos
     .map((v: any) => {
@@ -238,7 +301,7 @@ async function getChannel(channelId: string): Promise<Response> {
               v.metadata?.title?.toString() || v.overlay_metadata?.primary_text?.toString() || '',
           },
           thumbnails,
-          author: { name: chName, thumbnails: chThumbs },
+          author: { id: chId, name: chName, thumbnails: chThumbs },
           published,
           uploaded: v.content_id ? parseRelativeMs(published.text) : 0,
           duration: durText || { seconds: '0', text: '' },
@@ -268,6 +331,7 @@ function mapPlaylistItem(v: any) {
         ]
       }
     }
+    const durText = v.content_id ? extractDuration(v) : null
     return {
       id,
       title: {
@@ -281,8 +345,8 @@ function mapPlaylistItem(v: any) {
       author: v.author,
       published,
       uploaded: v.content_id ? parseRelativeMs(published.text) : 0,
-      duration: (v.content_id ? extractDuration(v) : null) || { seconds: '0', text: '' },
-      is_live: false,
+      duration: durText || { seconds: '0', text: '' },
+      is_live: durText?.is_live || false,
       is_upcoming: false,
     }
   }

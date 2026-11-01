@@ -29,6 +29,9 @@ afterEach(() => {
   config.set(structuredClone(defaults))
 })
 
+// Only startpage-specific concerns live here: the browser-cache contract on
+// the worker's `private, max-age=600` listings. Mapped output, failures and
+// feedFetchAll routing are covered in backend-contract.test.ts.
 describe('browser cache mode', () => {
   test('lets the browser cache channel listings on a normal refetch', async () => {
     const mock = stubFetch([VIDEO])
@@ -53,25 +56,5 @@ describe('browser cache mode', () => {
 
     expect(mock.mock.calls[0][1]?.cache).toBe('default')
     expect(mock.mock.calls[1][1]?.cache).toBe('reload')
-  })
-})
-
-describe('fetchChannel with feedFetchAll', () => {
-  test('uses the uploads playlist for real channel ids', async () => {
-    config.set({ ...structuredClone(defaults), feedFetchAll: true })
-    const mock = stubFetch({ items: [VIDEO], author: VIDEO.author })
-
-    await new StartpageBackend().fetchChannel(CHANNEL_ID)
-
-    expect(String(mock.mock.calls[0][0])).toContain(`/playlists/UU${CHANNEL_ID.slice(2)}`)
-  })
-
-  test('falls back to the channel endpoint for handles', async () => {
-    config.set({ ...structuredClone(defaults), feedFetchAll: true })
-    const mock = stubFetch([VIDEO])
-
-    await new StartpageBackend().fetchChannel('@handle')
-
-    expect(String(mock.mock.calls[0][0])).toContain('/channels/@handle')
   })
 })

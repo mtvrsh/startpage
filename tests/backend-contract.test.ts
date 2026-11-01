@@ -10,11 +10,16 @@ type FetchMock = ReturnType<typeof vi.fn>
 // One common scenario suite run against every backend: the startpage worker
 // (YouTube.js) responses are fixture-translated into the same logical data the
 // Piped instances send, so both backends must end up with identical app-level
-// results wherever the providers really do agree. Divergences that exist today
-// (see `subscribers` and live uploads) are asserted separately per backend.
+// results wherever the providers really do agree. Where the providers diverge
+// today (live upload timestamps) the difference is asserted inline in that
+// scenario instead of being hidden.
 
 const CHANNEL_ID = 'UC1234567890abcdefghijkl'
 const HANDLE = '@handle'
+// What the startpage worker resolves `@handle` to: each video's author id is
+// the channel's canonical UC id (metadata external_id), even when fetched by
+// handle.
+const RESOLVED_HANDLE_ID = 'UC9876543210fedcba12345678'
 const VIDEO_ID = 'vid12345678'
 const TITLE = 'Video'
 const THUMB = 'https://i.ytimg.com/vi/vid12345678/hqdefault.jpg'
@@ -204,6 +209,7 @@ describe('shared backend contract', () => {
                       {
                         id: CHANNEL_ID,
                         author: { id: CHANNEL_ID, name: 'Channel', thumbnails: [{ url: THUMB }] },
+                        subscribers: 42,
                       },
                       {
                         id: 'UC0987654321fedcba98765432',
@@ -212,6 +218,7 @@ describe('shared backend contract', () => {
                           name: 'Handle',
                           thumbnails: [],
                         },
+                        subscribers: 0,
                       },
                     ],
                   },
@@ -223,10 +230,8 @@ describe('shared backend contract', () => {
             url: `https://youtube.com/channel/${CHANNEL_ID}`,
             name: 'Channel',
             thumbnail: THUMB,
-            // Common sanity: every consumer (SearchPalette sorts on it) gets a
-            // real number. Exact values differ today — see the per-backend
-            // subscriber tests below.
-            subscribers: expect.any(Number),
+            // Both providers must surface the count: SearchPalette sorts on it.
+            subscribers: 42,
           })
           expect(results[1]?.url).toMatch(/^https:\/\/youtube\.com/)
           expect(new URL(results[1]?.url ?? '').pathname.length).toBeGreaterThan(0)
@@ -257,20 +262,37 @@ describe('shared backend contract', () => {
         })
 
         test('maps handle channels to the shared video contract', async () => {
+          // The two providers send the author identity differently: Piped
+          // reports the handle url as-is (it canonicalizes upstream, and that
+          // is its job, not ours), while the startpage worker emits each
+          // video's author id as the canonical UC id — so the frontend url
+          // carries the resolved UC id instead of the requested handle.
           c.routes({
             channel:
               c.name === 'piped'
                 ? { body: { relatedStreams: [pipedStream({ uploaderUrl: `/channel/${HANDLE}` })] } }
-                : // The worker's channel response carries the author on each
-                  // video but not the author id, so the url falls back to the
-                  // requested handle.
-                  { body: [startpageVideo()] },
+                : {
+                    body: [
+                      startpageVideo({
+                        author: {
+                          id: RESOLVED_HANDLE_ID,
+                          name: 'Channel',
+                          thumbnails: [{ url: THUMB, width: 100, height: 56 }],
+                        },
+                      }),
+                    ],
+                  },
           })
+
+          const expectedUrl =
+            c.name === 'piped'
+              ? `https://youtube.com/channel/${HANDLE}`
+              : `https://youtube.com/channel/${RESOLVED_HANDLE_ID}`
 
           const channel = await c.backend.fetchChannel(HANDLE)
 
           expect(channel).toEqual({
-            ...EXPECTED_WEBSITE(`https://youtube.com/channel/${HANDLE}`),
+            ...EXPECTED_WEBSITE(expectedUrl),
             videos: [EXPECTED_VIDEO],
           })
         })
@@ -418,38 +440,34 @@ describe('shared backend contract', () => {
     })
   }
 
-  describe('known divergences', () => {
+  describe('startpage-specific response handling', () => {
     afterEach(() => {
       vi.unstubAllGlobals()
       config.set(structuredClone(defaults))
     })
 
-    test('piped search carries subscriber counts', async () => {
+    test('maps the normalized worker subscriber count', async () => {
       wireFetch(
-        pipedRoutes({
+        startpageRoutes({
           search: {
-            body: {
-              items: [
-                {
-                  url: `/channel/${CHANNEL_ID}`,
-                  name: 'Channel',
-                  thumbnail: THUMB,
-                  subscribers: 42,
-                },
-              ],
-            },
+            body: [
+              {
+                id: CHANNEL_ID,
+                author: { id: CHANNEL_ID, name: 'Channel', thumbnails: [] },
+                subscribers: 525_000,
+              },
+            ],
           },
         }),
       )
 
-      expect((await new PipedBackend().search('q'))[0].subscribers).toBe(42)
+      expect((await new StartpageBackend().search('q'))[0].subscribers).toBe(525_000)
     })
 
-    // Current behavior, recorded on purpose: the deployed worker's search
-    // response actually contains the count (e.g. video_count.text === '525K
-    // subscribers'), but StartpageBackend.search hardcodes 0, so the
-    // SearchPalette's "sort by subscribers" is a no-op for this backend.
-    test('startpage search returns subscribers as 0', async () => {
+    // The worker always emits `subscribers`, but the field is optional at the
+    // frontend boundary: older workers and hand-built responses must not make
+    // the palette's sort throw or read `undefined`.
+    test('degrades to 0 when the worker omits subscribers', async () => {
       wireFetch(
         startpageRoutes({
           search: {
@@ -465,6 +483,18 @@ describe('shared backend contract', () => {
       )
 
       expect((await new StartpageBackend().search('q'))[0].subscribers).toBe(0)
+    })
+
+    // Same boundary robustness as the subscribers case: legacy workers and
+    // hand-built responses may omit the author id (15f987d introduced it), and
+    // the frontend must fall back to the requested id rather than producing a
+    // truncated `youtube.com/channel/` url.
+    test('falls back to the requested id when the response omits the author id', async () => {
+      wireFetch(startpageRoutes({ channel: { body: [startpageVideo()] } }))
+
+      const channel = await new StartpageBackend().fetchChannel(HANDLE)
+
+      expect(channel.url).toBe(`https://youtube.com/channel/${HANDLE}`)
     })
   })
 })

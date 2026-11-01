@@ -34,7 +34,7 @@ export class StartpageBackend implements Backend {
       url: `https://youtube.com/channel/${channel.id}`,
       name: channel.author?.name || '',
       thumbnail: bestThumbnail(channel.author?.thumbnails) || '',
-      subscribers: 0,
+      subscribers: channel.subscribers ?? 0,
     }))
   }
 
