@@ -141,6 +141,43 @@ export function parseRelativeMs(text: string): number {
   return 0
 }
 
+// Lockup-shaped items (LockupView for regular videos, ShortsLockupView for
+// shorts) do not carry the video id in `entity_id` — it is an opaque hash
+// (e.g. `C1A2D28FC54EBFE2`, unrelated to the item being trimmed to its last 11
+// characters). `content_id` is the id for LockupView items; ShortsLockupView
+// has neither `content_id` nor real thumbnails (`thumbnail` is an empty
+// array), so its id and thumbnails come from the tap endpoint
+// (`reelWatchEndpoint` payload, with the `/shorts/<id>` URL as a secondary).
+// Shorts renderers also expose no duration or publish date (a YouTube API
+// limitation — NewPipeExtractor's YoutubeShortsLockupInfoItemExtractor
+// documents the same gap), so those degrade to empty instead of guessing.
+function resolveLockupId(v: any): string {
+  if (v.content_id) return v.content_id
+  const videoId = v.on_tap_endpoint?.payload?.videoId
+  if (typeof videoId === 'string' && videoId) return videoId
+  const url: string = v.on_tap_endpoint?.metadata?.url || ''
+  // The URL form varies between captures (absolute in some, relative in the
+  // live shorts one), so the match is not anchored — both /shorts/<id> forms
+  // hit the same fallback.
+  return url.match(/\/shorts\/([\w-]{11})/)?.[1] || ''
+}
+
+// Thumbnails appear in various view-model wrappers depending on the renderer
+// batch. The first candidate for ShortsLockupView is an empty (truthy) array,
+// so candidates are tested for actual entries rather than truthiness.
+function resolveLockupThumbnails(v: any): any[] {
+  for (const candidate of [
+    v.content_image?.image,
+    v.thumbnail,
+    v.thumbnails,
+    v.thumbnail_view_model?.image,
+    v.on_tap_endpoint?.payload?.thumbnail?.thumbnails,
+  ]) {
+    if (Array.isArray(candidate) && candidate.length) return candidate
+  }
+  return []
+}
+
 // Parses the subscriber label YouTube puts on search rows ("525K
 // subscribers", "1.2M subscribers", "12,345 subscribers"). Only the palette's
 // sort order consumes the number, so an unrecognized label degrades to 0 (a
@@ -253,6 +290,8 @@ async function getChannel(channelId: string): Promise<Response> {
         let target: any = null
         if (i.type === 'LockupView' && i.content_type) {
           target = i
+        } else if (i.type === 'ShortsLockupView') {
+          target = i
         } else if (i.type === 'RichItem' && i.content) {
           const c = i.content as any
           if (c.content_type) target = c
@@ -275,41 +314,26 @@ async function getChannel(channelId: string): Promise<Response> {
 
   const result = videos
     .map((v: any) => {
-      if (v.content_id || v.entity_id) {
-        const rawId = v.content_id || v.entity_id || ''
-        const id = v.content_id ? rawId : (rawId.match(/([a-zA-Z0-9_-]{11})$/) || [])[0] || rawId
-        let thumbnails = v.content_image?.image || v.thumbnail || []
-        if (!thumbnails.length && v.entity_id) {
-          const vidMatch = v.entity_id.match(/([a-zA-Z0-9_-]{11})$/)
-          if (vidMatch) {
-            thumbnails = [
-              {
-                url: `https://i.ytimg.com/vi/${vidMatch[1]}/hqdefault.jpg`,
-                width: 336,
-                height: 188,
-              },
-            ]
-          }
-        }
-        const best = thumbnails[0] || null
-        const durText = v.content_id ? extractDuration(v) : null
-        const published = v.content_id ? extractPublished(v) : { text: '' }
-        return {
-          video_id: id,
-          title: {
-            text:
-              v.metadata?.title?.toString() || v.overlay_metadata?.primary_text?.toString() || '',
-          },
-          thumbnails,
-          author: { id: chId, name: chName, thumbnails: chThumbs },
-          published,
-          uploaded: v.content_id ? parseRelativeMs(published.text) : 0,
-          duration: durText || { seconds: '0', text: '' },
-          is_live: durText?.is_live || false,
-          is_upcoming: false,
-          is_premiere: false,
-          best_thumbnail: best ? { url: best.url, width: best.width, height: best.height } : null,
-        }
+      const id = resolveLockupId(v)
+      if (!id) return null
+      const thumbnails = resolveLockupThumbnails(v)
+      const best = thumbnails[0] || null
+      const durText = v.content_id ? extractDuration(v) : null
+      const published = v.content_id ? extractPublished(v) : { text: '' }
+      return {
+        video_id: id,
+        title: {
+          text: v.metadata?.title?.toString() || v.overlay_metadata?.primary_text?.toString() || '',
+        },
+        thumbnails,
+        author: { id: chId, name: chName, thumbnails: chThumbs },
+        published,
+        uploaded: v.content_id ? parseRelativeMs(published.text) : 0,
+        duration: durText || { seconds: '0', text: '' },
+        is_live: durText?.is_live || false,
+        is_upcoming: false,
+        is_premiere: false,
+        best_thumbnail: best ? { url: best.url, width: best.width, height: best.height } : null,
       }
     })
     .filter(Boolean)
@@ -318,37 +342,26 @@ async function getChannel(channelId: string): Promise<Response> {
 }
 
 function mapPlaylistItem(v: any) {
-  if (v.content_id || v.entity_id) {
-    const rawId = v.content_id || v.entity_id || ''
-    const id = v.content_id ? rawId : (rawId.match(/([a-zA-Z0-9_-]{11})$/) || [])[0] || rawId
-    const published = v.content_id ? extractPublished(v) : { text: '' }
-    let thumbnails = v.content_image?.image || v.thumbnail || v.thumbnails || []
-    if (!thumbnails.length && v.entity_id) {
-      const vidMatch = v.entity_id.match(/([a-zA-Z0-9_-]{11})$/)
-      if (vidMatch) {
-        thumbnails = [
-          { url: `https://i.ytimg.com/vi/${vidMatch[1]}/hqdefault.jpg`, width: 336, height: 188 },
-        ]
-      }
-    }
-    const durText = v.content_id ? extractDuration(v) : null
-    return {
-      id,
-      title: {
-        text:
-          v.metadata?.title?.toString() ||
-          v.overlay_metadata?.primary_text?.toString() ||
-          v.title?.toString() ||
-          '',
-      },
-      thumbnails,
-      author: v.author,
-      published,
-      uploaded: v.content_id ? parseRelativeMs(published.text) : 0,
-      duration: durText || { seconds: '0', text: '' },
-      is_live: durText?.is_live || false,
-      is_upcoming: false,
-    }
+  const id = resolveLockupId(v)
+  if (!id) return null
+  const published = v.content_id ? extractPublished(v) : { text: '' }
+  const durText = v.content_id ? extractDuration(v) : null
+  return {
+    id,
+    title: {
+      text:
+        v.metadata?.title?.toString() ||
+        v.overlay_metadata?.primary_text?.toString() ||
+        v.title?.toString() ||
+        '',
+    },
+    thumbnails: resolveLockupThumbnails(v),
+    author: v.author,
+    published,
+    uploaded: v.content_id ? parseRelativeMs(published.text) : 0,
+    duration: durText || { seconds: '0', text: '' },
+    is_live: durText?.is_live || false,
+    is_upcoming: false,
   }
 }
 
@@ -364,7 +377,9 @@ async function getPlaylist(playlistId: string): Promise<Response> {
     for (const [, memos] of playlist.memo) {
       for (const item of memos) {
         const i = item as any
-        if (i.type === 'LockupView' && i.content_id) extracted.push(i)
+        if ((i.type === 'LockupView' && i.content_id) || i.type === 'ShortsLockupView') {
+          extracted.push(i)
+        }
       }
     }
     items = extracted

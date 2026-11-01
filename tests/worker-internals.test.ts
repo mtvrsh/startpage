@@ -149,3 +149,194 @@ describe('GET /channels/:id', () => {
     expect(fetched).toEqual(['@handle'])
   })
 })
+
+// Shorts-only upload playlists come back as ShortsLockupView items (captured
+// live from the shorts-only channel UCkQ774ot9mhH3wWMsjzGq2g): `entity_id` is
+// an opaque hash and the video id / thumbnails sit on the tap endpoint, while
+// no duration or publish date exists anywhere in the renderer (a YouTube API
+// limitation, also documented in NewPipeExtractor's
+// YoutubeShortsLockupInfoItemExtractor).
+function shortsLockupFixture(videoId: string) {
+  return {
+    type: 'ShortsLockupView',
+    entity_id: 'C1A2D28FC54EBFE2',
+    accessibility_text: 'man, 8.8 thousand views - play Short',
+    thumbnail: [],
+    thumbnail_view_model: {
+      image: [{ url: `https://i.ytimg.com/vi/${videoId}/oardefault.jpg`, width: 360, height: 202 }],
+    },
+    on_tap_endpoint: {
+      payload: { videoId },
+      metadata: { url: `https://www.youtube.com/shorts/${videoId}` },
+    },
+    overlay_metadata: {
+      primary_text: { toString: () => 'A short' },
+      secondary_text: { toString: () => '42K views' },
+    },
+  }
+}
+
+describe('shorts lockup items in listings', () => {
+  test('GET /playlists/:id maps ShortsLockupView items via the tap endpoint, not entity_id', async () => {
+    const working = await withInnertube({
+      getPlaylist: async () => ({
+        videos: [
+          shortsLockupFixture('8U19uSzmPUU'),
+          // An opaque `entity_id` with no id on the tap endpoint must be
+          // dropped rather than emitted with a fabricated video id.
+          {
+            type: 'ShortsLockupView',
+            entity_id: '0B2C3D4E5FF6GH7II',
+            thumbnail: [],
+            on_tap_endpoint: { payload: {} },
+          },
+        ],
+        memo: new Map(),
+        info: { title: 'Uploads', author: { name: 'Channel' } },
+      }),
+    })
+
+    const res = await working(request('/playlists/PL1234567890abcdefghijklmno1'), env())
+
+    expect(res.status).toBe(200)
+    // The playlist-level author (from info) is what the frontend consumes:
+    // ShortsLockupView items carry no per-item author, so theirs serializes
+    // away and the backend falls back to `data.author`.
+    expect(await res.json()).toEqual({
+      name: 'Uploads',
+      author: { name: 'Channel' },
+      items: [
+        {
+          id: '8U19uSzmPUU',
+          title: { text: 'A short' },
+          thumbnails: [
+            { url: 'https://i.ytimg.com/vi/8U19uSzmPUU/oardefault.jpg', width: 360, height: 202 },
+          ],
+          author: undefined,
+          published: { text: '' },
+          uploaded: 0,
+          duration: { seconds: '0', text: '' },
+          is_live: false,
+          is_upcoming: false,
+        },
+      ],
+    })
+  })
+
+  test('GET /playlists/:id still maps content_id LockupView items', async () => {
+    const working = await withInnertube({
+      getPlaylist: async () => ({
+        videos: [
+          {
+            type: 'LockupView',
+            content_id: 'abc12345678',
+            content_type: 'VIDEO',
+            content_image: {
+              image: [
+                {
+                  url: 'https://i.ytimg.com/vi/abc12345678/hqdefault.jpg',
+                  width: 360,
+                  height: 202,
+                },
+              ],
+            },
+            metadata: { title: { toString: () => 'Long video' } },
+          },
+          shortsLockupFixture('8U19uSzmPUU'),
+        ],
+        memo: new Map(),
+        info: { title: 'Uploads', author: undefined },
+      }),
+    })
+
+    const res = await working(request('/playlists/PL1234567890abcdefghijklmno1'), env())
+
+    const { items } = await res.json()
+    expect(items).toEqual([
+      {
+        id: 'abc12345678',
+        title: { text: 'Long video' },
+        thumbnails: [
+          { url: 'https://i.ytimg.com/vi/abc12345678/hqdefault.jpg', width: 360, height: 202 },
+        ],
+        author: undefined,
+        published: { text: '' },
+        uploaded: 0,
+        duration: { seconds: '0', text: '' },
+        is_live: false,
+        is_upcoming: false,
+      },
+      {
+        id: '8U19uSzmPUU',
+        title: { text: 'A short' },
+        thumbnails: [
+          { url: 'https://i.ytimg.com/vi/8U19uSzmPUU/oardefault.jpg', width: 360, height: 202 },
+        ],
+        author: undefined,
+        published: { text: '' },
+        uploaded: 0,
+        duration: { seconds: '0', text: '' },
+        is_live: false,
+        is_upcoming: false,
+      },
+    ])
+  })
+
+  test('GET /channels/:id extracts ShortsLockupView items from the memo via the tap endpoint', async () => {
+    const working = await withInnertube({
+      getChannel: async () => ({
+        has_videos: true,
+        getVideos: async () => ({
+          videos: [],
+          memo: new Map([
+            [
+              'ShortsLockupView',
+              [
+                // Relative /shorts/<id> URL form, as captured live: the id
+                // fallback regex matches relative and absolute alike.
+                {
+                  ...shortsLockupFixture('8U19uSzmPUU'),
+                  on_tap_endpoint: {
+                    payload: { videoId: '8U19uSzmPUU' },
+                    metadata: { url: '/shorts/8U19uSzmPUU' },
+                  },
+                },
+              ],
+            ],
+          ]),
+        }),
+        metadata: { title: 'Channel', external_id: 'UCkQ774ot9mhH3wWMsjzGq2g' },
+        header: { author: { name: 'Channel', thumbnails: [] } },
+      }),
+    })
+
+    const res = await working(request('/channels/UCkQ774ot9mhH3wWMsjzGq2g'), env())
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual([
+      {
+        video_id: '8U19uSzmPUU',
+        title: { text: 'A short' },
+        thumbnails: [
+          { url: 'https://i.ytimg.com/vi/8U19uSzmPUU/oardefault.jpg', width: 360, height: 202 },
+        ],
+        author: {
+          id: 'UCkQ774ot9mhH3wWMsjzGq2g',
+          name: 'Channel',
+          thumbnails: [],
+        },
+        published: { text: '' },
+        uploaded: 0,
+        duration: { seconds: '0', text: '' },
+        is_live: false,
+        is_upcoming: false,
+        is_premiere: false,
+        best_thumbnail: {
+          url: 'https://i.ytimg.com/vi/8U19uSzmPUU/oardefault.jpg',
+          width: 360,
+          height: 202,
+        },
+      },
+    ])
+  })
+})
