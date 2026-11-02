@@ -220,7 +220,11 @@ textarea {
   font-size: $font-size-icon;
   line-height: 1.4;
   color: var(--color-accent);
-  background: var(--color-bg);
+  // Transparent so the button sits on whatever surface it is placed on: the
+  // page background in bookmarks, the row surface in the filter dropdown. A
+  // fixed background shows as a block there because a coarse pointer keeps
+  // the button visible without a hover state to retint it.
+  background: transparent;
   border: none;
   cursor: pointer;
 }
@@ -236,10 +240,9 @@ textarea {
 // Coarse pointers/touch screens keep the buttons visible because they have no
 // hover state.
 //
-// Do not use pointer-events: none or an opacity transition here. Both let the
-// button's different background show through: pointer-events delays :hover
-// until the next mouse move, and an opacity fade shows the inactive background
-// while the row is being left.
+// Do not use pointer-events: none or an opacity transition here: pointer-events
+// delays :hover until the next mouse move, and an opacity fade reveals the
+// underlying row background while the button is being left.
 @media (hover: hover) and (pointer: fine) {
   .column__remove {
     opacity: 0;

@@ -237,10 +237,11 @@
         background: var(--color-accent);
       }
 
-      // Match the select button's hover/focus background while the delete
-      // action is inactive; the global hover/focus rules still make it red.
-      &:hover > .column__remove:not(:hover):not(:focus),
-      &:focus-within > .column__remove:not(:hover):not(:focus) {
+      // Tint the whole row on hover/focus. Children stay transparent so the
+      // label, state square and delete action share the row background; only
+      // the delete action paints over it (red) when hovered/focused itself.
+      &:hover,
+      &:focus-within {
         background: var(--color-surface-light);
       }
     }
@@ -263,7 +264,10 @@
       text-align: left;
       white-space: nowrap;
       text-overflow: ellipsis;
-      background: inherit;
+      // Transparent (not inherit) so the row's own hover/focus tint shows
+      // through, including on the "All" row where this button is the direct
+      // child of the row.
+      background: transparent;
       border: none;
       cursor: pointer;
 
@@ -274,7 +278,6 @@
 
       &:hover,
       &:focus {
-        background: var(--color-surface-light);
         outline: none;
       }
     }
