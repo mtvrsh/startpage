@@ -26,6 +26,8 @@ $outline: $outline-size $outline-type;
 
 $nav-gap: $gap-0;
 $nav-z-index: 100;
+// Height of the bottom tab bar; the dock clears it below the xl breakpoint.
+$nav-height: 1.5rem;
 $overlay-z-index: 200;
 // Shared dim behind the search palette and the settings overlay so both
 // read as the same layer.

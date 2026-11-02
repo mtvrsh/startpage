@@ -54,7 +54,8 @@
   .dock {
     position: fixed;
     right: var(--gap-1);
-    bottom: calc(3rem + var(--gap-1));
+    // Clear the bottom tab bar, which is only rendered below the xl breakpoint.
+    bottom: calc(#{$nav-height} + var(--gap-1));
     z-index: $nav-z-index;
     display: flex;
     gap: var(--gap-0);

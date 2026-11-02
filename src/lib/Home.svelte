@@ -36,6 +36,7 @@
 
 <style lang="scss">
   @use 'scss/breakpoints' as *;
+  @use 'scss/variables' as *;
 
   .home {
     display: flex;
@@ -68,7 +69,7 @@
 
   .home__navigation-button {
     // Match the compact column header actions (e.g. the bookmark "+").
-    height: 1.5rem;
+    height: $nav-height;
     padding: 0 var(--gap-1);
     color: var(--color-accent);
     background: inherit;
