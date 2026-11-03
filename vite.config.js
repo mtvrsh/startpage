@@ -30,6 +30,10 @@ export default defineConfig({
         sw: './src/sw.js',
       },
       output: {
+        // Intentionally unhashed: the SW precache manifest in src/sw.js
+        // hard-codes these filenames. Re-enabling [hash] or emitting extra
+        // chunks requires updating that manifest (or switching to a generated
+        // manifest such as workbox / vite-plugin-pwa).
         assetFileNames: 'assets/[name].[ext]',
         chunkFileNames: 'assets/[name].js',
         entryFileNames: (chunkInfo) => {

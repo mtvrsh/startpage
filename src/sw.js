@@ -1,4 +1,5 @@
 // @ts-nocheck
+// No fallback: local builds without VITE_GIT_COMMIT cache as `startpage-undefined`.
 const VERSION = import.meta.env.VITE_GIT_COMMIT
 // Cache Storage is per-origin: GitHub Pages project sites share `<user>.github.io`,
 // so this SW must never touch caches it did not create.
@@ -11,6 +12,7 @@ self.addEventListener('install', (e) => {
       .open(CACHE)
       .then((cache) =>
         Promise.all(
+          // Keep in sync with the unhashed output names in vite.config.js.
           ['.', '404.html', 'index.html', 'favicon.svg', 'assets/index.js', 'assets/index.css'].map(
             (url) =>
               fetch(new Request(url, { cache: 'no-cache' })).then((resp) => {
@@ -28,6 +30,8 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(
     Promise.all([
       caches
+        // Sweep only this app's caches; legacy pre-prefix caches (bare commit
+        // hashes) are indistinguishable from sibling projects' and stay.
         .keys()
         .then((keys) =>
           Promise.all(
@@ -53,6 +57,9 @@ self.addEventListener('fetch', (e) => {
     return
   }
 
-  // Pass-through (cross-origin GETs are never cached here); add an origin filter if caching is ever extended.
+  // Precache-only: only entries written at install time are served; network
+  // responses are never cached here. Runtime caching would ignore
+  // `Request.cache` and defeat the backend's `reload`, so add an explicit
+  // `request.cache` check if caching is ever extended.
   e.respondWith(caches.match(request).then((cached) => cached || fetch(request)))
 })

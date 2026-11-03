@@ -106,6 +106,10 @@ export default class Bookmarks {
     })
   }
 
+  /**
+   * Re-keys a bookmark from `url` to `bookmark.url`. Rejects a missing source
+   * or a destination URL that is already taken.
+   */
   static replace(url: URL, bookmark: Bookmark): boolean {
     const current = get(bookmarks)
 
