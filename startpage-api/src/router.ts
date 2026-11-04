@@ -1,5 +1,6 @@
 import { Innertube } from 'youtubei.js/cf-worker'
 import { feedProxy, ProxyError } from './feed-proxy'
+import { playlistContinuationToken } from './playlist-continuation'
 import { corsHeaders, isAllowedOrigin, isRateLimited } from './access'
 import type { WorkerEnv } from './access'
 
@@ -312,6 +313,15 @@ async function getChannel(channelId: string): Promise<Response> {
   // of `youtube.com/channel/UC…`, diverging from Piped's canonical output.
   const chId = chMeta.external_id || chHeader.author?.id || channelId
 
+  // Same gap as uploads playlists: a channel whose videos tab contains
+  // `ShortsLockupView` items has no duration/date for those entries. Reuse the
+  // uploads-playlist continuation, which is derivable for `UC…` ids (`UU` +
+  // the rest). Other ids have no uploads playlist to ask for.
+  if (chId.startsWith('UC') && videos.some((v: any) => v.type === 'ShortsLockupView')) {
+    const lockups = await fetchPlaylistLockups(yt, `UU${chId.slice(2)}`)
+    if (lockups.length > 0) videos = lockups
+  }
+
   const result = videos
     .map((v: any) => {
       const id = resolveLockupId(v)
@@ -365,6 +375,48 @@ function mapPlaylistItem(v: any) {
   }
 }
 
+// Reads the lockup items out of a `/browse` continuation response. YouTube
+// answers the first page with a reload command and later pages with an append
+// action; both expose `contents`, so the action is read structurally. The
+// trailing ContinuationItemView node has no `content_id` and is skipped.
+async function fetchPlaylistLockups(yt: any, playlistId: string): Promise<any[]> {
+  try {
+    const response: any = await yt.actions.execute('/browse', {
+      continuation: playlistContinuationToken(playlistId),
+      parse: true,
+    })
+    const lockups: any[] = []
+    for (const action of response.on_response_received_actions || []) {
+      for (const item of action.contents || []) {
+        if (item.type === 'LockupView' && item.content_id) lockups.push(item)
+      }
+    }
+    if (lockups.length === 0) {
+      // The request succeeded but the payload is not the shape this fallback
+      // understands (or the playlist genuinely has no items). Log it so a
+      // silent return to empty durations stays diagnosable.
+      console.error(
+        JSON.stringify({
+          message: 'playlist continuation returned no lockups',
+          playlist: playlistId,
+        }),
+      )
+    }
+    return lockups
+  } catch (err) {
+    // Degrade to the ShortsLockupView page: the listing loads with empty
+    // duration/publish dates, exactly as it did before this fallback existed.
+    console.error(
+      JSON.stringify({
+        message: 'playlist continuation failed',
+        error: describeError(err),
+        playlist: playlistId,
+      }),
+    )
+    return []
+  }
+}
+
 async function getPlaylist(playlistId: string): Promise<Response> {
   if (isInvalidId(playlistId)) return json({ error: 'invalid playlist id' }, 400)
   const yt = await getYt()
@@ -383,6 +435,19 @@ async function getPlaylist(playlistId: string): Promise<Response> {
       }
     }
     items = extracted
+  }
+
+  // Shorts-only uploads playlists render their first page as
+  // ShortsLockupView items, which carry neither a duration nor a publish date.
+  // The continuation NewPipe uses for every playlist first page returns the
+  // same videos as LockupView items with both. Trigger it whenever the page
+  // contains at least one shorts lockup, mixed pages included: those still
+  // have gaps for every shorts entry. The continuation is the authoritative
+  // first page, so its items replace the initial list (pages that already
+  // render LockupViews only keep their single request).
+  if (items.some((v) => v.type === 'ShortsLockupView')) {
+    const lockups = await fetchPlaylistLockups(yt, playlistId)
+    if (lockups.length > 0) items = lockups
   }
 
   items = items.map(mapPlaylistItem).filter(Boolean)

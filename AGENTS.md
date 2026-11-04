@@ -110,6 +110,7 @@ Do not deploy or push unless the user asks.
 - `SettingsGeneral.svelte` maps `InstanceType` → UI labels via `backendLabel` record
 - **Rate budget:** one shared `FEED_LIMIT` binding in `startpage-api/wrangler.jsonc` throttles every worker route. A page load fires one request per channel plus one per feed in parallel - there is deliberately no client-side pacing. `Channels.refetch`/`Feeds.refetch` are single-flight; non-reload callers join the run in flight and a `reload: true` call is chained after it. Do not add pacing without checking the worker budget.
 - **Browser caching:** worker listings (`/channels`, `/playlists`) carry a private max-age; `StartpageBackend` sends `cache: reload ? 'reload' : 'default'`, so sync or an expired local lifetime bypasses the browser cache. Keep the worker TTL and the default `cacheLifetimeInMinutes` in sync. The SW does not participate: it is precache-only.
+- **Shorts listings:** `getPlaylist()` and `getChannel()` can return `ShortsLockupView` items with no duration/date. When a page contains any, the worker re-fetches it with the continuation token in `startpage-api/src/playlist-continuation.ts` (the `UU` uploads playlist for channels). Token field 35 (`playlistId`) is what makes YouTube return `LockupView` items; mixed pages take the continuation too, pages that only return `LockupView` keep their single request.
 
 Adding a new backend:
 

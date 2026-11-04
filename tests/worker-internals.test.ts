@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { parseSubscriberCount } from '../startpage-api/src/router'
+import { playlistContinuationToken } from '../startpage-api/src/playlist-continuation'
 import type { WorkerEnv } from '../startpage-api/src/access'
 
 // The YouTube.js client is never exercised here; route tests swap in their own
@@ -27,6 +28,12 @@ function request(path: string) {
   })
 }
 
+// The continuation fallback logs whenever it degrades; tests that exercise a
+// shorts page with an intentionally empty continuation should stay quiet.
+function muteErrors() {
+  return vi.spyOn(console, 'error').mockImplementation(() => {})
+}
+
 // Each route test needs a working client, so reset the module registry (the
 // router caches a `getYt()` singleton) and re-mock before importing it.
 async function withInnertube(client: Record<string, unknown>) {
@@ -36,6 +43,7 @@ async function withInnertube(client: Record<string, unknown>) {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks()
   vi.resetModules()
 })
 
@@ -59,6 +67,24 @@ describe('parseSubscriberCount', () => {
     ['@handle', 0], // handle text in a non-inverted `subscriber_count`
   ])('%s -> %i', (text, expected) => {
     expect(parseSubscriberCount(text)).toBe(expected)
+  })
+})
+
+describe('playlistContinuationToken', () => {
+  // Golden token for the live shorts-only uploads playlist used during the
+  // fix's validation. It must stay byte-identical to what NewPipeExtractor's
+  // protobuf produces (fields 2/3/35 under 80226972), because field 35 is
+  // what makes YouTube answer with `lockupViewModel` items (duration + date).
+  test('encodes the NewPipe-compatible first-page parameters', () => {
+    expect(playlistContinuationToken('UUkQ774ot9mhH3wWMsjzGq2g')).toBe(
+      '4qmFsgJJEhpWTFVVa1E3NzRvdDltaEgzd1dNc2p6R3EyZxoQQ0FEQ0JnSUlBQSUzRCUzRJoCGFVVa1E3NzRvdDltaEgzd1dNc2p6R3EyZw',
+    )
+  })
+
+  test('accepts an already VL-prefixed id without doubling it', () => {
+    expect(playlistContinuationToken('VLUUkQ774ot9mhH3wWMsjzGq2g')).toBe(
+      playlistContinuationToken('UUkQ774ot9mhH3wWMsjzGq2g'),
+    )
   })
 })
 
@@ -176,8 +202,35 @@ function shortsLockupFixture(videoId: string) {
   }
 }
 
+// `LockupView` items from the playlist continuation: unlike ShortsLockupView
+// they expose the duration badge in `content_image.overlays` and the publish
+// date in the content metadata rows.
+function lockupFixture(videoId: string) {
+  return {
+    type: 'LockupView',
+    content_id: videoId,
+    content_type: 'VIDEO',
+    content_image: {
+      image: [{ url: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`, width: 360, height: 202 }],
+      overlays: [
+        {
+          type: 'ThumbnailBottomOverlayView',
+          badges: [{ type: 'ThumbnailBadgeView', text: '0:13' }],
+        },
+      ],
+    },
+    metadata: {
+      title: { toString: () => 'A short with metadata' },
+      metadata: {
+        metadata_rows: [{ metadata_parts: [{ text: { toString: () => '6h ago' } }] }],
+      },
+    },
+  }
+}
+
 describe('shorts lockup items in listings', () => {
   test('GET /playlists/:id maps ShortsLockupView items via the tap endpoint, not entity_id', async () => {
+    muteErrors()
     const working = await withInnertube({
       getPlaylist: async () => ({
         videos: [
@@ -194,6 +247,8 @@ describe('shorts lockup items in listings', () => {
         memo: new Map(),
         info: { title: 'Uploads', author: { name: 'Channel' } },
       }),
+      // Empty continuation: the mapping under test is the fallback page.
+      actions: { execute: async () => ({}) },
     })
 
     const res = await working(request('/playlists/PL1234567890abcdefghijklmno1'), env())
@@ -224,6 +279,7 @@ describe('shorts lockup items in listings', () => {
   })
 
   test('GET /playlists/:id still maps content_id LockupView items', async () => {
+    muteErrors()
     const working = await withInnertube({
       getPlaylist: async () => ({
         videos: [
@@ -247,6 +303,9 @@ describe('shorts lockup items in listings', () => {
         memo: new Map(),
         info: { title: 'Uploads', author: undefined },
       }),
+      // Mixed page, so the fallback runs; an empty continuation must leave the
+      // initial page intact.
+      actions: { execute: async () => ({}) },
     })
 
     const res = await working(request('/playlists/PL1234567890abcdefghijklmno1'), env())
@@ -282,7 +341,189 @@ describe('shorts lockup items in listings', () => {
     ])
   })
 
+  test('GET /playlists/:id serves a mixed page from the continuation', async () => {
+    const execute = vi.fn(async () => ({
+      on_response_received_actions: [
+        {
+          type: 'AppendContinuationItemsAction',
+          contents: [lockupFixture('abc12345678'), lockupFixture('8U19uSzmPUU')],
+        },
+      ],
+    }))
+    const working = await withInnertube({
+      getPlaylist: async () => ({
+        videos: [lockupFixture('abc12345678'), shortsLockupFixture('8U19uSzmPUU')],
+        memo: new Map(),
+        info: { title: 'Uploads', author: undefined },
+      }),
+      actions: { execute },
+    })
+
+    const res = await working(request('/playlists/UUkQ774ot9mhH3wWMsjzGq2g'), env())
+
+    expect(res.status).toBe(200)
+    expect(execute).toHaveBeenCalledTimes(1)
+    const { items } = await res.json()
+    // The continuation is the authoritative first page, so it replaces the
+    // mixed initial list; the shorts entry gains the duration it lacked.
+    expect(items.map((item: any) => item.id)).toEqual(['abc12345678', '8U19uSzmPUU'])
+    expect(items.every((item: any) => item.duration.seconds !== '0')).toBe(true)
+  })
+
+  test('GET /playlists/:id refetches shorts-only uploads through the continuation', async () => {
+    const execute = vi.fn(async (_endpoint: string, _args: { continuation: string }) => ({
+      on_response_received_actions: [
+        {
+          type: 'AppendContinuationItemsAction',
+          contents: [
+            lockupFixture('xf9Je_S1mAs'),
+            // The continuation page always ends with a continuation node; it
+            // must not turn into a listing item.
+            { type: 'ContinuationItemView' },
+          ],
+        },
+      ],
+    }))
+
+    const working = await withInnertube({
+      getPlaylist: async () => ({
+        videos: [shortsLockupFixture('xf9Je_S1mAs')],
+        memo: new Map(),
+        info: { title: 'Uploads', author: { name: 'Channel' } },
+      }),
+      actions: { execute },
+    })
+
+    const res = await working(request('/playlists/UUkQ774ot9mhH3wWMsjzGq2g'), env())
+
+    expect(res.status).toBe(200)
+    expect(execute).toHaveBeenCalledTimes(1)
+    expect(execute).toHaveBeenCalledWith('/browse', {
+      continuation: playlistContinuationToken('UUkQ774ot9mhH3wWMsjzGq2g'),
+      parse: true,
+    })
+
+    const { items } = await res.json()
+    expect(items).toHaveLength(1)
+    expect(items[0]).toMatchObject({
+      id: 'xf9Je_S1mAs',
+      title: { text: 'A short with metadata' },
+      published: { text: '6h ago' },
+      duration: { seconds: '13', text: '0:13' },
+    })
+    expect(items[0].uploaded).toBeGreaterThan(0)
+  })
+
+  test('GET /playlists/:id reads the reload continuation shape too', async () => {
+    const working = await withInnertube({
+      getPlaylist: async () => ({
+        videos: [shortsLockupFixture('xf9Je_S1mAs')],
+        memo: new Map(),
+        info: { title: 'Uploads', author: undefined },
+      }),
+      actions: {
+        execute: async () => ({
+          on_response_received_actions: [
+            { type: 'ReloadContinuationItemsCommand', contents: [lockupFixture('xf9Je_S1mAs')] },
+          ],
+        }),
+      },
+    })
+
+    const res = await working(request('/playlists/UUkQ774ot9mhH3wWMsjzGq2g'), env())
+
+    const { items } = await res.json()
+    expect(items[0].duration).toMatchObject({ seconds: '13', text: '0:13' })
+  })
+
+  test('GET /playlists/:id keeps the single request for LockupView first pages', async () => {
+    const execute = vi.fn()
+    const working = await withInnertube({
+      getPlaylist: async () => ({
+        videos: [lockupFixture('abc12345678')],
+        memo: new Map(),
+        info: { title: 'Playlist', author: undefined },
+      }),
+      actions: { execute },
+    })
+
+    const res = await working(request('/playlists/PL1234567890abcdefghijklmno1'), env())
+
+    expect(res.status).toBe(200)
+    expect(execute).not.toHaveBeenCalled()
+    const { items } = await res.json()
+    expect(items[0]).toMatchObject({
+      id: 'abc12345678',
+      published: { text: '6h ago' },
+      duration: { seconds: '13', text: '0:13' },
+    })
+  })
+
+  test('GET /playlists/:id falls back to the shorts page when the continuation fails', async () => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const working = await withInnertube({
+      getPlaylist: async () => ({
+        videos: [shortsLockupFixture('8U19uSzmPUU')],
+        memo: new Map(),
+        info: { title: 'Uploads', author: undefined },
+      }),
+      actions: {
+        execute: async () => {
+          throw new Error('browse failed')
+        },
+      },
+    })
+
+    const res = await working(request('/playlists/UUkQ774ot9mhH3wWMsjzGq2g'), env())
+
+    expect(res.status).toBe(200)
+    const { items } = await res.json()
+    expect(items).toHaveLength(1)
+    expect(items[0]).toMatchObject({
+      id: '8U19uSzmPUU',
+      published: { text: '' },
+      duration: { seconds: '0', text: '' },
+    })
+    expect(logged).toHaveBeenCalled()
+  })
+
+  test('GET /channels/:id refetches shorts lockups through the uploads playlist', async () => {
+    const execute = vi.fn(async () => ({
+      on_response_received_actions: [
+        { type: 'ReloadContinuationItemsCommand', contents: [lockupFixture('8U19uSzmPUU')] },
+      ],
+    }))
+    const working = await withInnertube({
+      getChannel: async () => ({
+        has_videos: true,
+        getVideos: async () => ({
+          videos: [shortsLockupFixture('8U19uSzmPUU')],
+          memo: new Map(),
+        }),
+        metadata: { title: 'Channel', external_id: 'UCkQ774ot9mhH3wWMsjzGq2g' },
+        header: { author: { name: 'Channel', thumbnails: [] } },
+      }),
+      actions: { execute },
+    })
+
+    const res = await working(request('/channels/UCkQ774ot9mhH3wWMsjzGq2g'), env())
+
+    expect(res.status).toBe(200)
+    // `UC…` is rewritten to the matching uploads playlist.
+    expect(execute).toHaveBeenCalledWith('/browse', {
+      continuation: playlistContinuationToken('UUkQ774ot9mhH3wWMsjzGq2g'),
+      parse: true,
+    })
+    const items = await res.json()
+    expect(items[0]).toMatchObject({
+      video_id: '8U19uSzmPUU',
+      published: { text: '6h ago' },
+      duration: { seconds: '13', text: '0:13' },
+    })
+  })
+
   test('GET /channels/:id extracts ShortsLockupView items from the memo via the tap endpoint', async () => {
+    muteErrors()
     const working = await withInnertube({
       getChannel: async () => ({
         has_videos: true,
@@ -308,6 +549,8 @@ describe('shorts lockup items in listings', () => {
         metadata: { title: 'Channel', external_id: 'UCkQ774ot9mhH3wWMsjzGq2g' },
         header: { author: { name: 'Channel', thumbnails: [] } },
       }),
+      // Empty continuation: this test covers the mapping of the memo page.
+      actions: { execute: async () => ({}) },
     })
 
     const res = await working(request('/channels/UCkQ774ot9mhH3wWMsjzGq2g'), env())
