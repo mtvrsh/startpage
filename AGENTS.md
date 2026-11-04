@@ -20,7 +20,7 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 
 ### Deno alias
 
-`deno task <name>` is an alias for the same `package.json` scripts (`dev`, `build`, `preview`, `check`, `test`); the toolchain (`vite`, `vitest`, `svelte-check`) still runs under Node. Use `deno task test --run` when using Deno, because `deno task test` starts Vitest in watch mode. Only `scripts/healthcheck.ts` is native Deno (`deno run`, JSR). A full Deno-runtime migration is not feasible (vitest `.svelte` imports via Vite, `svelte-check` typechecker, `wrangler` backend, Node-based CI/Docker).
+`deno task <name>` is an alias for the same `package.json` scripts (`dev`, `build`, `preview`, `check`, `test`); the toolchain (`vite`, `vitest`, `svelte-check`) still runs under Node. Use `deno task test --run` when using Deno, because `deno task test` starts Vitest in watch mode. Only `scripts/healthcheck.ts` is native Deno (`deno run`, JSR). A full Deno-runtime migration is not feasible (vitest `.svelte` imports via Vite, `svelte-check` typechecker, `wrangler` backend, Node-based CI).
 
 ### Definition of done
 
