@@ -73,7 +73,7 @@ npm run deploy            # deploy to Cloudflare
 ```
 
 Run `wrangler types` after changing bindings in `wrangler.jsonc`. Tests covering
-the feed proxy live in the main repo's `tests/` (`deno task test` at the root).
+the feed proxy live in the main repo's `tests/` (`npx vitest run` at the root).
 
 ### Deploys
 

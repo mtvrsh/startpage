@@ -6,7 +6,7 @@
 
 ![Screenshot](.github/screenshot.webp)
 
-A [startpage](https://reddit.com/r/startpages/) with lightweight and privacy-friendly YouTube feed built with [Piped API](https://github.com/TeamPiped/Piped).
+A [startpage](https://reddit.com/r/startpages/) with lightweight and privacy-friendly YouTube feed built with the [Piped API](https://github.com/TeamPiped/Piped) or the bundled [startpage-api](startpage-api/README.md) backend (YouTube.js on Cloudflare Workers).
 
 # Open videos in app feature
 
