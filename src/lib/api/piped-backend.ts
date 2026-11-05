@@ -12,8 +12,10 @@ export class PipedBackend implements Backend {
 
   async search(query: string): Promise<SearchChannelsResult[]> {
     const response = await Piped.search(query, { filter: Piped.FILTER_CHANNELS })
-    if (!response.ok) return []
-    const data = await response.json()
+    if (!response.ok) throw new Error(`Search failed (HTTP ${response.status})`)
+    const data = await response.json().catch(() => {
+      throw new Error('Search returned an unexpected response')
+    })
     // Piped returns channel urls as site-relative paths (`/channel/UC…`).
     // Left as-is they resolve against the startpage origin in the palette, so
     // adding one fails to parse as a YouTube channel. Make them absolute.

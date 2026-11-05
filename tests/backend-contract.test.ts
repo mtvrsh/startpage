@@ -237,10 +237,10 @@ describe('shared backend contract', () => {
           expect(new URL(results[1]?.url ?? '').pathname.length).toBeGreaterThan(0)
         })
 
-        test('returns no results when the endpoint fails', async () => {
+        test('rejects when the search endpoint fails', async () => {
           c.routes({ search: { status: 500 } })
 
-          expect(await c.backend.search('query')).toEqual([])
+          await expect(c.backend.search('query')).rejects.toThrow('Search failed (HTTP 500)')
         })
       })
 

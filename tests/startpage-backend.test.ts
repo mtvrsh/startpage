@@ -32,6 +32,33 @@ afterEach(() => {
 // Only startpage-specific concerns live here: the browser-cache contract on
 // the worker's `private, max-age=600` listings. Mapped output, failures and
 // feedFetchAll routing are covered in backend-contract.test.ts.
+describe('search failures', () => {
+  test('rejects when the body is not a channel array', async () => {
+    stubFetch({ error: 'not found' })
+
+    await expect(new StartpageBackend().search('q')).rejects.toThrow(
+      'Search returned an unexpected response',
+    )
+  })
+
+  test('rejects when the body is not JSON', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        json: async () => {
+          throw new SyntaxError('Unexpected token <')
+        },
+      })),
+    )
+
+    await expect(new StartpageBackend().search('q')).rejects.toThrow(
+      'Search returned an unexpected response',
+    )
+  })
+})
+
 describe('browser cache mode', () => {
   test('lets the browser cache channel listings on a normal refetch', async () => {
     const mock = stubFetch([VIDEO])

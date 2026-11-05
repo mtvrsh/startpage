@@ -18,6 +18,9 @@
   let suggestions: SearchChannelsResult[] = $state([])
   let query = $state('')
   let errorMessage = $state('')
+  // The query the latest response belongs to; keeps "no results" from showing
+  // while a debounced search for the current query is still in flight.
+  let completedQuery = $state('')
   let previousFocus: HTMLElement | null = null
   let wasOpen = false
   let timeout = 0
@@ -31,6 +34,10 @@
     [...suggestions].sort((channelA, channelB) => channelB.subscribers - channelA.subscribers),
   )
 
+  let showNoResults = $derived(
+    !!query && completedQuery === query && !suggestions.length && !errorMessage,
+  )
+
   let open = () => (app.searchOpen = true)
 
   let close = () => {
@@ -41,21 +48,35 @@
 
   let clearSuggestions = () => (suggestions = [])
 
+  let showError = (error: unknown) => {
+    const message =
+      typeof error === 'string' ? error : error instanceof Error ? error.message : String(error)
+
+    errorMessage = message || strings.requestFailed
+  }
+
   let search = () => {
     const currentQuery = query
 
     if (!currentQuery) {
+      completedQuery = ''
       clearSuggestions()
       return
     }
 
+    completedQuery = ''
+
     $backend
       .search(currentQuery)
       .then((channelResults) => {
-        if (query === currentQuery) suggestions = channelResults
+        if (query !== currentQuery) return
+        suggestions = channelResults
+        completedQuery = currentQuery
       })
-      .catch(() => {
-        if (query === currentQuery) clearSuggestions()
+      .catch((error) => {
+        if (query !== currentQuery) return
+        clearSuggestions()
+        showError(error)
       })
   }
 
@@ -66,12 +87,7 @@
   }
 
   let addChannel = (url: string) => {
-    Channels.add(url)
-      .then(close)
-      .catch((error) => {
-        errorMessage =
-          typeof error === 'string' ? error : error instanceof Error ? error.message : String(error)
-      })
+    Channels.add(url).then(close).catch(showError)
   }
 
   let handleSubmit = (event: Event) => {
@@ -236,6 +252,8 @@
             </li>
           {/each}
         </ul>
+      {:else if showNoResults}
+        <p class="palette__empty">{strings.noChannelsFound}</p>
       {/if}
     </div>
   </div>
@@ -310,6 +328,12 @@
       font-size: $font-size-body;
       color: var(--color-error);
       border-bottom: $border var(--color-surface);
+    }
+
+    &__empty {
+      padding: var(--gap-1);
+      font-size: $font-size-body;
+      color: var(--color-fg-inactive);
     }
 
     &__list {

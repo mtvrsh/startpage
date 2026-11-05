@@ -25,10 +25,12 @@ export class StartpageBackend implements Backend {
     const response = await fetch(`${backendUrl}/search/channels?q=${encodeURIComponent(query)}`, {
       signal: AbortSignal.timeout(timeoutInSeconds * 1000),
     })
-    if (!response.ok) return []
+    if (!response.ok) throw new Error(`Search failed (HTTP ${response.status})`)
 
-    const channels: any[] = await response.json()
-    if (!Array.isArray(channels)) return []
+    const channels: any = await response.json().catch(() => {
+      throw new Error('Search returned an unexpected response')
+    })
+    if (!Array.isArray(channels)) throw new Error('Search returned an unexpected response')
 
     return channels.map((channel) => ({
       url: `https://youtube.com/channel/${channel.id}`,
