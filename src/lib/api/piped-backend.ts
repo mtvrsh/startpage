@@ -6,6 +6,7 @@ import humanizeDuration from 'humanize-duration'
 import type { Backend } from './backend'
 import type { Channel } from '../../share/channels'
 import type { SearchChannelsResult } from '../../util/piped'
+import { asSearchArray, readSearchResponse } from './search-response'
 
 export class PipedBackend implements Backend {
   static name = 'piped' as const
@@ -13,13 +14,13 @@ export class PipedBackend implements Backend {
   async search(query: string): Promise<SearchChannelsResult[]> {
     const response = await Piped.search(query, { filter: Piped.FILTER_CHANNELS })
     if (!response.ok) throw new Error(`Search failed (HTTP ${response.status})`)
-    const data = await response.json().catch(() => {
-      throw new Error('Search returned an unexpected response')
-    })
+
+    const data = (await readSearchResponse(response)) as { items?: unknown } | null
+    const items = asSearchArray(data?.items)
     // Piped returns channel urls as site-relative paths (`/channel/UC…`).
     // Left as-is they resolve against the startpage origin in the palette, so
     // adding one fails to parse as a YouTube channel. Make them absolute.
-    return (data.items || []).map((item: SearchChannelsResult) => ({
+    return items.map((item: SearchChannelsResult) => ({
       ...item,
       url: this.absoluteUrl(item.url),
     }))

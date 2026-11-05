@@ -242,6 +242,18 @@ describe('shared backend contract', () => {
 
           await expect(c.backend.search('query')).rejects.toThrow('Search failed (HTTP 500)')
         })
+
+        test('rejects a malformed search body the same way for both backends', async () => {
+          c.routes({
+            search: {
+              body: c.name === 'piped' ? { items: 'not-an-array' } : { error: 'not found' },
+            },
+          })
+
+          await expect(c.backend.search('query')).rejects.toThrow(
+            'Search returned an unexpected response',
+          )
+        })
       })
 
       describe('fetchChannel', () => {

@@ -24,6 +24,9 @@
   let previousFocus: HTMLElement | null = null
   let wasOpen = false
   let timeout = 0
+  // Identifies the latest search, so a superseded request (e.g. Enter while the
+  // debounced search is still in flight) cannot overwrite its outcome.
+  let searchId = 0
 
   let focusKeybind = $derived(Config.getUsedKeybind($config.keybind.focusSearch))
   let closeKeybind = $derived($config.keybind.close)
@@ -42,6 +45,7 @@
 
   let close = () => {
     if (timeout) clearTimeout(timeout)
+    timeout = 0
 
     app.searchOpen = false
   }
@@ -56,6 +60,10 @@
   }
 
   let search = () => {
+    // Submit or a retry replaces the debounced run that has not started yet.
+    if (timeout) clearTimeout(timeout)
+    timeout = 0
+
     const currentQuery = query
 
     if (!currentQuery) {
@@ -69,15 +77,17 @@
     // failure on screen once this request succeeds.
     errorMessage = ''
 
+    const requestId = ++searchId
+
     $backend
       .search(currentQuery)
       .then((channelResults) => {
-        if (query !== currentQuery) return
+        if (requestId !== searchId || query !== currentQuery) return
         suggestions = channelResults
         completedQuery = currentQuery
       })
       .catch((error) => {
-        if (query !== currentQuery) return
+        if (requestId !== searchId || query !== currentQuery) return
         clearSuggestions()
         showError(error)
       })
@@ -86,6 +96,7 @@
   let searchDelayed = () => {
     if (timeout) clearTimeout(timeout)
 
+    timeout = 0
     if (!isUrl) timeout = window.setTimeout(search, global.search.delayInMs)
   }
 

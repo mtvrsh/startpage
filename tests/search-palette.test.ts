@@ -43,14 +43,18 @@ async function openAndType(value: string) {
   await tick()
 }
 
+async function flush() {
+  // Drain the fetch promise chain without moving the debounce clock.
+  await vi.advanceTimersByTimeAsync(0)
+  await tick()
+}
+
 async function submit() {
   target
     .querySelector('form')!
     .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
 
-  // Flush the fetch promise chain without advancing to the debounce timer.
-  for (let index = 0; index < 20; index++) await Promise.resolve()
-  await tick()
+  await flush()
 }
 
 describe('SearchPalette feedback', () => {
@@ -85,6 +89,48 @@ describe('SearchPalette feedback', () => {
     // stale empty state with the new outcome.
     failing = false
     await submit()
+
+    expect(target.querySelector('.palette__error')).toBeNull()
+    expect(target.querySelector('.palette__empty')?.textContent).toBe(strings.noChannelsFound)
+  })
+
+  test('submitting cancels the pending debounced search', async () => {
+    let fetchMock = vi.fn(async () => ({ ok: true, status: 200, json: async () => [] }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await openAndType('query')
+    await submit()
+    await vi.advanceTimersByTimeAsync(300)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  test('ignores an older same-query failure after a retry succeeds', async () => {
+    let rejectFirst: (reason?: unknown) => void = () => {}
+    let calls = 0
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => {
+        calls += 1
+
+        if (calls === 1) {
+          return new Promise<never>((_resolve, reject) => (rejectFirst = reject))
+        }
+
+        return Promise.resolve({ ok: true, status: 200, json: async () => [] })
+      }),
+    )
+
+    await openAndType('query')
+
+    // The first request stays pending while Enter starts a second one.
+    await submit()
+    await submit()
+
+    // The superseded failure must not replace the retry's result.
+    rejectFirst(new Error('first request failed'))
+    await flush()
 
     expect(target.querySelector('.palette__error')).toBeNull()
     expect(target.querySelector('.palette__empty')?.textContent).toBe(strings.noChannelsFound)

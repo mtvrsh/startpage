@@ -5,6 +5,7 @@ import type { Backend } from './backend'
 import type { Channel } from '../../share/channels'
 import type { SearchChannelsResult } from '../../util/piped'
 import { isChannelId } from '../../util/youtube'
+import { asSearchArray, readSearchResponse } from './search-response'
 
 function getText(obj: any): string {
   if (!obj) return ''
@@ -27,10 +28,7 @@ export class StartpageBackend implements Backend {
     })
     if (!response.ok) throw new Error(`Search failed (HTTP ${response.status})`)
 
-    const channels: any = await response.json().catch(() => {
-      throw new Error('Search returned an unexpected response')
-    })
-    if (!Array.isArray(channels)) throw new Error('Search returned an unexpected response')
+    const channels = asSearchArray(await readSearchResponse(response))
 
     return channels.map((channel) => ({
       url: `https://youtube.com/channel/${channel.id}`,
