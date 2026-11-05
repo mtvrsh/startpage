@@ -110,6 +110,10 @@
   }
 
   let handleInput = () => {
+    // Any edit invalidates the completed marker: retyping a query that was
+    // searched before (e.g. in a previous palette session) must not show a
+    // stale "no results" state while the debounced search is pending.
+    completedQuery = ''
     errorMessage = ''
     focus.index = 0
     searchDelayed()

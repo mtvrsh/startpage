@@ -40,6 +40,7 @@ async function openAndType(value: string) {
 
   input!.value = value
   input!.dispatchEvent(new Event('input', { bubbles: true }))
+  await tick()
 }
 
 async function submit() {
@@ -100,6 +101,25 @@ describe('SearchPalette feedback', () => {
 
     expect(target.querySelector('.palette__error')).toBeNull()
     expect(target.querySelector('.palette__empty')?.textContent).toBe(strings.noChannelsFound)
+  })
+
+  test('does not show a stale no-results message after reopening', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: true, status: 200, json: async () => [] })),
+    )
+
+    await openAndType('query')
+    await submit()
+    expect(target.querySelector('.palette__empty')).not.toBeNull()
+
+    app.searchOpen = false
+    await tick()
+    await openAndType('query')
+
+    // The reopened palette knows nothing about the previous session's result:
+    // the empty state must wait for this search, not reuse the old marker.
+    expect(target.querySelector('.palette__empty')).toBeNull()
   })
 
   test('shows a failed channel add in the same error area', async () => {
