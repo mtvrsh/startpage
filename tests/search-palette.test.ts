@@ -65,6 +65,30 @@ describe('SearchPalette feedback', () => {
     expect(target.querySelector('.palette__error')?.textContent).toBe('Search failed (HTTP 404)')
   })
 
+  test('clears the error when a retry of the same query succeeds', async () => {
+    let failing = true
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        failing
+          ? { ok: false, status: 500, json: async () => ({}) }
+          : { ok: true, status: 200, json: async () => [] },
+      ),
+    )
+
+    await openAndType('query')
+    await submit()
+    expect(target.querySelector('.palette__error')?.textContent).toBe('Search failed (HTTP 500)')
+
+    // Enter again without editing: the retry replaces both the error and the
+    // stale empty state with the new outcome.
+    failing = false
+    await submit()
+
+    expect(target.querySelector('.palette__error')).toBeNull()
+    expect(target.querySelector('.palette__empty')?.textContent).toBe(strings.noChannelsFound)
+  })
+
   test('shows a no-results message for a successful search with no channels', async () => {
     vi.stubGlobal(
       'fetch',

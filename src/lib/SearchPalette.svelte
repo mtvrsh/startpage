@@ -65,6 +65,9 @@
     }
 
     completedQuery = ''
+    // A retry (Enter without editing the query) must not leave the previous
+    // failure on screen once this request succeeds.
+    errorMessage = ''
 
     $backend
       .search(currentQuery)
