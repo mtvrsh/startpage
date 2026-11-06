@@ -1,6 +1,7 @@
-#!/usr/bin/env -S deno run --allow-net --allow-read --allow-import
+#!/usr/bin/env -S node
 
-import { parseArgs } from 'jsr:@std/cli/parse-args'
+import { readFile } from 'node:fs/promises'
+import { parseArgs } from 'node:util'
 
 const TIMEOUT = 5_000
 const PLAYLIST_ID = 'UUWTA5Yd0rAkQt5-9etIFoBA'
@@ -34,7 +35,7 @@ async function fetchJson<T>(url: string): Promise<T | null> {
 }
 
 async function checkPiped() {
-  const text = await Deno.readTextFile(new URL('./instances.json', import.meta.url))
+  const text = await readFile(new URL('./instances.json', import.meta.url), 'utf8')
   const raw: { piped: { instances: string[] } } = JSON.parse(text)
 
   for (const uri of raw.piped.instances) {
@@ -79,11 +80,18 @@ async function checkInvidious() {
   }
 }
 
-const flags = parseArgs(Deno.args, { boolean: ['piped', 'invidious'] })
+const args = process.argv.slice(2)
+const flags = parseArgs({
+  args,
+  options: {
+    piped: { type: 'boolean' },
+    invidious: { type: 'boolean' },
+  },
+}).values
 
 if (flags.piped) await checkPiped()
 if (flags.invidious) await checkInvidious()
-if (Deno.args.length === 0) {
+if (args.length === 0) {
   await checkPiped()
   await checkInvidious()
 }

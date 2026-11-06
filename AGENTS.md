@@ -18,9 +18,9 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 - `npx prettier --write .` - Format the codebase
 - `npx prettier --check .` - Check formatting
 
-### Deno alias
+### Healthcheck script
 
-`deno task <name>` is an alias for the same `package.json` scripts (`dev`, `build`, `preview`, `check`, `test`); the toolchain (`vite`, `vitest`, `svelte-check`) still runs under Node. Use `deno task test --run` when using Deno, because `deno task test` starts Vitest in watch mode. Only `scripts/healthcheck.ts` is native Deno (`deno run`, JSR). A full Deno-runtime migration is not feasible (vitest `.svelte` imports via Vite, `svelte-check` typechecker, `wrangler` backend, Node-based CI).
+`scripts/healthcheck.ts` is a manual maintenance utility for probing Piped and Invidious instances; it is not part of the app or CI. Run it with Node 26, which strips the TypeScript types natively: `node scripts/healthcheck.ts` (both), `--piped`, or `--invidious`. It reads the Piped instance list from `scripts/instances.json`.
 
 ### Definition of done
 
