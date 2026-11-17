@@ -20,8 +20,8 @@
   --color-error-fg: #{$gruvbox-light-fg-0};
   --color-visited: #{$gruvbox-light-purple-0};
   --color-visited-fg: #{$gruvbox-light-fg-0};
-  --color-warrning: #{$gruvbox-light-yellow-0};
-  --color-warrning-fg: #{$gruvbox-light-bg-0};
+  --color-warning: #{$gruvbox-light-yellow-0};
+  --color-warning-fg: #{$gruvbox-light-bg-0};
 }
 
 @media (prefers-color-scheme: dark) {
@@ -42,8 +42,8 @@
     --color-error-fg: #{$gruvbox-dark-fg-0};
     --color-visited: #{$gruvbox-dark-purple-0};
     --color-visited-fg: #{$gruvbox-dark-fg-0};
-    --color-warrning: #{$gruvbox-dark-yellow-0};
-    --color-warrning-fg: #{$gruvbox-dark-bg-0};
+    --color-warning: #{$gruvbox-dark-yellow-0};
+    --color-warning-fg: #{$gruvbox-dark-bg-0};
   }
 }
 

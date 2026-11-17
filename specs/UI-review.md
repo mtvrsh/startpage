@@ -170,7 +170,7 @@ Equivalent content also differs across columns:
 - **Backdrop opacity:** search is `.45`; settings is `.55`.
 - **Scrollbars:** Chromium scrollbars are globally hidden; Firefox still shows them.
 - **Heading semantics:** each video item uses an `<h1>`, column headers use `<h2>`, settings uses `<h1>`, and settings section separators also use `<h1>`.
-- **Unused tokens:** `--color-fg-light`, `--color-surface-inactive`, `--color-visited-fg`, and `--color-warrning` (misspelled) are unused.
+- **Unused tokens:** `--color-fg-light`, `--color-surface-inactive`, `--color-visited-fg`, and `--color-warning` are unused.
 - **Import errors:** `.general__error` is used in `SettingsGeneral.svelte` but has no CSS rule, so import failures are not styled red like every other error.
 - **Responsive video feed:** between `768px` and `1199px` the single column keeps a fixed `10.5rem` thumbnail and `5.875rem` row height, leaving large empty space at wider single-column widths.
 - **Fixed row height:** the video row can clip if the typography scale is increased.
@@ -223,7 +223,7 @@ I would handle this as a token and primitive refactor, not scattered one-off CSS
 2. Make the dock fully visible on touch devices.
 3. Make video rows flexible or adapt the thumbnail layout for wider single-column widths.
 4. Style `.general__error` and unify all error states.
-5. Remove unused tokens and fix the `--color-warrning` typo.
+5. Remove unused tokens.
 
 ### Phase 5 — Verification
 
