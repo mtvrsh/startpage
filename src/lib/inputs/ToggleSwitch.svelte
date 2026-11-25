@@ -8,6 +8,8 @@
 </div>
 
 <style lang="scss">
+  @use '../scss/variables' as *;
+
   .toggle-switch {
     $width: 60px;
     $height: 34px;
@@ -27,12 +29,11 @@
         transform: translateX($width - $height);
       }
 
+      // Fade the whole control rather than recoloring the thumb: a disabled
+      // checked switch must stay distinguishable from an unchecked one.
       &:disabled + .toggle-switch__slider {
         cursor: default;
-      }
-
-      &:disabled + .toggle-switch__slider::before {
-        background: var(--color-surface-light);
+        opacity: $inactive-opacity;
       }
     }
 

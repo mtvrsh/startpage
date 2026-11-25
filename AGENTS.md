@@ -125,6 +125,7 @@ Adding a new backend:
 
 - Variables: `src/lib/scss/_variables.scss` (gaps, z-index, typography scale, etc.)
 - Every `font-size` comes from the `$font-size-*` scale in `_variables.scss`; do not hardcode sizes.
+- Muted/de-emphasized text uses `--color-fg-inactive`; faded or non-interactive controls use `$inactive-opacity` from `_variables.scss`. Do not add another greying-out mechanism or an unused color token.
 - Themes: `src/lib/scss/_themes.scss` (Gruvbox color palette)
 - Breakpoints: `src/lib/scss/_breakpoints.scss`
 - Mixins: `src/lib/scss/_mixins.scss` (`line-clamp`, `input-base`, `button-base`, `button-danger`, both built on `button-core`)

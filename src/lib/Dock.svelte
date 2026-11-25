@@ -60,7 +60,7 @@
     z-index: $nav-z-index;
     display: flex;
     gap: var(--gap-0);
-    opacity: 0.45;
+    opacity: $inactive-opacity;
     transition: opacity 0.1618s;
 
     &:hover,

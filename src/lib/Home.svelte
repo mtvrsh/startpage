@@ -64,7 +64,6 @@
   .home__navigation {
     display: grid;
     grid-auto-flow: column;
-    color: var(--color-surface-fg);
     background: var(--color-surface);
   }
 

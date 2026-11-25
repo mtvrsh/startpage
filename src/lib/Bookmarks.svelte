@@ -297,7 +297,7 @@
     }
 
     &__link--unsafe {
-      opacity: 0.6;
+      opacity: $inactive-opacity;
     }
 
     &__edit {
