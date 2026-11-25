@@ -108,7 +108,7 @@
             </div>
           </a>
 
-          <h3 class="feed__item-name ellipsis">
+          <h3 class="feed__item-name">
             <a class="feed__item-name-url" href={titleHref} title={video.title}>
               {video.title}
             </a>
@@ -200,7 +200,11 @@
       &-name {
         grid-area: n;
         font-size: $font-size-ui;
-
+        // Single-line fallback where -webkit-line-clamp is unsupported; the
+        // mixin overrides white-space where it is supported.
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
         @include line-clamp(3);
 
         &-url:visited {

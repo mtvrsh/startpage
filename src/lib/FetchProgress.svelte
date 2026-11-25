@@ -38,7 +38,7 @@
 
   .progress-bar {
     position: fixed;
-    height: 0.2em;
+    height: $progress-height;
     background: var(--color-accent);
 
     &.animate {

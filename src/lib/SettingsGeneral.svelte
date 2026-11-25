@@ -138,7 +138,7 @@
       {:else}
         <li class="general__group-list-item">
           <InputSelect
-            id={strings.instanceId}
+            id="settings-instance"
             label={strings.instance}
             bind:use={$config.instance}
             bind:options={$config.instances}

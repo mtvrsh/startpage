@@ -53,7 +53,7 @@
         <button
           bind:this={addButton}
           class="column__action column__add"
-          class:open={adding}
+          class:active={adding}
           type="button"
           title={addTitle}
           aria-label={addTitle}
@@ -116,7 +116,7 @@
       justify-content: center;
       font-size: $font-size-icon;
 
-      &.open {
+      &.active {
         color: var(--color-on-accent-light);
         background: var(--color-accent-light);
       }

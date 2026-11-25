@@ -22,6 +22,11 @@ $outline-size: 0.2em;
 $outline-type: solid;
 $outline: $outline-size $outline-type;
 
+// Small indicators: top progress bar, selected-row bar and status squares.
+$progress-height: 0.2em;
+$selection-bar-width: 0.2rem;
+$status-square-size: 0.45rem;
+
 $nav-gap: $gap-0;
 $nav-z-index: 100;
 // Height of the bottom tab bar; the dock clears it below the xl breakpoint.

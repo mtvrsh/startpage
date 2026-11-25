@@ -93,7 +93,7 @@
   <Closeable bind:open={isDropdownOpen}>
     <button
       class="column__action filter__toggler"
-      class:focus={isDropdownOpen}
+      class:active={isDropdownOpen}
       type="button"
       aria-expanded={isDropdownOpen}
       onclick={toggleDropdown}
@@ -180,9 +180,6 @@
   @use 'scss/variables' as *;
   @use 'scss/mixins' as *;
 
-  // Loading/error marker, shared by the collapsed toggler and the rows.
-  $state-square-size: 0.45rem;
-
   .filter {
     position: relative;
     min-width: 0;
@@ -196,7 +193,7 @@
 
       // Open state: same "active" tint as the column "+" while its form is
       // open, so it stays distinct from hover/focus.
-      &.focus {
+      &.active {
         color: var(--color-on-accent-light);
         background: var(--color-accent-light);
       }
@@ -213,7 +210,7 @@
     // its tooltip; per-item dots live inside the dropdown.
     &__alert {
       flex: none;
-      width: $state-square-size;
+      width: $status-square-size;
       aspect-ratio: 1;
       background: var(--color-error-text);
     }
@@ -247,7 +244,7 @@
         position: absolute;
         inset: 0 auto 0 0;
         z-index: 1;
-        width: 0.2rem;
+        width: $selection-bar-width;
         content: '';
         background: var(--color-accent);
       }
@@ -315,7 +312,7 @@
       padding: 0 $gap-1;
 
       &::before {
-        width: $state-square-size;
+        width: $status-square-size;
         aspect-ratio: 1;
         content: '';
         background: var(--color-fg-inactive);

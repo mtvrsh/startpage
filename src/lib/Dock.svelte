@@ -72,8 +72,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 2rem;
-      height: 2rem;
+      width: 1.5rem;
+      height: 1.5rem;
       @include button-base($font-size-ui, 0);
     }
   }
