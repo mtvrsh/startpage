@@ -156,12 +156,13 @@ textarea {
 
 .column__remove {
   flex-shrink: 0;
-  line-height: 1.4;
   // Transparent so the button sits on whatever surface it is placed on: the
   // page background in bookmarks, the row surface in the filter dropdown. A
   // fixed background shows as a block there because a coarse pointer keeps
   // the button visible without a hover state to retint it.
   @include button-danger;
+  // Keep the tighter line box: the mixin's `font` shorthand resets line-height.
+  line-height: 1.4;
 }
 
 // Keep row delete actions out of the way until the row is hovered or focused.

@@ -66,10 +66,11 @@
     &__close {
       width: 1.5rem;
       height: 1.5rem;
-      line-height: 1;
       // Reuse the delete buttons' destructive treatment instead of keeping a
       // private copy of the red hover recipe.
       @include button-danger($font-size-icon, 0, var(--color-surface));
+      // After the include: the mixin's `font` shorthand resets line-height.
+      line-height: 1;
     }
 
     &__list {
