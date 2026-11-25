@@ -171,6 +171,9 @@
   @use 'scss/variables' as *;
   @use 'scss/mixins' as *;
 
+  // Loading/error marker, shared by the collapsed toggler and the rows.
+  $state-square-size: 0.45rem;
+
   .filter {
     position: relative;
     min-width: 0;
@@ -202,7 +205,7 @@
     // its tooltip; per-item dots live inside the dropdown.
     &__alert {
       flex: none;
-      width: 0.45rem;
+      width: $state-square-size;
       aspect-ratio: 1;
       background: var(--color-error);
     }
@@ -293,7 +296,7 @@
       padding: 0 $gap-1;
 
       &::before {
-        width: 0.45rem;
+        width: $state-square-size;
         aspect-ratio: 1;
         content: '';
         background: var(--color-fg-inactive);

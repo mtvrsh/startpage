@@ -54,7 +54,7 @@
         left: $offset;
         bottom: $offset;
         background: var(--color-surface-light);
-        transition: transform 0.1618s;
+        transition: transform $transition-duration;
       }
     }
   }

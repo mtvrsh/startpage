@@ -37,3 +37,6 @@ $search-thumbnail-height: 2.7rem;
 // interacted with (idle dock, disabled buttons/toggles, unsafe links). Muted
 // text uses --color-fg-inactive instead so it stays legible, not translucent.
 $inactive-opacity: 0.6;
+
+// Short transition for reversible UI motion: dock fade, toggle thumb, progress.
+$transition-duration: 0.1618s;

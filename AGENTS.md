@@ -129,8 +129,9 @@ Adding a new backend:
 - Muted/de-emphasized text uses `--color-fg-inactive`; faded or non-interactive controls use `$inactive-opacity` from `_variables.scss`. Do not add another greying-out mechanism or an unused color token.
 - Themes: `src/lib/scss/_themes.scss` (Gruvbox color palette)
 - Breakpoints: `src/lib/scss/_breakpoints.scss`
-- Mixins: `src/lib/scss/_mixins.scss` (`line-clamp`, `input-base`, `button-base`, `button-danger`, both built on `button-core`)
+- Mixins: `src/lib/scss/_mixins.scss` (`line-clamp`, `input-base`, `button-base`, `button-danger`, `backdrop-button`, `overlay-panel`; the two button variants share `button-core`)
 - All text-entry controls include `input-base` (`_mixins.scss`); contexts only add sizing and error/disabled variants.
+- Overlay chrome comes from `backdrop-button` / `overlay-panel`; UI motion uses `$transition-duration` from `_variables.scss`.
 - Accent buttons use `button-base`; destructive buttons (row delete, settings close) use `button-danger` so the red hover has one source.
 - Components use `@use 'scss/variables' as *;` (Vite resolves via `src/lib/scss/`)
 - Global layout/control primitives live in `src/app.scss` (`Column` chrome form controls, `.button`)

@@ -61,7 +61,7 @@
     display: flex;
     gap: var(--gap-0);
     opacity: $inactive-opacity;
-    transition: opacity 0.1618s;
+    transition: opacity $transition-duration;
 
     &:hover,
     &:focus-within {

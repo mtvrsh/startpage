@@ -292,24 +292,14 @@
     font-size: $font-size-ui;
 
     &__backdrop {
-      position: absolute;
-      inset: 0;
-      padding: 0;
-      background: $overlay-backdrop;
-      border: none;
-      cursor: default;
+      @include backdrop-button;
     }
 
     &__panel {
-      position: relative;
-      display: flex;
+      @include overlay-panel;
       flex-direction: column;
       width: min(100%, 40rem);
       max-height: min(70vh, 36rem);
-      overflow: hidden;
-      background: var(--color-bg);
-      border: $border var(--color-surface);
-      box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.35);
     }
 
     &__form {

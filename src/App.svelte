@@ -128,6 +128,7 @@
 
 <style lang="scss">
   @use 'lib/scss/variables' as *;
+  @use 'lib/scss/mixins' as *;
 
   .app {
     display: grid;
@@ -145,23 +146,13 @@
     padding: var(--gap-2);
 
     &__backdrop {
-      position: absolute;
-      inset: 0;
-      padding: 0;
-      background: $overlay-backdrop;
-      border: none;
-      cursor: default;
+      @include backdrop-button;
     }
 
     &__panel {
-      position: relative;
-      display: flex;
+      @include overlay-panel;
       width: min(100%, 52rem);
       height: min(100%, 90dvh);
-      overflow: hidden;
-      background: var(--color-bg);
-      border: $border var(--color-surface);
-      box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.35);
     }
   }
 </style>

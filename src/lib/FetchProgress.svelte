@@ -34,13 +34,15 @@
 ></aside>
 
 <style lang="scss">
+  @use 'scss/variables' as *;
+
   .progress-bar {
     position: fixed;
     height: 0.2em;
     background: var(--color-accent);
 
     &.animate {
-      transition: width 0.1618s;
+      transition: width $transition-duration;
     }
   }
 </style>

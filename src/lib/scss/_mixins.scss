@@ -3,8 +3,8 @@
 // One look for every text-entry control: tan field, dark text, muted hint and
 // an accent ring on focus. Contexts only add sizing (width/flex) and error
 // variants on top.
-@mixin input-base {
-  padding: $gap-1;
+@mixin input-base($padding: $gap-1) {
+  padding: $padding;
   font: inherit;
   font-size: $font-size-ui;
   color: var(--color-fg);
@@ -68,6 +68,27 @@
 /// by both the row delete buttons and the settings close button.
 @mixin button-danger($size: $font-size-icon, $padding: 0 $gap-1, $background: transparent) {
   @include button-core($size, $padding, $background, var(--color-error-fg), var(--color-error));
+}
+
+/// Full-screen dimming button shared by the settings overlay and the search
+/// palette. Clicking it dismisses the panel.
+@mixin backdrop-button {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  background: $overlay-backdrop;
+  border: none;
+  cursor: default;
+}
+
+/// Shared chrome for floating panels. Contexts add their own size and layout.
+@mixin overlay-panel {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  background: var(--color-bg);
+  border: $border var(--color-surface);
+  box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.35);
 }
 
 @mixin line-clamp($lines) {

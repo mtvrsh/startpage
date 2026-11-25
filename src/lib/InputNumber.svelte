@@ -16,6 +16,7 @@
 <input type="number" bind:value onchange={normalize} {id} {min} {max} />
 
 <style lang="scss">
+  @use 'scss/variables' as *;
   @use 'scss/mixins' as *;
 
   label {
@@ -23,9 +24,8 @@
   }
 
   input {
-    @include input-base;
-    width: 3.5rem;
     // Asymmetric padding leaves room for the number spinners.
-    padding: 0.5rem 0.25rem 0.5rem 0.5rem;
+    @include input-base($gap-1 $gap-0 $gap-1 $gap-1);
+    width: 3.5rem;
   }
 </style>
