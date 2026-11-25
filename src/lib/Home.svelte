@@ -37,6 +37,7 @@
 <style lang="scss">
   @use 'scss/breakpoints' as *;
   @use 'scss/variables' as *;
+  @use 'scss/mixins' as *;
 
   .home {
     display: flex;
@@ -70,18 +71,7 @@
   .home__navigation-button {
     // Match the compact column header actions (e.g. the bookmark "+").
     height: $nav-height;
-    padding: 0 var(--gap-1);
-    color: var(--color-accent);
-    background: inherit;
-    border: none;
-  }
-
-  .home__navigation-button:hover,
-  .home__navigation-button:focus {
-    color: var(--color-accent-fg);
-    background: var(--color-accent);
-    outline: none;
-    cursor: pointer;
+    @include button-base($font-size-body, 0 $gap-1);
   }
 
   // Selected tab: same "open/active" tint as the column "+" while its form

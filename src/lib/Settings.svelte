@@ -33,6 +33,7 @@
 
 <style lang="scss">
   @use 'scss/variables' as *;
+  @use 'scss/mixins' as *;
 
   .settings {
     display: flex;
@@ -65,20 +66,10 @@
     &__close {
       width: 1.5rem;
       height: 1.5rem;
-      padding: 0;
-      font-size: $font-size-icon;
       line-height: 1;
-      color: var(--color-accent);
-      background: var(--color-surface);
-      border: none;
-      cursor: pointer;
-
-      &:hover,
-      &:focus {
-        color: var(--color-error-fg);
-        background: var(--color-error);
-        outline: none;
-      }
+      // Reuse the delete buttons' destructive treatment instead of keeping a
+      // private copy of the red hover recipe.
+      @include button-danger($font-size-icon, 0, var(--color-surface));
     }
 
     &__list {

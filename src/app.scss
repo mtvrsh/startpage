@@ -5,7 +5,6 @@
 
 :root {
   --color-bg: #{$gruvbox-light-bg-0};
-  --color-bg-light: #{$gruvbox-light-bg-1};
   --color-fg: #{$gruvbox-light-fg-0};
   --color-fg-light: #{$gruvbox-light-fg-1};
   --color-fg-inactive: #{$gruvbox-light-bg-3};
@@ -27,7 +26,6 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --color-bg: #{$gruvbox-dark-bg-0};
-    --color-bg-light: #{$gruvbox-dark-bg-1};
     --color-fg: #{$gruvbox-dark-fg-0};
     --color-fg-light: #{$gruvbox-dark-fg-1};
     --color-fg-inactive: #{$gruvbox-dark-bg-3};
@@ -126,19 +124,7 @@ textarea {
 // Shared controls ------------------------------------------------------------
 
 .button {
-  padding: var(--gap-1) var(--gap-2);
-  font: inherit;
-  color: var(--color-accent);
-  background: var(--color-bg-light);
-  border: none;
-  cursor: pointer;
-}
-
-.button:hover,
-.button:focus {
-  color: var(--color-accent-fg);
-  background: var(--color-accent);
-  outline: none;
+  @include button-base($font-size-ui, $gap-1 $gap-2);
 }
 
 .column__action {
@@ -147,29 +133,7 @@ textarea {
   align-items: center;
   gap: var(--gap-0);
   height: 1.5rem;
-  padding: 0 var(--gap-1);
-  font: inherit;
-  font-size: $font-size-body;
-  color: var(--color-accent);
-  background: var(--color-surface);
-  border: none;
-  cursor: pointer;
-}
-
-.column__action:hover,
-.column__action:focus {
-  color: var(--color-accent-fg);
-  background: var(--color-accent);
-  outline: none;
-}
-
-.column__action:disabled,
-.column__action:disabled:hover,
-.column__action:disabled:focus {
-  color: var(--color-accent);
-  background: var(--color-surface);
-  cursor: default;
-  opacity: 0.6;
+  @include button-base($font-size-body, 0 $gap-1);
 }
 
 .column__form form {
@@ -192,20 +156,7 @@ textarea {
 }
 
 .column__submit {
-  padding: var(--gap-1);
-  font: inherit;
-  font-size: $font-size-column-title;
-  color: var(--color-accent);
-  background: var(--color-bg-light);
-  border: none;
-  cursor: pointer;
-}
-
-.column__submit:hover,
-.column__submit:focus {
-  color: var(--color-accent-fg);
-  background: var(--color-accent);
-  outline: none;
+  @include button-base($font-size-column-title);
 }
 
 .column__error {
@@ -215,25 +166,12 @@ textarea {
 
 .column__remove {
   flex-shrink: 0;
-  padding: 0 var(--gap-1);
-  font: inherit;
-  font-size: $font-size-icon;
   line-height: 1.4;
-  color: var(--color-accent);
   // Transparent so the button sits on whatever surface it is placed on: the
   // page background in bookmarks, the row surface in the filter dropdown. A
   // fixed background shows as a block there because a coarse pointer keeps
   // the button visible without a hover state to retint it.
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.column__remove:hover,
-.column__remove:focus {
-  color: var(--color-error-fg);
-  background: var(--color-error);
-  outline: none;
+  @include button-danger;
 }
 
 // Keep row delete actions out of the way until the row is hovered or focused.

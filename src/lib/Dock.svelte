@@ -49,6 +49,7 @@
 
 <style lang="scss">
   @use 'scss/variables' as *;
+  @use 'scss/mixins' as *;
   @use 'scss/breakpoints' as *;
 
   .dock {
@@ -73,19 +74,7 @@
       justify-content: center;
       width: 2rem;
       height: 2rem;
-      padding: 0;
-      font-size: $font-size-item-title;
-      color: var(--color-accent);
-      background: var(--color-surface);
-      border: none;
-      cursor: pointer;
-
-      &:hover,
-      &:focus {
-        color: var(--color-accent-fg);
-        background: var(--color-accent);
-        outline: none;
-      }
+      @include button-base($font-size-item-title, 0);
     }
   }
 

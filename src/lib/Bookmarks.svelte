@@ -240,6 +240,7 @@
 
 <style lang="scss">
   @use 'scss/variables' as *;
+  @use 'scss/mixins' as *;
 
   .bookmarks {
     display: flex;
@@ -319,20 +320,7 @@
     }
 
     &__edit-cancel {
-      padding: $gap-1;
-      font: inherit;
-      font-size: $font-size-column-title;
-      color: var(--color-accent);
-      background: var(--color-surface);
-      border: none;
-      cursor: pointer;
-
-      &:hover,
-      &:focus {
-        color: var(--color-accent-fg);
-        background: var(--color-accent);
-        outline: none;
-      }
+      @include button-base($font-size-column-title);
     }
   }
 </style>

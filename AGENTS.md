@@ -50,7 +50,7 @@ Do not deploy or push unless the user asks.
 
 - No top navigation bar. `Home.svelte` shows the three main columns (Channels, Bookmarks, Feeds); below the `xl` breakpoint only the selected column is shown with a bottom tab bar.
 - All three columns use `Column.svelte`: compact header with title + header actions + `+` toggle, an optional collapsible form snippet, and a scrollable body.
-- Shared control primitives (`.column__*`, `.button`) live in `src/app.scss` because they are used across component scopes.
+- Shared control primitives (`.column__*`, `.button`) live in `src/app.scss` because they are used across component scopes. Their shared look comes from the `button-base` mixin in `src/lib/scss/_mixins.scss`; component-local accent buttons include the same mixin instead of repeating the recipe, and only pass their own size/padding.
 - `Dock.svelte` is the fixed bottom-right entry point for the floating search palette and settings (mouse/touch access alongside keybinds).
 - `SearchPalette.svelte` renders only when `app.searchOpen` is true; it is mounted globally in `App.svelte`.
 
@@ -127,8 +127,9 @@ Adding a new backend:
 - Every `font-size` comes from the `$font-size-*` scale in `_variables.scss`; do not hardcode sizes.
 - Themes: `src/lib/scss/_themes.scss` (Gruvbox color palette)
 - Breakpoints: `src/lib/scss/_breakpoints.scss`
-- Mixins: `src/lib/scss/_mixins.scss` (`line-clamp`, `input-base`)
+- Mixins: `src/lib/scss/_mixins.scss` (`line-clamp`, `input-base`, `button-base`, `button-danger`, both built on `button-core`)
 - All text-entry controls include `input-base` (`_mixins.scss`); contexts only add sizing and error/disabled variants.
+- Accent buttons use `button-base`; destructive buttons (row delete, settings close) use `button-danger` so the red hover has one source.
 - Components use `@use 'scss/variables' as *;` (Vite resolves via `src/lib/scss/`)
 - Global layout/control primitives live in `src/app.scss` (`Column` chrome form controls, `.button`)
 

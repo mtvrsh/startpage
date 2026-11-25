@@ -22,6 +22,54 @@
   }
 }
 
+/// Shared button structure: geometry, resting state, hover/focus fill and
+/// disabled state. Variants supply the fill colors so they cannot drift.
+@mixin button-core($size, $padding, $background, $hover-color, $hover-background) {
+  padding: $padding;
+  font: inherit;
+  font-size: $size;
+  color: var(--color-accent);
+  background: $background;
+  border: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus {
+    color: $hover-color;
+    background: $hover-background;
+    outline: none;
+  }
+
+  // Keep the resting look when disabled: a hover fill would still read as
+  // interactive, and the pointer hand would suggest a clickable control.
+  &:disabled,
+  &:disabled:hover,
+  &:disabled:focus {
+    color: var(--color-accent);
+    background: $background;
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+/// The default: an accent label on the shared surface, filling with the
+/// accent color. Contexts only pass their own size and padding.
+@mixin button-base($size: $font-size-ui, $padding: $gap-1) {
+  @include button-core(
+    $size,
+    $padding,
+    var(--color-surface),
+    var(--color-accent-fg),
+    var(--color-accent)
+  );
+}
+
+/// Destructive actions: the same recipe with a red fill on hover/focus. Used
+/// by both the row delete buttons and the settings close button.
+@mixin button-danger($size: $font-size-icon, $padding: 0 $gap-1, $background: transparent) {
+  @include button-core($size, $padding, $background, var(--color-error-fg), var(--color-error));
+}
+
 @mixin line-clamp($lines) {
   @supports (-webkit-line-clamp: $lines) {
     white-space: initial;
