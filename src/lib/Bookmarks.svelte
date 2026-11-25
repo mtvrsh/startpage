@@ -289,7 +289,7 @@
       min-width: 0;
       padding: $gap-0 0;
       overflow: hidden;
-      font-size: $font-size-item-title;
+      font-size: $font-size-ui;
       white-space: nowrap;
       text-overflow: ellipsis;
       user-select: none;
@@ -320,7 +320,7 @@
     }
 
     &__edit-cancel {
-      @include button-base($font-size-column-title);
+      @include button-base($font-size-ui);
     }
   }
 </style>

@@ -327,7 +327,7 @@
           top: 50%;
           transform: translateY(-50%);
           padding-right: $gap-2;
-          font-size: $font-size-column-title;
+          font-size: $font-size-ui;
           color: var(--color-accent);
           background: var(--color-bg);
           user-select: none;
@@ -340,7 +340,7 @@
     }
 
     &__version {
-      font-size: $font-size-column-title;
+      font-size: $font-size-body;
       color: var(--color-fg-inactive);
     }
   }

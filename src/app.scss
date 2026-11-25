@@ -46,8 +46,10 @@
 
 svg {
   display: block;
-  width: 1lh;
-  height: 1lh;
+  // Icons have one default size. Contexts needing a larger one (thumbnail
+  // placeholders) set --icon-size rather than inheriting a line-height.
+  width: var(--icon-size, #{$font-size-icon});
+  height: var(--icon-size, #{$font-size-icon});
 }
 
 body {
@@ -144,7 +146,7 @@ textarea {
 }
 
 .column__submit {
-  @include button-base($font-size-column-title);
+  @include button-base($font-size-ui);
 }
 
 .column__error {

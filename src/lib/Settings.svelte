@@ -56,7 +56,7 @@
 
     &__title {
       overflow: hidden;
-      font-size: $font-size-column-title;
+      font-size: $font-size-ui;
       color: var(--color-fg-inactive);
       white-space: nowrap;
       text-overflow: ellipsis;

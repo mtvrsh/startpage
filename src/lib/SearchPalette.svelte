@@ -380,6 +380,8 @@
       justify-content: center;
       width: $search-thumbnail-height;
       height: $search-thumbnail-height;
+      // Fill the circle's content box without overflowing its padding.
+      --icon-size: calc(#{$search-thumbnail-height} - 2 * #{$gap-1});
       padding: $gap-1 $gap-0;
       border-radius: 50%;
     }
@@ -387,7 +389,7 @@
     &__name {
       min-width: 0;
       overflow: hidden;
-      font-size: $font-size-item-title;
+      font-size: $font-size-ui;
       white-space: nowrap;
       text-overflow: ellipsis;
     }

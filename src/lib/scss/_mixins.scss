@@ -6,7 +6,7 @@
 @mixin input-base {
   padding: $gap-1;
   font: inherit;
-  font-size: $font-size-column-title;
+  font-size: $font-size-ui;
   color: var(--color-fg);
   background: var(--color-surface);
   border: none;

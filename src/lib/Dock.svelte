@@ -74,7 +74,7 @@
       justify-content: center;
       width: 2rem;
       height: 2rem;
-      @include button-base($font-size-item-title, 0);
+      @include button-base($font-size-ui, 0);
     }
   }
 

@@ -259,7 +259,7 @@
       padding: $gap-1;
       overflow: hidden;
       font: inherit;
-      font-size: $font-size-column-title;
+      font-size: $font-size-ui;
       color: var(--color-accent);
       text-align: left;
       white-space: nowrap;

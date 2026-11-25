@@ -70,7 +70,7 @@
   .home__navigation-button {
     // Match the compact column header actions (e.g. the bookmark "+").
     height: $nav-height;
-    @include button-base($font-size-body, 0 $gap-1);
+    @include button-base($font-size-ui, 0 $gap-1);
   }
 
   // Selected tab: same "open/active" tint as the column "+" while its form

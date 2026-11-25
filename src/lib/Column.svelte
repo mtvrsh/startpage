@@ -96,7 +96,7 @@
     &__title {
       min-width: 0;
       overflow: hidden;
-      font-size: $font-size-item-title;
+      font-size: $font-size-ui;
       color: var(--color-fg-inactive);
       white-space: nowrap;
       text-overflow: ellipsis;

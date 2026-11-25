@@ -178,7 +178,7 @@
       border-bottom: $border var(--color-surface);
 
       &-title {
-        font-size: $font-size-item-title;
+        font-size: $font-size-ui;
         @include line-clamp(2);
         overflow: hidden;
 
@@ -201,7 +201,7 @@
         justify-content: space-between;
         gap: $gap-1;
         margin-top: $gap-0;
-        font-size: $font-size-meta;
+        font-size: $font-size-body;
         color: var(--color-fg-inactive);
       }
 

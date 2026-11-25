@@ -170,7 +170,7 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: $font-size-large;
+          --icon-size: #{$font-size-large};
         }
 
         &.themed {
@@ -199,7 +199,7 @@
 
       &-name {
         grid-area: n;
-        font-size: $font-size-item-title;
+        font-size: $font-size-ui;
 
         @include line-clamp(3);
 
@@ -211,7 +211,7 @@
       &-user,
       &-date,
       &-duration {
-        font-size: $font-size-meta;
+        font-size: $font-size-body;
         color: var(--color-fg-inactive);
       }
 

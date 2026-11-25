@@ -124,7 +124,8 @@ Adding a new backend:
 ### SCSS
 
 - Variables: `src/lib/scss/_variables.scss` (gaps, z-index, typography scale, etc.)
-- Every `font-size` comes from the `$font-size-*` scale in `_variables.scss`; do not hardcode sizes.
+- Every `font-size` comes from the `$font-size-*` scale in `_variables.scss` (one name per value); do not hardcode sizes.
+- SVG icons have one default size from the global `svg` rule; contexts needing a larger icon set `--icon-size` instead of relying on an inherited line-height.
 - Muted/de-emphasized text uses `--color-fg-inactive`; faded or non-interactive controls use `$inactive-opacity` from `_variables.scss`. Do not add another greying-out mechanism or an unused color token.
 - Themes: `src/lib/scss/_themes.scss` (Gruvbox color palette)
 - Breakpoints: `src/lib/scss/_breakpoints.scss`

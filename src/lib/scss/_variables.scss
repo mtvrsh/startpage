@@ -4,15 +4,13 @@ $gap-2: 0.75rem;
 $gap-3: 1rem;
 $gap-4: 1.25rem;
 
-// Typography scale: metadata/body < UI/title < icon < large.
-// Every font size must come from this scale; an inherited body size would vary
-// by browser because the default monospace size is not standardized.
-// UI/title matches Firefox's chrome/address-bar size (~14.7px on a 16px root).
-$font-size-meta: 0.75rem; // feed/video metadata, tooltip
-$font-size-body: 0.75rem; // body base, small text, errors, tags
+// Typography scale: body/metadata < ui < icon < large. One name per value:
+// metadata shares the body size, and every title/control label shares the UI
+// size. An inherited body size would vary by browser because the default
+// monospace size is not standardized. UI matches Firefox's chrome/address-bar
+// size (~14.7px on a 16px root).
+$font-size-body: 0.75rem; // body base, metadata, errors, tags
 $font-size-ui: 0.92rem; // titles, headers, settings, search, controls
-$font-size-column-title: $font-size-ui; // column/settings titles, inputs, selects
-$font-size-item-title: $font-size-ui; // item titles (columns, search palette, dock)
 $font-size-icon: 1rem; // remove/+/close glyphs
 $font-size-large: 2rem; // thumbnail placeholder
 
