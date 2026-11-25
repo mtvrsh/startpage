@@ -66,7 +66,7 @@
     &__close {
       // Same geometry as the row delete, but keep a visible resting square in
       // the header instead of a bare "×" on the page background.
-      @include icon-button-danger(var(--color-surface));
+      @include icon-button-danger($icon-button-size, var(--color-surface));
     }
 
     &__list {

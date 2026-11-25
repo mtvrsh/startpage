@@ -29,8 +29,10 @@ $status-square-size: 0.45rem;
 
 $nav-gap: $gap-0;
 $nav-z-index: 100;
-// Height of the bottom tab bar; the dock clears it below the xl breakpoint.
-$nav-height: 1.5rem;
+// Shared size for dock, header, settings and navigation icon buttons. It is
+// also the bottom tab bar height; the dock clears it below the xl breakpoint.
+$icon-button-size: 1.5rem;
+$nav-height: $icon-button-size;
 $overlay-z-index: 200;
 // Shared dim behind the search palette and the settings overlay so both
 // read as the same layer.

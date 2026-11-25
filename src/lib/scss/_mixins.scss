@@ -86,12 +86,12 @@
 /// Square destructive icon button (row delete, settings close). Shared so the
 /// two "×" controls cannot drift in size or vertical metrics; contexts that
 /// need a resting fill (the settings header) pass their own background.
-@mixin icon-button-danger($background: transparent) {
+@mixin icon-button-danger($size: 1.5rem, $background: transparent) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: $size;
+  height: $size;
   padding: 0;
   line-height: 1;
   @include button-danger($font-size-icon, 0, $background);

@@ -133,7 +133,7 @@ textarea {
   flex-shrink: 0;
   align-items: center;
   gap: var(--gap-0);
-  height: 1.5rem;
+  height: $icon-button-size;
   @include button-base($font-size-ui, 0 $gap-1);
 }
 

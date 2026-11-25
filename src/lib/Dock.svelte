@@ -72,8 +72,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 1.5rem;
-      height: 1.5rem;
+      width: $icon-button-size;
+      height: $icon-button-size;
       @include button-base($font-size-ui, 0);
     }
   }

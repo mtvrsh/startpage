@@ -111,7 +111,7 @@
     }
 
     &__add {
-      width: 1.5rem;
+      width: $icon-button-size;
       padding: 0;
       justify-content: center;
       font-size: $font-size-icon;
