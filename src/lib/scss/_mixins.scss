@@ -24,11 +24,18 @@
 
 /// Shared button structure: geometry, resting state, hover/focus fill and
 /// disabled state. Variants supply the fill colors so they cannot drift.
-@mixin button-core($size, $padding, $background, $hover-color, $hover-background) {
+@mixin button-core(
+  $size,
+  $padding,
+  $background,
+  $hover-color,
+  $hover-background,
+  $resting-color: var(--color-accent)
+) {
   padding: $padding;
   font: inherit;
   font-size: $size;
-  color: var(--color-accent);
+  color: $resting-color;
   background: $background;
   border: none;
   cursor: pointer;
@@ -45,7 +52,7 @@
   &:disabled,
   &:disabled:hover,
   &:disabled:focus {
-    color: var(--color-accent);
+    color: $resting-color;
     background: $background;
     cursor: default;
     opacity: $inactive-opacity;
@@ -67,7 +74,14 @@
 /// Destructive actions: the same recipe with a red fill on hover/focus. Used
 /// by both the row delete buttons and the settings close button.
 @mixin button-danger($size: $font-size-icon, $padding: 0 $gap-1, $background: transparent) {
-  @include button-core($size, $padding, $background, var(--color-error-fg), var(--color-error));
+  @include button-core(
+    $size,
+    $padding,
+    $background,
+    var(--color-error-fg),
+    var(--color-error),
+    var(--color-error)
+  );
 }
 
 /// Full-screen dimming button shared by the settings overlay and the search
