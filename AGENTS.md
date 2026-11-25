@@ -126,13 +126,14 @@ Adding a new backend:
 - Variables: `src/lib/scss/_variables.scss` (gaps, z-index, typography scale, etc.)
 - Every `font-size` comes from the `$font-size-*` scale in `_variables.scss` (one name per value); do not hardcode sizes.
 - SVG icons have one default size from the global `svg` rule; contexts needing a larger icon set `--icon-size` instead of relying on an inherited line-height.
-- Muted/de-emphasized text uses `--color-fg-inactive`; faded or non-interactive controls use `$inactive-opacity` from `_variables.scss`. Do not add another greying-out mechanism or an unused color token.
+- Muted text and disabled controls both use `--color-fg-inactive` — the single de-emphasis grey. `$inactive-opacity` is only for the idle dock fade. Do not add another greying-out mechanism or an unused color token.
+- Color tokens name roles, not palette steps: `accent`/`error` are fills (ramp 0), `accent-text`/`error-text` are readable labels (ramp 1), and `on-accent`/`on-accent-light`/`on-error` are fixed contrast foregrounds for those fills. Do not map an `on-*` token to the theme foreground or text to a fill token.
 - Themes: `src/lib/scss/_themes.scss` (Gruvbox color palette)
 - Breakpoints: `src/lib/scss/_breakpoints.scss`
-- Mixins: `src/lib/scss/_mixins.scss` (`line-clamp`, `input-base`, `button-base`, `button-danger`, `backdrop-button`, `overlay-panel`; the two button variants share `button-core`)
+- Mixins: `src/lib/scss/_mixins.scss` (`line-clamp`, `input-base`, `button-base`, `button-danger`, `icon-button-danger`, `backdrop-button`, `overlay-panel`; the button variants share `button-core`)
 - All text-entry controls include `input-base` (`_mixins.scss`); contexts only add sizing and error/disabled variants.
 - Overlay chrome comes from `backdrop-button` / `overlay-panel`; UI motion uses `$transition-duration` from `_variables.scss`.
-- Accent buttons use `button-base`; destructive buttons (row delete, settings close) use `button-danger` so the red hover has one source.
+- Accent buttons use `button-base`; destructive buttons (row delete, settings close) use `icon-button-danger` so the red hover and × geometry have one source.
 - Components use `@use 'scss/variables' as *;` (Vite resolves via `src/lib/scss/`)
 - Global layout/control primitives live in `src/app.scss` (`Column` chrome form controls, `.button`)
 

@@ -95,13 +95,17 @@
       class="column__action filter__toggler"
       class:focus={isDropdownOpen}
       type="button"
-      aria-haspopup="listbox"
       aria-expanded={isDropdownOpen}
       onclick={toggleDropdown}
     >
       <span class="filter__name">{selectedLabel}</span>
       {#if failedLabels.length}
-        <span class="filter__alert" title={failedLabels.join(', ')}></span>
+        <span
+          class="filter__alert"
+          role="img"
+          aria-label={failedLabels.join(', ')}
+          title={failedLabels.join(', ')}
+        ></span>
       {/if}
     </button>
 
@@ -147,7 +151,12 @@
             </span>
 
             {#if item.loading || item.error}
-              <span class="filter__state" class:filter__state--error={item.error} title={item.error}
+              <span
+                class="filter__state"
+                class:filter__state--error={item.error}
+                role="img"
+                aria-label={item.error || strings.loading}
+                title={item.error}
               ></span>
             {/if}
 
@@ -184,12 +193,11 @@
       align-items: center;
       gap: $gap-0;
       max-width: 100%;
-      font-size: $font-size-ui;
 
       // Open state: same "active" tint as the column "+" while its form is
       // open, so it stays distinct from hover/focus.
       &.focus {
-        color: var(--color-accent-fg);
+        color: var(--color-on-accent-light);
         background: var(--color-accent-light);
       }
     }
@@ -207,7 +215,7 @@
       flex: none;
       width: $state-square-size;
       aspect-ratio: 1;
-      background: var(--color-error);
+      background: var(--color-error-text);
     }
 
     &__list {
@@ -220,6 +228,10 @@
       max-height: 50vh;
       overflow-y: auto;
       background: var(--color-surface);
+      // The dropdown sits directly on the page, so it needs its own edge and
+      // shadow to read as a floating layer.
+      border: $border var(--color-surface-light);
+      box-shadow: $shadow-dropdown;
     }
 
     &__item {
@@ -263,7 +275,7 @@
       overflow: hidden;
       font: inherit;
       font-size: $font-size-ui;
-      color: var(--color-accent);
+      color: var(--color-accent-text);
       text-align: left;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -288,6 +300,13 @@
     // Small state square: dim for loading, red for an error. The span copies
     // .column__remove's horizontal padding so its slot matches the button's
     // footprint; the square itself is drawn by ::before.
+    // The row stretches its cells, so let the delete button cover the full
+    // row height on hover; the shared icon mixin keeps the glyph centred.
+    .column__remove {
+      align-self: stretch;
+      height: auto;
+    }
+
     &__state {
       flex: none;
       display: flex;
@@ -303,7 +322,7 @@
       }
 
       &--error::before {
-        background: var(--color-error);
+        background: var(--color-error-text);
       }
     }
 

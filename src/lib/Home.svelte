@@ -28,6 +28,7 @@
         class="home__navigation-button"
         class:focus={focused == i}
         type="button"
+        aria-current={focused == i ? 'true' : undefined}
         onclick={() => (focused = i)}>{tab}</button
       >
     {/each}
@@ -76,7 +77,7 @@
   // Selected tab: same "open/active" tint as the column "+" while its form
   // is open, so hover and selection stay distinguishable.
   .home__navigation-button.focus {
-    color: var(--color-accent-fg);
+    color: var(--color-on-accent-light);
     background: var(--color-accent-light);
   }
 

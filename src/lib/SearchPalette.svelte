@@ -243,7 +243,7 @@
               bind:this={focus.items[1]}
               tabindex="-1"
             >
-              <p class="palette__name">Add {query}</p>
+              <p class="palette__name">{strings.add} {query}</p>
             </a>
           </li>
         </ul>
@@ -325,16 +325,12 @@
       &::-webkit-search-cancel-button {
         display: none;
       }
-
-      &:focus {
-        outline: $outline var(--color-accent);
-      }
     }
 
     &__error {
       padding: var(--gap-1);
       font-size: $font-size-body;
-      color: var(--color-error);
+      color: var(--color-error-text);
       border-bottom: $border var(--color-surface);
     }
 
@@ -353,7 +349,7 @@
       align-items: center;
       gap: var(--gap-1);
       padding: var(--gap-0) var(--gap-1);
-      color: var(--color-accent);
+      color: var(--color-accent-text);
       text-decoration: none;
 
       &:hover,

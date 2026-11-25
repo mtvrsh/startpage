@@ -27,5 +27,10 @@
     // Asymmetric padding leaves room for the number spinners.
     @include input-base($gap-1 $gap-0 $gap-1 $gap-1);
     width: 3.5rem;
+
+    &:disabled {
+      color: var(--color-fg-inactive);
+      cursor: default;
+    }
   }
 </style>

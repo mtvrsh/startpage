@@ -30,7 +30,7 @@
   $background,
   $hover-color,
   $hover-background,
-  $resting-color: var(--color-accent)
+  $resting-color: var(--color-accent-text)
 ) {
   padding: $padding;
   font: inherit;
@@ -47,15 +47,14 @@
     outline: none;
   }
 
-  // Keep the resting look when disabled: a hover fill would still read as
-  // interactive, and the pointer hand would suggest a clickable control.
+  // Keep the resting shape when disabled, but use the shared de-emphasis
+  // color instead of translucency so every disabled control has one shade.
   &:disabled,
   &:disabled:hover,
   &:disabled:focus {
-    color: $resting-color;
+    color: var(--color-fg-inactive);
     background: $background;
     cursor: default;
-    opacity: $inactive-opacity;
   }
 }
 
@@ -66,7 +65,7 @@
     $size,
     $padding,
     var(--color-surface),
-    var(--color-accent-fg),
+    var(--color-on-accent),
     var(--color-accent)
   );
 }
@@ -78,10 +77,24 @@
     $size,
     $padding,
     $background,
-    var(--color-error-fg),
+    var(--color-on-error),
     var(--color-error),
-    var(--color-error)
+    var(--color-error-text)
   );
+}
+
+/// Square destructive icon button (row delete, settings close). Shared so the
+/// two "×" controls cannot drift in size or vertical metrics; contexts that
+/// need a resting fill (the settings header) pass their own background.
+@mixin icon-button-danger($background: transparent) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  line-height: 1;
+  @include button-danger($font-size-icon, 0, $background);
 }
 
 /// Full-screen dimming button shared by the settings overlay and the search
@@ -102,7 +115,7 @@
   overflow: hidden;
   background: var(--color-bg);
   border: $border var(--color-surface);
-  box-shadow: 0 1rem 3rem rgb(0 0 0 / 0.35);
+  box-shadow: $shadow-overlay;
 }
 
 @mixin line-clamp($lines) {

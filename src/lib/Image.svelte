@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte'
+  import strings from '../share/strings'
   import Image from './icons/Image.svelte'
   import Spinner from './icons/Spinner.svelte'
 
@@ -25,14 +26,16 @@
   onload={() => (ok = true)}
   onerror={() => (ok = false)}
   {src}
-  {alt}
+  alt={ok === false ? '' : alt}
   {...args}
 />
 
 {#if ok === undefined}
   <Spinner />
 {:else if ok === false}
-  <Image />
+  <span class="image__fallback" role="img" aria-label={strings.imageFailed}>
+    <Image />
+  </span>
 {/if}
 
 <style lang="scss">
@@ -49,5 +52,9 @@
       height: 0;
       overflow: hidden;
     }
+  }
+
+  .image__fallback {
+    display: flex;
   }
 </style>

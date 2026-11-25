@@ -11,9 +11,12 @@
   @use '../scss/variables' as *;
 
   .toggle-switch {
-    $width: 60px;
-    $height: 34px;
-    $offset: 4px;
+    // The original switch scale (60×34 px), kept in rem so it still follows
+    // the root font size. Shrinking it shortened every settings row and left
+    // a visible gap at the bottom of the page.
+    $width: 3.75rem;
+    $height: 2.125rem;
+    $offset: 0.25rem;
 
     position: relative;
     width: $width;
@@ -29,11 +32,25 @@
         transform: translateX($width - $height);
       }
 
-      // Fade the whole control rather than recoloring the thumb: a disabled
-      // checked switch must stay distinguishable from an unchecked one.
+      // The native checkbox is 0×0, so the slider must show keyboard focus.
+      &:focus-visible + .toggle-switch__slider {
+        outline: var(--outline) var(--color-accent);
+        outline-offset: var(--gap-0);
+      }
+
+      // One de-emphasis color for the whole control, matching disabled text.
+      // The thumb keeps its position, so a disabled checked switch is still
+      // distinguishable from an unchecked one.
       &:disabled + .toggle-switch__slider {
         cursor: default;
-        opacity: $inactive-opacity;
+
+        &::before {
+          background: var(--color-fg-inactive);
+        }
+      }
+
+      &:disabled:checked + .toggle-switch__slider::before {
+        background: var(--color-fg-inactive);
       }
     }
 

@@ -117,7 +117,7 @@
       font-size: $font-size-icon;
 
       &.open {
-        color: var(--color-accent-fg);
+        color: var(--color-on-accent-light);
         background: var(--color-accent-light);
       }
     }

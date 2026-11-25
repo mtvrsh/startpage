@@ -108,11 +108,11 @@
             </div>
           </a>
 
-          <h1 class="feed__item-name ellipsis">
+          <h3 class="feed__item-name ellipsis">
             <a class="feed__item-name-url" href={titleHref} title={video.title}>
               {video.title}
             </a>
-          </h1>
+          </h3>
 
           <p class="feed__item-duration ellipsis">
             {video.duration}
@@ -144,7 +144,7 @@
   .feed {
     display: grid;
     gap: $gap-1;
-    padding: $gap-0;
+    padding: $gap-1;
 
     &__item {
       min-height: 5.875rem;

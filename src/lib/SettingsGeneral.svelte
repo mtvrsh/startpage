@@ -112,13 +112,13 @@
 
 {#snippet separator(title: string)}
   <div class="general__group-separator">
-    <h1 class="general__group-separator-title">{title}</h1>
+    <h2 class="general__group-separator-title">{title}</h2>
   </div>
 {/snippet}
 
 <ul class="general">
   <li class="general__group">
-    {@render separator(strings.piped)}
+    {@render separator(strings.backend)}
 
     <ul class="general__group-list">
       <li class="general__group-list-item">
@@ -318,7 +318,7 @@
 
       &-separator {
         position: relative;
-        height: 0.08rem;
+        height: $border-size;
         margin: $gap-4 $gap-1;
         background: var(--color-accent);
 
@@ -328,7 +328,7 @@
           transform: translateY(-50%);
           padding-right: $gap-2;
           font-size: $font-size-ui;
-          color: var(--color-accent);
+          color: var(--color-accent-text);
           background: var(--color-bg);
           user-select: none;
         }
@@ -339,9 +339,9 @@
       display: none;
     }
 
-    &__version {
+    &__error {
       font-size: $font-size-body;
-      color: var(--color-fg-inactive);
+      color: var(--color-error-text);
     }
   }
 </style>

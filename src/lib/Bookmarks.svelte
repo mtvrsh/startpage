@@ -297,7 +297,7 @@
     }
 
     &__link--unsafe {
-      opacity: $inactive-opacity;
+      color: var(--color-fg-inactive);
     }
 
     &__edit {
@@ -316,7 +316,6 @@
     &__edit-save,
     &__edit-cancel {
       flex: 1;
-      justify-content: center;
     }
 
     &__edit-cancel {

@@ -64,13 +64,9 @@
     }
 
     &__close {
-      width: 1.5rem;
-      height: 1.5rem;
-      // Reuse the delete buttons' destructive treatment instead of keeping a
-      // private copy of the red hover recipe.
-      @include button-danger($font-size-icon, 0, var(--color-surface));
-      // After the include: the mixin's `font` shorthand resets line-height.
-      line-height: 1;
+      // Same geometry as the row delete, but keep a visible resting square in
+      // the header instead of a bare "×" on the page background.
+      @include icon-button-danger(var(--color-surface));
     }
 
     &__list {

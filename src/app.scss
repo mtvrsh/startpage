@@ -3,45 +3,56 @@
 @use 'lib/scss/variables' as *;
 @use 'lib/scss/mixins' as *;
 
+// Semantic roles, not palette indices: ramp-1 entries are the readable text
+// tones, ramp-0 entries are fills. `on-*` tokens are the foreground that
+// actually contrasts with their fill, so they do not follow the theme fg.
 :root {
   --color-bg: #{$gruvbox-light-bg-0};
   --color-fg: #{$gruvbox-light-fg-0};
-  --color-fg-inactive: #{$gruvbox-light-bg-3};
+  --color-fg-inactive: #{$gruvbox-light-fg-4};
   --color-surface: #{$gruvbox-light-bg-1};
   --color-surface-light: #{$gruvbox-light-bg-2};
   --color-accent: #{$gruvbox-light-aqua-0};
-  --color-accent-fg: #{$gruvbox-light-fg-0};
+  --color-accent-text: #{$gruvbox-light-aqua-1};
   --color-accent-light: #{$gruvbox-light-aqua-1};
+  --color-on-accent: #{$gruvbox-light-fg-0};
+  --color-on-accent-light: #{$gruvbox-light-bg-0};
   --color-error: #{$gruvbox-light-red-0};
-  --color-error-fg: #{$gruvbox-light-fg-0};
-  --color-visited: #{$gruvbox-light-purple-0};
+  --color-error-text: #{$gruvbox-light-red-1};
+  --color-on-error: #{$gruvbox-light-bg-0};
+  --color-visited: #{$gruvbox-light-purple-1};
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --color-bg: #{$gruvbox-dark-bg-0};
     --color-fg: #{$gruvbox-dark-fg-0};
-    --color-fg-inactive: #{$gruvbox-dark-bg-3};
+    --color-fg-inactive: #{$gruvbox-dark-fg-4};
     --color-surface: #{$gruvbox-dark-bg-1};
     --color-surface-light: #{$gruvbox-dark-bg-2};
     --color-accent: #{$gruvbox-dark-aqua-0};
-    --color-accent-fg: #{$gruvbox-dark-fg-0};
+    --color-accent-text: #{$gruvbox-dark-aqua-1};
     --color-accent-light: #{$gruvbox-dark-aqua-1};
+    --color-on-accent: #{$gruvbox-dark-bg-0};
+    --color-on-accent-light: #{$gruvbox-dark-bg-0};
     --color-error: #{$gruvbox-dark-red-0};
-    --color-error-fg: #{$gruvbox-dark-fg-0};
-    --color-visited: #{$gruvbox-dark-purple-0};
+    --color-error-text: #{$gruvbox-dark-red-1};
+    --color-on-error: #{$gruvbox-dark-fg-0};
+    --color-visited: #{$gruvbox-dark-purple-1};
   }
 }
 
+// Custom properties mirror the SCSS scale for the few components that read
+// them at runtime; keep this the only place the values are written.
 :root {
-  --gap-0: 0.25rem;
-  --gap-1: 0.5rem;
-  --gap-2: 0.75rem;
-  --gap-3: 1rem;
-  --gap-4: 1.25rem;
+  --gap-0: #{$gap-0};
+  --gap-1: #{$gap-1};
+  --gap-2: #{$gap-2};
+  --gap-3: #{$gap-3};
+  --gap-4: #{$gap-4};
 
-  --border: 0.1rem solid;
-  --outline: 0.2rem solid;
+  --border: #{$border};
+  --outline: #{$outline};
 }
 
 svg {
@@ -62,7 +73,7 @@ body {
 }
 
 a {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   text-decoration: none;
 }
 
@@ -123,7 +134,7 @@ textarea {
   align-items: center;
   gap: var(--gap-0);
   height: 1.5rem;
-  @include button-base($font-size-body, 0 $gap-1);
+  @include button-base($font-size-ui, 0 $gap-1);
 }
 
 .column__form form {
@@ -138,11 +149,11 @@ textarea {
 }
 
 .column__input.error {
-  border-color: var(--color-error);
+  border-color: var(--color-error-text);
 }
 
 .column__input.error:focus {
-  outline-color: var(--color-error);
+  outline-color: var(--color-error-text);
 }
 
 .column__submit {
@@ -151,7 +162,7 @@ textarea {
 
 .column__error {
   font-size: $font-size-body;
-  color: var(--color-error);
+  color: var(--color-error-text);
 }
 
 .column__remove {
@@ -160,9 +171,7 @@ textarea {
   // page background in bookmarks, the row surface in the filter dropdown. A
   // fixed background shows as a block there because a coarse pointer keeps
   // the button visible without a hover state to retint it.
-  @include button-danger;
-  // Keep the roomier line box: the mixin's `font` shorthand resets line-height.
-  line-height: 1.4;
+  @include icon-button-danger;
 }
 
 // Keep row delete actions out of the way until the row is hovered or focused.
@@ -186,4 +195,16 @@ textarea {
 // Hide scrollbars in Chromium
 ::-webkit-scrollbar {
   display: none;
+}
+
+// Respect the OS motion preference for every animation/transition in the app
+// (spinner, dock fade, toggle thumb, progress bar).
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

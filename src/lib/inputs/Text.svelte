@@ -12,15 +12,7 @@
 
     &:disabled {
       color: var(--color-fg-inactive);
-    }
-
-    &:required {
-      border-color: var(--color-error);
-
-      &:focus {
-        border-color: transparent;
-        outline-color: var(--color-error);
-      }
+      cursor: default;
     }
   }
 </style>

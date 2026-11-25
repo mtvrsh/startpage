@@ -33,10 +33,15 @@ $overlay-backdrop: rgb(0 0 0 / 0.5);
 
 $search-thumbnail-height: 2.7rem;
 
-// The one "quiet" treatment for controls that are disabled or recede until
-// interacted with (idle dock, disabled buttons/toggles, unsafe links). Muted
-// text uses --color-fg-inactive instead so it stays legible, not translucent.
+// The one fade used for an idle control that recedes until interacted with
+// (the dock). Disabled controls do not use it: they use --color-fg-inactive,
+// the same de-emphasis color as muted text, so there is a single grey.
 $inactive-opacity: 0.6;
+
+// Floating-layer elevation. Overlays sit above dimmed content; dropdowns sit
+// directly on the page and need a lighter shadow.
+$shadow-overlay: 0 1rem 3rem rgb(0 0 0 / 0.35);
+$shadow-dropdown: 0 0.5rem 1rem rgb(0 0 0 / 0.25);
 
 // Short transition for reversible UI motion: dock fade, toggle thumb, progress.
 $transition-duration: 0.1618s;

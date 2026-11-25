@@ -7,6 +7,7 @@ export default {
   allKebabCase: 'all',
   always: 'Always',
   back: 'Back',
+  backend: 'Backend',
   backendType: 'Backend type',
   backendUrl: 'Backend URL',
   bookmarkExists: 'Bookmark already exists',

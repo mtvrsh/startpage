@@ -54,6 +54,9 @@
 
   let isHome = $derived(main.path === strings.paths.home)
   let isSettings = $derived(settingsPaths.includes(main.path))
+  // The page behind a modal must not be tabbable; `inert` does that without a
+  // hand-rolled focus trap on each overlay.
+  let modalOpen = $derived(isSettings || app.searchOpen)
 
   let closeSettings = () => (app.route.path = strings.paths.home)
 
@@ -100,9 +103,17 @@
 <div class="app">
   <FetchProgress />
 
-  {#if isHome || isSettings}
-    <Home />
-  {/if}
+  <div class="app__background" inert={modalOpen}>
+    {#if isHome || isSettings}
+      <Home />
+    {/if}
+
+    {#if !isHome && !isSettings}
+      <main.view {...main.args} />
+    {/if}
+
+    <Dock />
+  </div>
 
   {#if isSettings}
     <div class="overlay">
@@ -118,12 +129,9 @@
         <main.view {...main.args} />
       </div>
     </div>
-  {:else if !isHome}
-    <main.view {...main.args} />
   {/if}
 
   <SearchPalette />
-  <Dock />
 </div>
 
 <style lang="scss">
@@ -134,6 +142,13 @@
     display: grid;
     grid-template-rows: 1fr;
     height: 100dvh;
+    min-height: 0;
+  }
+
+  .app__background {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     min-height: 0;
   }
 
