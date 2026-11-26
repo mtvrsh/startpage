@@ -47,6 +47,14 @@
 
   let selectedLabel = $derived(items.find((item) => item.id === selectedId)?.label ?? allLabel)
 
+  // With nothing to filter and "All" already selected, the dropdown would open
+  // to an empty (or lone "All") row — a broken-looking box. Disable it.
+  let noItems = $derived(items.length === 0 && (allId === undefined || selectedId === allId))
+
+  $effect(() => {
+    if (noItems) isDropdownOpen = false
+  })
+
   // Aggregate signal on the collapsed toggler: the list may never be opened,
   // so failing items are announced even then.
   let failedLabels = $derived(items.filter((item) => item.error).map((item) => item.label))
@@ -95,6 +103,7 @@
       class="column__action filter__toggler"
       class:active={isDropdownOpen}
       type="button"
+      disabled={noItems}
       aria-expanded={isDropdownOpen}
       onclick={toggleDropdown}
     >
@@ -237,24 +246,27 @@
       align-items: stretch;
       background: var(--color-surface);
 
-      // Selected row: mark it with a foreground-colored bar. Drawing it on
-      // the row keeps it visible while the rename editor covers the label
-      // button.
-      &.active::before {
-        position: absolute;
-        inset: 0 auto 0 0;
-        z-index: 1;
-        width: $selection-bar-width;
-        content: '';
-        background: var(--color-accent);
+      // Selected row: the same accent-light fill used by the tabs, the "+"
+      // and the open filter toggler.
+      &.active {
+        background: var(--color-accent-light);
       }
 
-      // Tint the whole row on hover/focus. Children stay transparent so the
-      // label, state square and delete action share the row background; only
-      // the delete action paints over it (red) when hovered/focused itself.
+      // Hover/focus uses the same accent fill as the bottom tabs and the
+      // other buttons; the label switches to the fill's foreground.
       &:hover,
       &:focus-within {
-        background: var(--color-surface-light);
+        background: var(--color-accent);
+
+        .filter__select {
+          color: var(--color-on-accent);
+        }
+      }
+
+      // Selection wins over the generic hover/focus fill.
+      &.active:hover,
+      &.active:focus-within {
+        background: var(--color-accent-light);
       }
     }
 
@@ -294,9 +306,12 @@
       }
     }
 
-    // Small state square: dim for loading, red for an error. The span copies
-    // .column__remove's horizontal padding so its slot matches the button's
-    // footprint; the square itself is drawn by ::before.
+    // Selected row's label needs the fill's foreground; accent text would
+    // disappear on the green background.
+    &__item.active &__select {
+      color: var(--color-on-accent-light);
+    }
+
     // The row stretches its cells, so let the delete button cover the full
     // row height on hover; the shared icon mixin keeps the glyph centred.
     .column__remove {
@@ -304,6 +319,9 @@
       height: auto;
     }
 
+    // Small state square: dim for loading, red for an error. The span copies
+    // .column__remove's horizontal padding so its slot matches the button's
+    // footprint; the square itself is drawn by ::before.
     &__state {
       flex: none;
       display: flex;

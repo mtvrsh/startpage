@@ -259,10 +259,10 @@
                 tabindex="-1"
               >
                 <div class="palette__thumbnail">
+                  <!-- No crossorigin: proxied thumbnail hosts may not send CORS headers. -->
                   <Image
                     src={$config.useDirectThumbnails ? getDirectThumbnail(thumbnail) : thumbnail}
                     alt={strings.thumbnail}
-                    crossorigin="anonymous"
                   />
                 </div>
                 <p class="palette__name" title={name}>{name}</p>
@@ -352,10 +352,15 @@
       color: var(--color-accent-text);
       text-decoration: none;
 
+      // Same hover fill as the bottom tabs and the dropdown rows.
       &:hover,
       &:focus {
-        background: var(--color-surface-light);
+        background: var(--color-accent);
         outline: none;
+
+        .palette__name {
+          color: var(--color-on-accent);
+        }
       }
     }
 

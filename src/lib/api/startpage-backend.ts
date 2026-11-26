@@ -15,7 +15,11 @@ function getText(obj: any): string {
 
 function bestThumbnail(thumbnails: any[]): string {
   if (!thumbnails?.length) return ''
-  return thumbnails.at(-1).url
+  const url = thumbnails.at(-1).url
+  if (typeof url !== 'string') return ''
+  // YouTube.js returns protocol-relative URLs. On an http:// dev host they
+  // resolve to http:// and the image loads are rejected; pin them to https.
+  return url.startsWith('//') ? `https:${url}` : url
 }
 
 export class StartpageBackend implements Backend {
