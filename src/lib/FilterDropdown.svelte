@@ -203,8 +203,7 @@
       // Open state: same "active" tint as the column "+" while its form is
       // open, so it stays distinct from hover/focus.
       &.active {
-        color: var(--color-on-accent-light);
-        background: var(--color-accent-light);
+        @include active-tint;
       }
     }
 
@@ -221,7 +220,7 @@
       flex: none;
       width: $status-square-size;
       aspect-ratio: 1;
-      background: var(--color-error-text);
+      background: var(--color-error);
     }
 
     &__list {
@@ -249,7 +248,11 @@
       // Selected row: the same accent-light fill used by the tabs, the "+"
       // and the open filter toggler.
       &.active {
-        background: var(--color-accent-light);
+        @include active-tint;
+
+        .filter__select {
+          color: var(--color-on-accent-light);
+        }
       }
 
       // Hover/focus uses the same accent fill as the bottom tabs and the
@@ -306,12 +309,6 @@
       }
     }
 
-    // Selected row's label needs the fill's foreground; accent text would
-    // disappear on the green background.
-    &__item.active &__select {
-      color: var(--color-on-accent-light);
-    }
-
     // The row stretches its cells, so let the delete button cover the full
     // row height on hover; the shared icon mixin keeps the glyph centred.
     .column__remove {
@@ -337,7 +334,7 @@
       }
 
       &--error::before {
-        background: var(--color-error-text);
+        background: var(--color-error);
       }
     }
 

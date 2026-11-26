@@ -291,6 +291,7 @@
 
 <style lang="scss">
   @use 'scss/variables' as *;
+  @use 'scss/mixins' as *;
 
   .general {
     display: flex;
@@ -308,7 +309,7 @@
           user-select: none;
 
           &.disabled {
-            color: var(--color-fg-inactive);
+            @include disabled-control;
           }
 
           &--buttons {

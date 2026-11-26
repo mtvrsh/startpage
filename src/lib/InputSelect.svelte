@@ -36,10 +36,5 @@
   select {
     @include input-base;
     cursor: pointer;
-
-    &:disabled {
-      color: var(--color-fg-inactive);
-      cursor: default;
-    }
   }
 </style>

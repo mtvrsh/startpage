@@ -23,6 +23,6 @@
   }
 
   .error {
-    color: var(--color-error);
+    color: var(--color-error-text);
   }
 </style>

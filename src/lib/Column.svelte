@@ -81,6 +81,7 @@
 
 <style lang="scss">
   @use 'scss/variables' as *;
+  @use 'scss/mixins' as *;
 
   .column {
     display: flex;
@@ -121,8 +122,7 @@
       font-size: $font-size-icon;
 
       &.active {
-        color: var(--color-on-accent-light);
-        background: var(--color-accent-light);
+        @include active-tint;
       }
     }
 

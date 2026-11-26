@@ -1,5 +1,19 @@
 @use 'variables' as *;
 
+/// The one de-emphasis treatment for disabled controls and their labels. It
+/// pairs the shared grey with the non-interactive cursor so no component has
+/// to repeat (or drift from) it.
+@mixin disabled-control {
+  color: var(--color-fg-inactive);
+  cursor: default;
+}
+
+/// Shared fill and readable foreground for open, selected and active controls.
+@mixin active-tint {
+  color: var(--color-on-accent-light);
+  background: var(--color-accent-light);
+}
+
 // One look for every text-entry control: tan field, dark text, muted hint and
 // an accent ring on focus. Contexts only add sizing (width/flex) and error
 // variants on top.
@@ -7,6 +21,7 @@
   padding: $padding;
   font: inherit;
   font-size: $font-size-ui;
+  line-height: $line-height-body;
   color: var(--color-fg);
   background: var(--color-surface);
   border: none;
@@ -19,6 +34,10 @@
 
   &:focus {
     outline: $outline var(--color-accent);
+  }
+
+  &:disabled {
+    @include disabled-control;
   }
 }
 
@@ -35,6 +54,7 @@
   padding: $padding;
   font: inherit;
   font-size: $size;
+  line-height: $line-height-body;
   color: $resting-color;
   background: $background;
   border: none;
@@ -52,9 +72,8 @@
   &:disabled,
   &:disabled:hover,
   &:disabled:focus {
-    color: var(--color-fg-inactive);
+    @include disabled-control;
     background: $background;
-    cursor: default;
   }
 }
 
@@ -93,7 +112,7 @@
   width: $size;
   height: $size;
   padding: 0;
-  line-height: 1;
+  line-height: $line-height-icon;
   @include button-danger($font-size-icon, 0, $background);
 }
 
@@ -127,6 +146,6 @@
     // The clamp box ends at the last line box, and overflow: hidden then cuts
     // anything below it. Monospace ascender + descender (~1.36em) is taller
     // than the inherited 1.3 line-height, so descenders (g, j) got clipped.
-    line-height: 1.4;
+    line-height: $line-height-clamp;
   }
 }

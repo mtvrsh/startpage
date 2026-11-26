@@ -14,6 +14,11 @@ $font-size-ui: 0.92rem; // titles, headers, settings, search, controls
 $font-size-icon: 1rem; // remove/+/close glyphs
 $font-size-large: 2rem; // thumbnail placeholder
 
+// One line height per context: body/controls, clamped titles, icon glyphs.
+$line-height-body: 1.3;
+$line-height-clamp: 1.4;
+$line-height-icon: 1;
+
 $border-size: 0.1rem;
 $border-type: solid;
 $border: $border-size $border-type;

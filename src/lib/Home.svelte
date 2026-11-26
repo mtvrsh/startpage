@@ -77,8 +77,7 @@
   // Selected tab: same "open/active" tint as the column "+" while its form
   // is open, so hover and selection stay distinguishable.
   .home__navigation-button.active {
-    color: var(--color-on-accent-light);
-    background: var(--color-accent-light);
+    @include active-tint;
   }
 
   @include breakpoint-xl {

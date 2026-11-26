@@ -9,10 +9,5 @@
 
   .text {
     @include input-base;
-
-    &:disabled {
-      color: var(--color-fg-inactive);
-      cursor: default;
-    }
   }
 </style>
