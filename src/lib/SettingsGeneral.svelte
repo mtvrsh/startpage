@@ -178,6 +178,7 @@
           id={strings.feedCacheKebabCase}
           label={strings.feedCache}
           min={0}
+          fallback={defaults.cacheLifetimeInMinutes}
           bind:value={$config.cacheLifetimeInMinutes}
         />
       </li>
@@ -186,7 +187,8 @@
         <InputNumber
           id={strings.feedLimitKebabCase}
           label={strings.feedLimit}
-          min={0}
+          min={1}
+          fallback={defaults.feedLimit}
           bind:value={$config.feedLimit}
         />
       </li>
@@ -243,7 +245,8 @@
         <InputNumber
           id="reader-limit"
           label={strings.readerLimit}
-          min={0}
+          min={1}
+          fallback={defaults.readerLimit}
           bind:value={$config.readerLimit}
         />
       </li>

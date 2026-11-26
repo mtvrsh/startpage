@@ -7,16 +7,24 @@
   let { src, alt, ...args } = $props()
 
   let ok: boolean | undefined = $state(undefined)
-  let pv = ''
+  // A separate flag (instead of comparing against a `pv` initialized to '')
+  // makes the first run apply the initial state even when src is empty/unset.
+  let pv: string | undefined
+  let initialized = false
 
   $effect(() => {
     // Skip reset loading state when src changes but has the same value.
-    // Svelte doesn't update image attribute in that case.
-    // Avoides endless animation screen.
-    if (src == untrack(() => pv)) return
+    // Svelte doesn't update the image attribute in that case.
+    // Avoids an endless animation screen.
+    if (initialized && src === untrack(() => pv)) return
+    initialized = true
 
     pv = src
-    ok = undefined
+    // An empty/blank/missing src never fires load/error in browsers, so
+    // treating it as "still loading" would leave the spinner up forever.
+    // Show the fallback instead.
+    const hasSource = typeof src === 'string' ? src.trim().length > 0 : !!src
+    ok = hasSource ? undefined : false
   })
 </script>
 

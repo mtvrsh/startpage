@@ -246,14 +246,20 @@ export function parseConfig(raw: unknown, issues?: string[]): AppConfig {
       'config.feedProtocolEnabledForVideosInTitles',
       issues,
     ),
-    feedLimit: readCount(source.feedLimit, defaults.feedLimit, 'config.feedLimit', issues),
+    feedLimit: readCount(source.feedLimit, defaults.feedLimit, 'config.feedLimit', issues, 1),
     feedThumbnailThemed: readBoolean(
       source.feedThumbnailThemed,
       defaults.feedThumbnailThemed,
       'config.feedThumbnailThemed',
       issues,
     ),
-    readerLimit: readCount(source.readerLimit, defaults.readerLimit, 'config.readerLimit', issues),
+    readerLimit: readCount(
+      source.readerLimit,
+      defaults.readerLimit,
+      'config.readerLimit',
+      issues,
+      1,
+    ),
     useDirectThumbnails: readBoolean(
       source.useDirectThumbnails,
       defaults.useDirectThumbnails,

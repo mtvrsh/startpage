@@ -66,7 +66,7 @@ describe('parseConfig', () => {
     })
 
     expect(parsed.feedLimit).toBe(defaults.feedLimit)
-    expect(parsed.readerLimit).toBe(0)
+    expect(parsed.readerLimit).toBe(1)
     expect(parsed.cacheLifetimeInMinutes).toBe(defaults.cacheLifetimeInMinutes)
     expect(parsed.timeoutInSeconds).toBe(defaults.timeoutInSeconds)
     expect(parsed.feedShowSummary).toBe(defaults.feedShowSummary)
@@ -81,6 +81,19 @@ describe('parseConfig', () => {
     expect(issues).toEqual(['config.timeoutInSeconds: expected a number of at least 1'])
 
     expect(parseConfig({ timeoutInSeconds: -5 }).timeoutInSeconds).toBe(1)
+  })
+
+  it('raises zero limits to one while leaving the cache lifetime at zero', () => {
+    const issues: string[] = []
+    const parsed = parseConfig({ feedLimit: 0, readerLimit: 0, cacheLifetimeInMinutes: 0 }, issues)
+
+    expect(parsed.feedLimit).toBe(1)
+    expect(parsed.readerLimit).toBe(1)
+    expect(parsed.cacheLifetimeInMinutes).toBe(0)
+    expect(issues).toEqual([
+      'config.feedLimit: expected a number of at least 1',
+      'config.readerLimit: expected a number of at least 1',
+    ])
   })
 
   it('falls back to the default for non-integer numbers', () => {
@@ -159,10 +172,10 @@ describe('parseConfig strict mode', () => {
       'config.instances[0]: expected an object',
       'config.instances[1].value: expected an http(s) url',
       'config.feedLimit: expected a number',
-      'config.readerLimit: expected a non-negative number',
+      'config.readerLimit: expected a number of at least 1',
       'config.feedShowSummary: expected a boolean',
     ])
-    expect(parsed).toEqual({ ...defaults, readerLimit: 0 })
+    expect(parsed).toEqual({ ...defaults, readerLimit: 1 })
   })
 
   it('treats cleared number fields (null) as unset, not malformed', () => {

@@ -59,38 +59,75 @@ function json(
   })
 }
 
-function extractDuration(lockup: any): { seconds: string; text: string; is_live: boolean } | null {
-  const overlays = lockup.content_image?.overlays || []
-  for (const overlay of overlays) {
-    if (overlay.type === 'ThumbnailBottomOverlayView' && overlay.badges) {
-      for (const badge of overlay.badges) {
-        const t: string = badge.text || ''
-        if (/\d+:\d+/.test(t)) {
-          const parts = t.split(':').map(Number)
-          let seconds: number
-          if (parts.length === 3) {
-            seconds = parts[0] * 3600 + parts[1] * 60 + parts[2]
-          } else if (parts.length === 2) {
-            seconds = parts[0] * 60 + parts[1]
-          } else {
-            seconds = parts[0]
-          }
-          return { seconds: String(seconds), text: t, is_live: false }
-        }
-        if (/live|streaming/i.test(t)) {
-          return { seconds: '0', text: t, is_live: true }
-        }
-      }
+/** Reads both raw `Text`-like objects (`{text}` / `toString()`) and plain strings. */
+function asText(value: any): string {
+  if (typeof value === 'string') return value
+  if (!value) return ''
+  if (typeof value.text === 'string') return value.text
+  if (typeof value.toString === 'function') {
+    const text = value.toString()
+    if (typeof text === 'string' && text !== '[object Object]') return text
+  }
+  return ''
+}
+
+/** "1:37", "0:13", "1:02:03" and comma-grouped badges like "1,234:56". */
+function durationSeconds(text: string): number {
+  const cleaned = text.replace(/,/g, '')
+  if (!/^\d+(?::\d{1,2}){1,2}$/.test(cleaned)) return 0
+  const parts = cleaned.split(':').map(Number)
+  if (parts.some((part) => !Number.isFinite(part))) return 0
+  return parts.reduce((seconds, part) => seconds * 60 + part, 0)
+}
+
+/**
+ * youtubei.js parses most listings into class instances (PlaylistVideo, Video,
+ * GridVideo, …) whose duration is already a `{text, seconds}` object. Raw
+ * view-model payloads (memo/continuation) carry it in a thumbnail badge, so
+ * both shapes are read here. The lockup getter also accepts
+ * `ThumbnailOverlayBadgeView` and `CollectionThumbnailView.primary_thumbnail`.
+ */
+function extractDuration(v: any): { seconds: string; text: string; is_live: boolean } | null {
+  if (v.duration) {
+    const text = asText(v.duration.text)
+    const parsed = Number(v.duration.seconds)
+    const seconds = Number.isFinite(parsed) && parsed > 0 ? parsed : durationSeconds(text)
+    if (seconds > 0) return { seconds: String(seconds), text, is_live: !!v.is_live }
+  }
+
+  const image = v.content_image?.primary_thumbnail || v.content_image
+  for (const overlay of image?.overlays || []) {
+    if (
+      overlay.type !== 'ThumbnailBottomOverlayView' &&
+      overlay.type !== 'ThumbnailOverlayBadgeView'
+    )
+      continue
+    for (const badge of overlay.badges || []) {
+      const text = asText(badge.text)
+      const seconds = durationSeconds(text)
+      if (seconds > 0) return { seconds: String(seconds), text, is_live: false }
+      if (/live|streaming/i.test(text)) return { seconds: '0', text, is_live: true }
     }
   }
   return null
 }
 
+function upcomingIso(v: any): string | undefined {
+  if (!v.upcoming) return undefined
+  const date = v.upcoming instanceof Date ? v.upcoming : new Date(v.upcoming)
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
+}
+
 function extractPublished(v: any): { text: string } {
+  // Parsed renderer classes expose `published` as a Text object; raw lockups
+  // keep it in the content metadata rows.
+  const published = asText(v.published)
+  if (published) return { text: published }
+
   const rows = v.metadata?.metadata?.metadata_rows || []
   for (const row of rows) {
     for (const part of row.metadata_parts || []) {
-      const t = part.text?.toString() || ''
+      const t = asText(part.text)
       if (/ago|year|month|week|day|hour|minute|second/i.test(t)) return { text: t }
     }
   }
@@ -145,15 +182,17 @@ export function parseRelativeMs(text: string): number {
 // Lockup-shaped items (LockupView for regular videos, ShortsLockupView for
 // shorts) do not carry the video id in `entity_id` — it is an opaque hash
 // (e.g. `C1A2D28FC54EBFE2`, unrelated to the item being trimmed to its last 11
-// characters). `content_id` is the id for LockupView items; ShortsLockupView
+// characters). `content_id` is the id for LockupView items. ShortsLockupView
 // has neither `content_id` nor real thumbnails (`thumbnail` is an empty
 // array), so its id and thumbnails come from the tap endpoint
 // (`reelWatchEndpoint` payload, with the `/shorts/<id>` URL as a secondary).
-// Shorts renderers also expose no duration or publish date (a YouTube API
-// limitation — NewPipeExtractor's YoutubeShortsLockupInfoItemExtractor
-// documents the same gap), so those degrade to empty instead of guessing.
-function resolveLockupId(v: any): string {
+// Classic renderers parsed by youtubei.js (PlaylistVideo, Video, GridVideo,
+// ReelItem, …) use `id` or `video_id` instead — they must not be dropped just
+// because they are not lockups.
+function resolveVideoId(v: any): string {
   if (v.content_id) return v.content_id
+  if (typeof v.id === 'string' && v.id) return v.id
+  if (typeof v.video_id === 'string' && v.video_id) return v.video_id
   const videoId = v.on_tap_endpoint?.payload?.videoId
   if (typeof videoId === 'string' && videoId) return videoId
   const url: string = v.on_tap_endpoint?.metadata?.url || ''
@@ -169,6 +208,7 @@ function resolveLockupId(v: any): string {
 function resolveLockupThumbnails(v: any): any[] {
   for (const candidate of [
     v.content_image?.image,
+    v.content_image?.primary_thumbnail?.image,
     v.thumbnail,
     v.thumbnails,
     v.thumbnail_view_model?.image,
@@ -324,24 +364,29 @@ async function getChannel(channelId: string): Promise<Response> {
 
   const result = videos
     .map((v: any) => {
-      const id = resolveLockupId(v)
+      const id = resolveVideoId(v)
       if (!id) return null
       const thumbnails = resolveLockupThumbnails(v)
       const best = thumbnails[0] || null
-      const durText = v.content_id ? extractDuration(v) : null
-      const published = v.content_id ? extractPublished(v) : { text: '' }
+      const durText = extractDuration(v)
+      const published = extractPublished(v)
       return {
         video_id: id,
         title: {
-          text: v.metadata?.title?.toString() || v.overlay_metadata?.primary_text?.toString() || '',
+          text:
+            v.metadata?.title?.toString() ||
+            v.overlay_metadata?.primary_text?.toString() ||
+            v.title?.toString() ||
+            '',
         },
         thumbnails,
         author: { id: chId, name: chName, thumbnails: chThumbs },
         published,
-        uploaded: v.content_id ? parseRelativeMs(published.text) : 0,
+        uploaded: parseRelativeMs(published.text),
         duration: durText || { seconds: '0', text: '' },
-        is_live: durText?.is_live || false,
-        is_upcoming: false,
+        is_live: durText?.is_live || !!v.is_live,
+        is_upcoming: !!v.is_upcoming,
+        upcoming: upcomingIso(v),
         is_premiere: false,
         best_thumbnail: best ? { url: best.url, width: best.width, height: best.height } : null,
       }
@@ -352,10 +397,10 @@ async function getChannel(channelId: string): Promise<Response> {
 }
 
 function mapPlaylistItem(v: any) {
-  const id = resolveLockupId(v)
+  const id = resolveVideoId(v)
   if (!id) return null
-  const published = v.content_id ? extractPublished(v) : { text: '' }
-  const durText = v.content_id ? extractDuration(v) : null
+  const published = extractPublished(v)
+  const durText = extractDuration(v)
   return {
     id,
     title: {
@@ -368,10 +413,11 @@ function mapPlaylistItem(v: any) {
     thumbnails: resolveLockupThumbnails(v),
     author: v.author,
     published,
-    uploaded: v.content_id ? parseRelativeMs(published.text) : 0,
+    uploaded: parseRelativeMs(published.text),
     duration: durText || { seconds: '0', text: '' },
-    is_live: durText?.is_live || false,
-    is_upcoming: false,
+    is_live: durText?.is_live || !!v.is_live,
+    is_upcoming: !!v.is_upcoming,
+    upcoming: upcomingIso(v),
   }
 }
 

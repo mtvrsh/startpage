@@ -54,8 +54,37 @@ describe('Number inputs', () => {
     input.dispatchEvent(new Event('change', { bubbles: true }))
     await tick()
 
-    expect(get(config).feedLimit).toBe(0)
-    expect(input.value).toBe('0')
+    expect(get(config).feedLimit).toBe(1)
+    expect(input.value).toBe('1')
+  })
+
+  test('raises a typed zero to one instead of hiding the whole feed', async () => {
+    const input = target.querySelector<HTMLInputElement>('#feed-limit')!
+
+    input.value = '0'
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    input.dispatchEvent(new Event('blur', { bubbles: true }))
+    await tick()
+
+    expect(get(config).feedLimit).toBe(1)
+    expect(input.value).toBe('1')
+  })
+
+  test('never writes null into config while a field is cleared', async () => {
+    const input = target.querySelector<HTMLInputElement>('#feed-limit')!
+
+    input.value = ''
+    input.dispatchEvent(new Event('input', { bubbles: true }))
+    await tick()
+
+    // Clearing the field must keep the last valid value instead of making the
+    // video feed's `.slice(0, feedLimit)` return nothing.
+    expect(get(config).feedLimit).toBe(defaults.feedLimit)
+
+    input.dispatchEvent(new Event('blur', { bubbles: true }))
+    await tick()
+    expect(get(config).feedLimit).toBe(defaults.feedLimit)
+    expect(input.value).toBe(String(defaults.feedLimit))
   })
 })
 

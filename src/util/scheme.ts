@@ -41,3 +41,15 @@ export function isSafeProtocolName(name: string): boolean {
 export function safeHref(url: string): string | undefined {
   return hasSafeScheme(url) ? url : undefined
 }
+
+/**
+ * A schemeless bookmark like `example.com/foo` resolves against the app's own
+ * origin, so the SPA router intercepts the click and shows a not-found page
+ * instead of navigating. Make it absolute; explicit schemes (including custom
+ * handlers) and protocol-relative URLs are left as they are.
+ */
+export function absoluteBookmarkUrl(url: string): string {
+  const trimmed = url.trim()
+  if (!trimmed || trimmed.startsWith('/') || /^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}

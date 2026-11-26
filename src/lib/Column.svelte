@@ -2,6 +2,7 @@
   import type { Snippet } from 'svelte'
   import { config } from '../share/config'
   import strings from '../share/strings'
+  import { isTypedCharacter } from '../util/keyboard'
 
   let {
     title,
@@ -23,6 +24,9 @@
   let addButton = $state<HTMLButtonElement>()
 
   let closeFormIfPressedCloseKey = (event: KeyboardEvent) => {
+    // A plain-character close key must not close the form (losing the text
+    // being typed) while that character is entered into one of its inputs.
+    if (isTypedCharacter(event)) return
     if (!adding || event.key !== $config.keybind.close) return
 
     event.preventDefault()

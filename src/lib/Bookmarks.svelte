@@ -5,7 +5,7 @@
   import Column from './Column.svelte'
   import Empty from './Empty.svelte'
   import { editGesture } from './gestures'
-  import { hasSafeScheme, safeHref } from '../util/scheme'
+  import { absoluteBookmarkUrl, hasSafeScheme, safeHref } from '../util/scheme'
 
   let adding = $state(false)
   let url = $state('')
@@ -34,8 +34,9 @@
     errorUrl = errorTag = errorName = false
 
     if (!url.trim()) errorUrl = true
+    const nextUrl = absoluteBookmarkUrl(url.trim())
 
-    if (url.trim() && !hasSafeScheme(url.trim())) errorUrl = true
+    if (url.trim() && !hasSafeScheme(nextUrl)) errorUrl = true
 
     if (!tag.trim()) errorTag = true
 
@@ -44,7 +45,7 @@
     if (errorUrl || errorTag || errorName) return
 
     Bookmarks.set({
-      url: url.trim(),
+      url: nextUrl,
       tag: tag.trim(),
       name: name.trim(),
     })
@@ -77,7 +78,7 @@
 
     if (!editingUrl) return
 
-    let nextUrl = editUrl.trim()
+    let nextUrl = absoluteBookmarkUrl(editUrl.trim())
     let nextName = editName.trim()
     let nextTag = editTag.trim()
 
@@ -153,6 +154,7 @@
 
           <ul class="bookmarks__items">
             {#each items as bookmark (bookmark.url)}
+              {@const href = safeHref(absoluteBookmarkUrl(bookmark.url))}
               <li class="bookmarks__item" class:editing={editingUrl === bookmark.url}>
                 {#if editingUrl === bookmark.url}
                   <form
@@ -204,7 +206,7 @@
                     </div>
                   </form>
                 {:else}
-                  {#if safeHref(bookmark.url) === undefined}
+                  {#if href === undefined}
                     <span
                       class="bookmarks__link bookmarks__link--unsafe"
                       title={`${strings.unsafeScheme} - ${strings.editBookmarkHint}`}
@@ -213,7 +215,7 @@
                   {:else}
                     <a
                       class="bookmarks__link"
-                      href={bookmark.url}
+                      {href}
                       title={`${bookmark.url} - ${strings.editBookmarkHint}`}
                       use:editGesture={{ onEdit: () => startEdit(bookmark) }}>{bookmark.name}</a
                     >

@@ -168,6 +168,29 @@ describe('SearchPalette feedback', () => {
     expect(target.querySelector('.palette__empty')).toBeNull()
   })
 
+  test('does not close while typing a plain-character close key', async () => {
+    config.set({
+      ...structuredClone(defaults),
+      instanceType: 'startpage',
+      keybind: { ...structuredClone(defaults.keybind), close: 'q' },
+    })
+
+    await openAndType('query')
+    target
+      .querySelector<HTMLInputElement>('.palette__input')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true, cancelable: true }))
+    await tick()
+
+    expect(app.searchOpen).toBe(true)
+
+    // The same key still closes when the focus is not in a text field.
+    target
+      .querySelector<HTMLElement>('.palette__panel')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true, cancelable: true }))
+    await tick()
+    expect(app.searchOpen).toBe(false)
+  })
+
   test('shows a failed channel add in the same error area', async () => {
     vi.stubGlobal(
       'fetch',

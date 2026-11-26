@@ -152,6 +152,10 @@
   }
 
   let handlePanelKeybinds = (event: KeyboardEvent) => {
+    // A plain-character close key (e.g. `q`) must not close the palette while
+    // that character is being typed into the search field.
+    if (isTypedCharacter(event)) return
+
     event.stopPropagation()
 
     if (event.key === closeKeybind) {

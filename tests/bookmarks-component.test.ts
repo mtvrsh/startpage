@@ -3,6 +3,7 @@ import { get } from 'svelte/store'
 import { mount, tick, unmount } from 'svelte'
 import BookmarksColumn from '../src/lib/Bookmarks.svelte'
 import Bookmarks, { bookmarks, type Bookmark } from '../src/share/bookmarks'
+import { config, defaults } from '../src/share/config'
 
 const first: Bookmark = {
   url: 'https://example.com/first',
@@ -27,6 +28,31 @@ afterEach(() => {
 })
 
 describe('Bookmarks column editor', () => {
+  test('normalizes a schemeless URL so the SPA router does not swallow it', async () => {
+    const addButton = target.querySelector<HTMLButtonElement>('.column__add')!
+    addButton.click()
+    await tick()
+
+    const [nameInput, tagInput, urlInput] =
+      target.querySelectorAll<HTMLInputElement>('.column__form input')
+    nameInput.value = 'Example'
+    tagInput.value = 'News'
+    urlInput.value = 'example.com/foo'
+    for (const input of [nameInput, tagInput, urlInput])
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+
+    target
+      .querySelector<HTMLFormElement>('.column__form form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    await tick()
+
+    expect(get(bookmarks).has('https://example.com/foo')).toBe(true)
+    const link = [...target.querySelectorAll<HTMLAnchorElement>('.bookmarks__link')].find(
+      (a) => a.textContent === 'Example',
+    )!
+    expect(link.getAttribute('href')).toBe('https://example.com/foo')
+  })
+
   test('opens on right-click and saves name, tag, and URL changes', async () => {
     let link = target.querySelector<HTMLAnchorElement>('.bookmarks__link')
 
@@ -90,6 +116,25 @@ describe('Bookmarks column editor', () => {
     await tick()
 
     expect(target.querySelector('.column__form')).toBeNull()
+  })
+
+  test('does not close the add form while typing a plain-character close key', async () => {
+    config.set({
+      ...structuredClone(defaults),
+      keybind: { ...structuredClone(defaults.keybind), close: 'q' },
+    })
+    const addButton = target.querySelector<HTMLButtonElement>('.column__add')!
+    addButton.click()
+    await tick()
+
+    const input = target.querySelector<HTMLInputElement>('.column__form input')!
+    input.focus()
+    input.value = 'q'
+    input.dispatchEvent(new KeyboardEvent('keyup', { key: 'q', bubbles: true, cancelable: true }))
+    await tick()
+
+    expect(target.querySelector('.column__form')).not.toBeNull()
+    config.set(structuredClone(defaults))
   })
 
   test('closes the add form when clicking outside', async () => {
