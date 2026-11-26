@@ -70,7 +70,15 @@
 
     wasSettings = isSettings
 
-    document.body.style.overflow = isSettings || app.searchOpen ? 'hidden' : ''
+    document.body.style.overflow = modalOpen ? 'hidden' : ''
+
+    // Extensions that read <meta name="theme-color"> re-sample on user events
+    // and on changes to this tag, so update it when an overlay opens or closes.
+    const meta = document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+    if (meta)
+      meta.content = getComputedStyle(document.documentElement)
+        .getPropertyValue(modalOpen ? '--theme-color-overlay' : '--color-bg')
+        .trim()
   })
 
   let handleGlobalKeydown = (event: KeyboardEvent) => {

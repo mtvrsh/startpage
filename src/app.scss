@@ -1,4 +1,5 @@
 @use '../node_modules/modern-normalize/modern-normalize.css';
+@use 'sass:color';
 @use 'lib/scss/themes' as *;
 @use 'lib/scss/variables' as *;
 @use 'lib/scss/mixins' as *;
@@ -21,6 +22,10 @@
   --color-error-text: #{$gruvbox-light-red-1};
   --color-on-error: #{$gruvbox-light-bg-0};
   --color-visited: #{$gruvbox-light-purple-1};
+
+  // Page color reported to the browser UI; the modal variant is the same color
+  // under the shared 50% black backdrop.
+  --theme-color-overlay: #{color.mix(#000, $gruvbox-light-bg-0, 50%)};
 }
 
 @media (prefers-color-scheme: dark) {
@@ -39,6 +44,7 @@
     --color-error-text: #{$gruvbox-dark-red-1};
     --color-on-error: #{$gruvbox-dark-fg-0};
     --color-visited: #{$gruvbox-dark-purple-1};
+    --theme-color-overlay: #{color.mix(#000, $gruvbox-dark-bg-0, 50%)};
   }
 }
 
