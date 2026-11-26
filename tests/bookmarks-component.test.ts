@@ -53,6 +53,31 @@ describe('Bookmarks column editor', () => {
     expect(link.getAttribute('href')).toBe('https://example.com/foo')
   })
 
+  test('accepts a schemeless URL with a port', async () => {
+    const addButton = target.querySelector<HTMLButtonElement>('.column__add')!
+    addButton.click()
+    await tick()
+
+    const [nameInput, tagInput, urlInput] =
+      target.querySelectorAll<HTMLInputElement>('.column__form input')
+    nameInput.value = 'Local'
+    tagInput.value = 'Dev'
+    urlInput.value = 'localhost:3000/dashboard'
+    for (const input of [nameInput, tagInput, urlInput])
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+
+    target
+      .querySelector<HTMLFormElement>('.column__form form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+    await tick()
+
+    expect(get(bookmarks).has('https://localhost:3000/dashboard')).toBe(true)
+    const link = [...target.querySelectorAll<HTMLAnchorElement>('.bookmarks__link')].find(
+      (a) => a.textContent === 'Local',
+    )!
+    expect(link.getAttribute('href')).toBe('https://localhost:3000/dashboard')
+  })
+
   test('opens on right-click and saves name, tag, and URL changes', async () => {
     let link = target.querySelector<HTMLAnchorElement>('.bookmarks__link')
 

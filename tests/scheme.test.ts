@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, test } from 'vitest'
 import { get } from 'svelte/store'
-import { hasSafeScheme, isSafeProtocolName, safeHref } from '../src/util/scheme'
+import {
+  absoluteBookmarkUrl,
+  hasSafeScheme,
+  isSafeProtocolName,
+  safeHref,
+} from '../src/util/scheme'
 import Bookmarks, { bookmarks } from '../src/share/bookmarks'
 import { Channels, channels } from '../src/share/channels'
 
@@ -39,6 +44,33 @@ describe('hasSafeScheme', () => {
   test('rejects an unsafe custom protocol composed over a safe URL', () => {
     expect(hasSafeScheme('javascript:https://youtube.com/watch?v=x')).toBe(false)
     expect(hasSafeScheme('ja:va:https://youtube.com/watch?v=x')).toBe(false)
+  })
+})
+
+describe('absoluteBookmarkUrl', () => {
+  test.each([
+    ['example.com/foo', 'https://example.com/foo'],
+    ['example.com:8080/path', 'https://example.com:8080/path'],
+    ['localhost:3000', 'https://localhost:3000'],
+    ['localhost:3000/foo?x=y:z', 'https://localhost:3000/foo?x=y:z'],
+    ['127.0.0.1:8080/path', 'https://127.0.0.1:8080/path'],
+    ['  example.com:8080  ', 'https://example.com:8080'],
+  ])('normalizes %s to %s', (url, expected) => {
+    expect(absoluteBookmarkUrl(url)).toBe(expected)
+    expect(hasSafeScheme(absoluteBookmarkUrl(url))).toBe(true)
+  })
+
+  test.each([
+    '',
+    'https://example.com:8080/path',
+    'http://localhost:3000',
+    'magnet:?xt=urn:btih:abc',
+    'tel:1234567890',
+    'javascript:alert(1)',
+    '//example.com:8080/foo',
+    'vlc://localhost:8080/stream',
+  ])('leaves %s untouched', (url) => {
+    expect(absoluteBookmarkUrl(url)).toBe(url)
   })
 })
 
