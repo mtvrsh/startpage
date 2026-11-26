@@ -59,10 +59,16 @@ ranges. Run the worker in a network namespace or a container without host
 networking if possible. Do this especially for `wrangler dev`-based setups,
 where the runtime itself does not filter.
 
-Also be aware the worker replies with permissive CORS (`Access-Control-Allow-Origin:
-*`) because the static frontend calls it cross-origin; any site can use a
-publicly reachable instance as an XML-fetching proxy (subject to the same egress
-limits).
+The frontend calls the worker cross-origin, so set `ALLOWED_ORIGINS` in
+`wrangler.jsonc` to the browser origin(s) that host your frontend (space-separated).
+Requests from any other origin are rejected with 403 and no CORS headers, and
+successful responses echo only the requesting allowlisted origin — never `*`
+(`Vary: Origin` is set so shared caches cannot cross grants between origins).
+
+This is an abuse countermeasure, not authentication: non-browser clients can
+spoof `Origin` or `Referer`, so a publicly reachable instance can still be used
+as an XML-fetching proxy by such clients (subject to the same egress limits and
+the `FEED_LIMIT` rate limit).
 
 ### Development
 
