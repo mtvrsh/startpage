@@ -132,7 +132,8 @@ Adding a new backend:
 - Themes: `src/lib/scss/_themes.scss` (Gruvbox color palette)
 - Breakpoints: `src/lib/scss/_breakpoints.scss`
 - Mixins: `src/lib/scss/_mixins.scss` (`disabled-control`, `active-tint`, `line-clamp`, `input-base`, `button-base`, `button-danger`, `icon-button-danger`, `backdrop-button`, `overlay-panel`; the button variants share `button-core`)
-- All text-entry controls include `input-base` (`_mixins.scss`), which owns the disabled color/cursor and the shared line height; contexts only add sizing and error variants. Disabled labels use `disabled-control`; open/selected controls use `active-tint`.
+- All text-entry controls include `input-base` (`_mixins.scss`), which owns the disabled color/cursor, the shared line height and `appearance: none`; contexts only add sizing and error variants. Disabled labels use `disabled-control`; open/selected controls use `active-tint`.
+- Native number spinners and select arrows are replaced, not restyled: `InputNumber` uses `appearance: textfield` in Firefox (plus WebKit spin-button suppression) with token-colored buttons, and `InputSelect` draws a `::after` chevron with `pointer-events: none` so the native dropdown still opens. Keyboard arrows and `:focus` rings stay on the composed control.
 - Overlay chrome comes from `backdrop-button` / `overlay-panel`; UI motion uses `$transition-duration` from `_variables.scss`.
 - Accent buttons use `button-base`; destructive buttons (row delete, settings close) use `icon-button-danger` so the red hover and × geometry have one source.
 - Components use `@use 'scss/variables' as *;` (Vite resolves via `src/lib/scss/`)

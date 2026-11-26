@@ -133,7 +133,11 @@
       {#if $config.instanceType === 'startpage'}
         <li class="general__group-list-item">
           <label for="settings-backend-url">{strings.backendUrl}</label>
-          <Text id="settings-backend-url" bind:value={$config.backendUrl} />
+          <Text
+            id="settings-backend-url"
+            class="general__url-input"
+            bind:value={$config.backendUrl}
+          />
         </li>
       {:else}
         <li class="general__group-list-item">
@@ -253,7 +257,11 @@
 
       <li class="general__group-list-item">
         <label for="settings-feed-proxy-url">{strings.feedProxyUrl}</label>
-        <Text id="settings-feed-proxy-url" bind:value={$config.feedProxyUrl} />
+        <Text
+          id="settings-feed-proxy-url"
+          class="general__url-input"
+          bind:value={$config.feedProxyUrl}
+        />
       </li>
     </ul>
   </li>
@@ -347,5 +355,11 @@
       font-size: $font-size-body;
       color: var(--color-error-text);
     }
+  }
+
+  // The input lives inside Text.svelte, so Svelte's scoped selector cannot
+  // reach it; only these two URL fields get the wider size.
+  :global(.general__url-input) {
+    width: 18rem;
   }
 </style>

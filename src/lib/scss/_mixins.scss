@@ -19,6 +19,10 @@
 // variants on top.
 @mixin input-base($padding: $gap-1) {
   padding: $padding;
+  // Native number spinners and select arrows differ by browser and theme;
+  // components that need them draw their own controls on top of this field.
+  -webkit-appearance: none;
+  appearance: none;
   font: inherit;
   font-size: $font-size-ui;
   line-height: $line-height-body;
