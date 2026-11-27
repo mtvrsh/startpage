@@ -155,7 +155,7 @@ Adding a new backend:
 
 ### Service Worker
 
-- `src/sw.js` - built by Vite from `vite.config.js` `build.rollupOptions.input` (the `sw` entry) and `output.entryFileNames` (SW stays at `sw.js`, other entries go to `assets/[name].js`) to keep scope at `/startpage/sw.js`. Registered in `src/App.svelte` behind the `import.meta.env.PROD` guard, because `vite dev` does not serve the bundled SW. Do not move the SW under `assets/`.
+- `src/sw.js` - built by Vite from `vite.config.js` `build.rollupOptions.input` (the `sw` entry) and `output.entryFileNames` (SW stays at `sw.js`, other entries go to `assets/[name].js`) to keep scope at `/startpage/sw.js`. Registered via `src/lib/service-worker.ts` (called from `src/App.svelte`) behind the `import.meta.env.PROD` guard, because `vite dev` does not serve the bundled SW. Do not move the SW under `assets/`. The client reloads once on `controllerchange` when an updated worker claims the page, so a deploy is visible on the load that detects it; the first install is ignored so a first visit does not reload.
 - `vite.config.js` output names are **intentionally without `[hash]`**: the `install` precache list in `src/sw.js` hard-codes those filenames. **Invariant:** re-enabling hashing or adding chunks requires updating that manifest (or switching to a generated manifest).
 - `VERSION` in `src/sw.js` comes from `VITE_GIT_COMMIT` with no fallback and must be set at build (the `Build project` step in `.github/workflows/deploy.yml`).
 - **Cache namespacing:** Cache Storage is per-origin and GitHub Pages project sites share `<user>.github.io`, so `CACHE = 'startpage-' + VERSION` and activation deletes only keys with `CACHE_PREFIX`. **Invariant:** never delete origin-wide, and keep the prefix constant for this app.

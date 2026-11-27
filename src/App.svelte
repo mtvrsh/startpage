@@ -10,13 +10,13 @@
   import { Config, config as userConfig } from './share/config'
   import { Status } from './share/status'
   import { isTypedCharacter } from './util/keyboard'
+  import { registerServiceWorker } from './lib/service-worker'
   import Dock from './lib/Dock.svelte'
   import FetchProgress from './lib/FetchProgress.svelte'
   import Home from './lib/Home.svelte'
   import SearchPalette from './lib/SearchPalette.svelte'
 
-  if ('serviceWorker' in navigator && import.meta.env.PROD)
-    navigator.serviceWorker.register(config.base + '/sw.js')
+  registerServiceWorker()
 
   let main = $state(routes.home)
   let router = navaid(config.base, (uri) => {
