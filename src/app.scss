@@ -70,7 +70,7 @@ svg {
 }
 
 body {
-  font-family: monospace;
+  font-family: 'Adwaita Mono', monospace;
   // Pin the base size: an inherited default monospace size varies by browser.
   font-size: $font-size-body;
   line-height: $line-height-body;
