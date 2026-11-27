@@ -267,6 +267,7 @@
                   <Image
                     src={$config.useDirectThumbnails ? getDirectThumbnail(thumbnail) : thumbnail}
                     alt={strings.thumbnail}
+                    referrerpolicy="no-referrer"
                   />
                 </div>
                 <p class="palette__name" title={name}>{name}</p>
