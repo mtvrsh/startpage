@@ -1,0 +1,181 @@
+{
+  "config": {
+    "keybind": {
+      "close": "Escape",
+      "focusSearch": {
+        "user": "",
+        "default": "s"
+      },
+      "openSettings": {
+        "user": "",
+        "default": ","
+      }
+    },
+    "instanceType": "startpage",
+    "instance": {
+      "label": "wireway.ch",
+      "value": "https://pipedapi.wireway.ch"
+    },
+    "instances": [
+      {
+        "label": "wireway.ch",
+        "value": "https://pipedapi.wireway.ch"
+      },
+      {
+        "label": "private.coffee",
+        "value": "https://api.piped.private.coffee"
+      }
+    ],
+    "backendUrl": "https://startpage-api.mtvrs.workers.dev",
+    "feedProxyUrl": "https://startpage-api.mtvrs.workers.dev",
+    "feedProtocolName": "mpv",
+    "feedProtocolEnabledForVideos": false,
+    "feedProtocolEnabledForVideosInTitles": true,
+    "feedLimit": 20,
+    "feedThumbnailThemed": false,
+    "readerLimit": 10,
+    "useDirectThumbnails": false,
+    "feedFetchAll": true,
+    "feedShowSummary": false,
+    "timeoutInSeconds": 5,
+    "cacheLifetimeInMinutes": 10
+  },
+  "bookmarks": [
+    [
+      "https://news.ycombinator.com/",
+      {
+        "url": "https://news.ycombinator.com/",
+        "tag": "News",
+        "name": "Hacker News"
+      }
+    ],
+    [
+      "https://developer.mozilla.org/",
+      {
+        "url": "https://developer.mozilla.org/",
+        "tag": "Learning",
+        "name": "MDN Web Docs"
+      }
+    ],
+    [
+      "https://github.com/",
+      {
+        "url": "https://github.com/",
+        "tag": "Tools",
+        "name": "GitHub"
+      }
+    ],
+    [
+      "https://codepen.io/",
+      {
+        "url": "https://codepen.io/",
+        "tag": "Tools",
+        "name": "CodePen"
+      }
+    ],
+    [
+      "https://svelte.dev/docs",
+      {
+        "url": "https://svelte.dev/docs",
+        "tag": "Docs",
+        "name": "Svelte Docs"
+      }
+    ],
+    [
+      "https://docs.deno.com/",
+      {
+        "url": "https://docs.deno.com/",
+        "tag": "Docs",
+        "name": "Deno Docs"
+      }
+    ],
+    [
+      "https://bandcamp.com/",
+      {
+        "url": "https://bandcamp.com/",
+        "tag": "Music",
+        "name": "Bandcamp"
+      }
+    ],
+    [
+      "https://open.spotify.com/",
+      {
+        "url": "https://open.spotify.com/",
+        "tag": "Music",
+        "name": "Spotify"
+      }
+    ],
+    [
+      "https://store.steampowered.com/",
+      {
+        "url": "https://store.steampowered.com/",
+        "tag": "Games",
+        "name": "Steam"
+      }
+    ],
+    [
+      "https://itch.io/",
+      {
+        "url": "https://itch.io/",
+        "tag": "Games",
+        "name": "itch.io"
+      }
+    ]
+  ],
+  "channels": [
+    [
+      "UCWTA5Yd0rAkQt5-9etIFoBA",
+      {
+        "url": "https://youtube.com/channel/UCWTA5Yd0rAkQt5-9etIFoBA/videos",
+        "name": "SciFun",
+        "displayName": "SciFun"
+      }
+    ],
+    [
+      "UC3V0O7m2nZrunjE1FFFLQ8A",
+      {
+        "url": "https://youtube.com/channel/UC3V0O7m2nZrunjE1FFFLQ8A",
+        "name": "Pan Doktor",
+        "displayName": "Pan Doktor"
+      }
+    ],
+    [
+      "UCsXVk37bltHxD1rDPwtNM8Q",
+      {
+        "url": "https://youtube.com/channel/UCsXVk37bltHxD1rDPwtNM8Q",
+        "name": "Kurzgesagt – In a Nutshell",
+        "displayName": "Kurzgesagt – In a Nutshell"
+      }
+    ]
+  ],
+  "feeds": [
+    [
+      "https://dustri.org/b/atom.xml",
+      {
+        "url": "https://dustri.org/b/atom.xml",
+        "name": "Artificial truth"
+      }
+    ],
+    [
+      "https://hnrss.org/frontpage",
+      {
+        "url": "https://hnrss.org/frontpage",
+        "name": "Hacker News (RSS)"
+      }
+    ],
+    [
+      "https://github.com/sveltejs/svelte/releases.atom",
+      {
+        "url": "https://github.com/sveltejs/svelte/releases.atom",
+        "name": "Svelte Releases (Atom)"
+      }
+    ],
+    [
+      "https://blog.chromium.org/feeds/posts/default",
+      {
+        "url": "https://blog.chromium.org/feeds/posts/default",
+        "name": "Chromium Blog (Atom)"
+      }
+    ]
+  ]
+}

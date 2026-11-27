@@ -8,8 +8,9 @@ $gap-4: 1.25rem;
 // metadata shares the body size, and every title/control label shares the UI
 // size. An inherited body size would vary by browser because the default
 // monospace size is not standardized. UI matches Firefox's chrome/address-bar
-// size (~14.7px on a 16px root).
-$font-size-body: 0.75rem; // body base, metadata, errors, tags
+// size (~14.7px on a 16px root). The body size is slightly larger than the
+// usual 0.75rem so its x-height reads the same across monospace font builds.
+$font-size-body: 0.76rem; // body base, metadata, errors, tags, summaries, empty states
 $font-size-ui: 0.92rem; // titles, headers, settings, search, controls
 $font-size-icon: 1rem; // remove/+/close glyphs
 $font-size-large: 2rem; // thumbnail placeholder

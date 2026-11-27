@@ -1,0 +1,72 @@
+{
+  "config": {
+    "keybind": {
+      "close": "Escape",
+      "focusSearch": {
+        "user": "",
+        "default": "s"
+      },
+      "openSettings": {
+        "user": "",
+        "default": ","
+      }
+    },
+    "instanceType": "startpage",
+    "instance": {
+      "label": "mtvrs",
+      "value": "https://startpage-api.mtvrs.workers.dev"
+    },
+    "instances": [
+      {
+        "label": "mtvrs",
+        "value": "https://startpage-api.mtvrs.workers.dev"
+      },
+      {
+        "label": "wireway.ch",
+        "value": "https://pipedapi.wireway.ch"
+      }
+    ],
+    "backendUrl": "https://startpage-api.mtvrs.workers.dev",
+    "feedProxyUrl": "https://startpage-api.mtvrs.workers.dev",
+    "feedProtocolName": "mpv",
+    "feedProtocolEnabledForVideos": false,
+    "feedProtocolEnabledForVideosInTitles": true,
+    "feedLimit": 20,
+    "feedThumbnailThemed": false,
+    "readerLimit": 10,
+    "useDirectThumbnails": false,
+    "feedFetchAll": false,
+    "feedShowSummary": false,
+    "timeoutInSeconds": 10,
+    "cacheLifetimeInMinutes": 10
+  },
+  "bookmarks": [
+    [
+      "https://news.ycombinator.com/",
+      {
+        "url": "https://news.ycombinator.com/",
+        "tag": "News",
+        "name": "Hacker News"
+      }
+    ]
+  ],
+  "channels": [
+    [
+      "UC3V0O7m2nZrunjE1FFFLQ8A",
+      {
+        "url": "https://youtube.com/channel/UC3V0O7m2nZrunjE1FFFLQ8A",
+        "name": "Pan Doktor",
+        "displayName": "Pan Doktor"
+      }
+    ]
+  ],
+  "feeds": [
+    [
+      "https://dustri.org/b/atom.xml",
+      {
+        "url": "https://dustri.org/b/atom.xml",
+        "name": "Artificial truth"
+      }
+    ]
+  ]
+}

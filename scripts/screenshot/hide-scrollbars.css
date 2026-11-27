@@ -1,0 +1,9 @@
+/* Screenshot-only: Firefox's scrollbar-width is not inherited, so it has to
+   be set on every scroll container (column bodies, dropdowns, overlays). */
+* {
+  scrollbar-width: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}

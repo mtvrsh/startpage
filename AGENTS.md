@@ -17,6 +17,7 @@ Lightweight YouTube feed startpage built with Svelte 5 + Vite, using Piped API o
 - `npx vitest run tests/feed.test.ts` - Run one test file; add `-t "<name>"` to filter by test name
 - `npx prettier --write .` - Format the codebase
 - `npx prettier --check .` - Check formatting
+- `npm run screenshot` - Regenerate `.github/screenshot.webp` with headless Firefox. Requires `firefox` and `cwebp` (WebP encoder) on `PATH`. The demo config lives in `scripts/screenshot/config.json` (replace it with a fresh app export to change what is shown); videos, feed entries and thumbnails come from the live URLs in that file (network required). Add scenario names (`settings`, `search`, `mobile`) to generate the matching `.github/screenshot-*.webp` files. The server injects `scripts/screenshot/hide-scrollbars.css` into the built page so scrollbars are hidden in screenshots only, never in the app itself.
 
 ### Healthcheck script
 
