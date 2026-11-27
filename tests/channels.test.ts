@@ -1,8 +1,15 @@
-import { test, expect, describe, vi, afterEach } from 'vitest'
+import { test, expect, describe, vi, afterEach, beforeEach } from 'vitest'
 import { get } from 'svelte/store'
 import { Channels, channels, channelStates } from '../src/share/channels'
 import type { Channel } from '../src/share/channels'
+import { config, defaults } from '../src/share/config'
 import { status } from '../src/share/status'
+
+// These tests exercise the Piped URL shapes and response bodies; the app now
+// defaults to the startpage backend, so opt in explicitly.
+function usePipedBackend() {
+  config.set({ ...structuredClone(defaults), instanceType: 'piped' })
+}
 
 const t = test.extend({
   id: 'myId',
@@ -426,6 +433,8 @@ describe('hydration validation', () => {
 })
 
 describe('refetch', () => {
+  beforeEach(usePipedBackend)
+
   const video = {
     url: '/watch?v=1',
     title: 't',
@@ -677,6 +686,7 @@ describe('refetch', () => {
 })
 
 describe('add validation', () => {
+  beforeEach(usePipedBackend)
   afterEach(() => vi.unstubAllGlobals())
 
   t('rejects empty input without fetching', async () => {

@@ -23,7 +23,7 @@ export const defaults = {
     focusSearch: { user: '', default: 's' },
     openSettings: { user: '', default: ',' },
   },
-  instanceType: 'piped' as InstanceType,
+  instanceType: 'startpage' as InstanceType,
   instance: { label: 'wireway.ch', value: 'https://pipedapi.wireway.ch' },
   instances: [
     { label: 'wireway.ch', value: 'https://pipedapi.wireway.ch' },

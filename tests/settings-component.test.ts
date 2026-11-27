@@ -90,12 +90,12 @@ describe('Number inputs', () => {
 
 describe('Settings config import', () => {
   test('applies and displays the imported backend type', async () => {
+    expect(backendSelect().value).toBe(defaults.instanceType)
+
+    await importConfig({ config: { instanceType: 'piped' } })
+
+    expect(get(config).instanceType).toBe('piped')
     expect(backendSelect().value).toBe('piped')
-
-    await importConfig({ config: { instanceType: 'startpage' } })
-
-    expect(get(config).instanceType).toBe('startpage')
-    expect(backendSelect().value).toBe('startpage')
   })
 
   test('rejects an unknown backend type', async () => {
