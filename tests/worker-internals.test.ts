@@ -89,38 +89,184 @@ describe('playlistContinuationToken', () => {
 })
 
 describe('GET /search/channels', () => {
-  test('normalizes raw YouTube.js channel nodes to the frontend shape', async () => {
-    const working = await withInnertube({
-      search: async () => ({
-        channels: [
-          {
-            id: 'UC1234567890abcdefghijkl',
-            author: {
-              id: 'UC1234567890abcdefghijkl',
-              name: 'Channel',
-              thumbnails: [{ url: 'https://example.test/avatar.jpg' }],
-            },
-            // YouTube.js puts the count in `video_count`, not `subscribers`.
-            video_count: { text: '525K subscribers' },
+  const CHANNEL_ID = 'UC1234567890abcdefghijkl'
+
+  function legacyRow(
+    name: string,
+    subscribers: string,
+    avatar = `https://example.test/${CHANNEL_ID}.jpg`,
+  ) {
+    return {
+      channelRenderer: {
+        channelId: CHANNEL_ID,
+        title: { simpleText: name },
+        thumbnail: { thumbnails: [{ url: avatar, width: 88, height: 88 }] },
+        // YouTube inverts these two fields for channel rows: the count is in
+        // `videoCountText` and the handle is in `subscriberCountText`.
+        videoCountText: { simpleText: subscribers },
+        subscriberCountText: { simpleText: `@${name}` },
+      },
+    }
+  }
+
+  function lockupMeta(name: string, subscribers: string) {
+    return {
+      lockupMetadataViewModel: {
+        title: { content: name },
+        metadata: {
+          contentMetadataViewModel: {
+            metadataRows: [
+              { metadataParts: [{ text: { content: `@${name}` } }] },
+              { metadataParts: [{ text: { content: subscribers } }] },
+            ],
           },
-        ],
-      }),
+        },
+      },
+    }
+  }
+
+  function lockupRow(
+    name: string,
+    subscribers: string,
+    contentType = 'LOCKUP_CONTENT_TYPE_CHANNEL',
+  ) {
+    return {
+      lockupViewModel: {
+        contentId: CHANNEL_ID,
+        contentType,
+        contentImage: {
+          thumbnailViewModel: {
+            image: {
+              sources: [{ url: `https://example.test/${CHANNEL_ID}.jpg`, width: 88, height: 88 }],
+            },
+          },
+        },
+        metadata: lockupMeta(name, subscribers),
+      },
+    }
+  }
+
+  // The shape youtubei.js 18.3.0 logs as a DecoratedAvatarView typecheck
+  // failure in LockupView#content_image (upstream PR #1329).
+  function decoratedLockupRow(name: string, subscribers: string) {
+    return {
+      lockupViewModel: {
+        contentId: CHANNEL_ID,
+        contentType: 'LOCKUP_CONTENT_TYPE_CHANNEL',
+        contentImage: {
+          decoratedAvatarViewModel: {
+            avatar: {
+              avatarViewModel: {
+                image: {
+                  sources: [
+                    { url: `https://example.test/${CHANNEL_ID}.jpg`, width: 88, height: 88 },
+                  ],
+                },
+              },
+            },
+            a11yLabel: 'Go to channel',
+          },
+        },
+        metadata: lockupMeta(name, subscribers),
+      },
+    }
+  }
+
+  function searchData(contents: unknown[]) {
+    return {
+      contents: {
+        sectionListRenderer: { contents: [{ itemSectionRenderer: { contents } }] },
+      },
+    }
+  }
+
+  async function withSearch(data: unknown) {
+    const execute = vi.fn(async () => ({ success: true, status_code: 200, data }))
+    const working = await withInnertube({ actions: { execute } })
+    return { working, execute }
+  }
+
+  const channel = {
+    id: CHANNEL_ID,
+    author: {
+      id: CHANNEL_ID,
+      name: 'Channel',
+      thumbnails: [{ url: `https://example.test/${CHANNEL_ID}.jpg`, width: 88, height: 88 }],
+    },
+    subscribers: 525_000,
+  }
+
+  test('normalizes classic channelRenderer rows to the frontend shape', async () => {
+    const { working, execute } = await withSearch(
+      searchData([legacyRow('Channel', '525K subscribers')]),
+    )
+
+    const res = await working(request('/search/channels?q=channel'), env())
+
+    expect(execute).toHaveBeenCalledWith('/search', {
+      query: 'channel',
+      params: 'EgIQAg%3D%3D',
+      parse: false,
     })
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual([channel])
+  })
+
+  test('reads channel lockups, which youtubei.js leaves out of results.channels', async () => {
+    const { working } = await withSearch(searchData([lockupRow('Channel', '525K subscribers')]))
 
     const res = await working(request('/search/channels?q=channel'), env())
 
     expect(res.status).toBe(200)
-    expect(await res.json()).toEqual([
-      {
-        id: 'UC1234567890abcdefghijkl',
-        author: {
-          id: 'UC1234567890abcdefghijkl',
-          name: 'Channel',
-          thumbnails: [{ url: 'https://example.test/avatar.jpg' }],
-        },
-        subscribers: 525_000,
-      },
-    ])
+    expect(await res.json()).toEqual([channel])
+  })
+
+  test('keeps the avatar on decorated-avatar channel lockups', async () => {
+    const { working } = await withSearch(
+      searchData([decoratedLockupRow('Channel', '525K subscribers')]),
+    )
+
+    const res = await working(request('/search/channels?q=channel'), env())
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual([channel])
+  })
+
+  test('ignores non-channel lockups and deduplicates repeated ids', async () => {
+    const { working } = await withSearch(
+      searchData([
+        lockupRow('Channel', '525K subscribers'),
+        lockupRow('Video', '1M subscribers', 'LOCKUP_CONTENT_TYPE_VIDEO'),
+        legacyRow('Channel', '525K subscribers', 'https://example.test/legacy.jpg'),
+      ]),
+    )
+
+    const res = await working(request('/search/channels?q=channel'), env())
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual([channel])
+  })
+
+  test('returns an empty list for a genuine no-results response', async () => {
+    const { working } = await withSearch(searchData([]))
+
+    const res = await working(request('/search/channels?q=channel'), env())
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual([])
+  })
+
+  test('returns a generic 500 when the search subrequest fails', async () => {
+    const muted = muteErrors()
+    const working = await withInnertube({
+      actions: { execute: async () => ({ success: false, status_code: 503 }) },
+    })
+
+    const res = await working(request('/search/channels?q=channel'), env())
+
+    expect(res.status).toBe(500)
+    expect(await res.json()).toMatchObject({ error: 'internal error' })
+    muted.mockRestore()
   })
 })
 

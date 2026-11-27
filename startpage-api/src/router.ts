@@ -286,29 +286,121 @@ async function rawPlaylist(playlistId: string): Promise<Response> {
   return json(playlist.page)
 }
 
+// `SearchFilter{type: CHANNEL}` — the params youtubei.js builds for
+// `search(q, { type: 'channel' })`. Search reads the raw response below, so the
+// constant has to be supplied explicitly.
+const CHANNEL_SEARCH_PARAMS = 'EgIQAg%3D%3D'
+
+type SearchChannel = {
+  id: string
+  author: { id: string; name: string; thumbnails: any[] }
+  subscribers: number
+}
+
+/** Text fields in raw InnerTube JSON use `simpleText`, `content` or `runs`. */
+function rawSearchText(value: any): string {
+  if (typeof value === 'string') return value
+  if (!value) return ''
+  if (typeof value.simpleText === 'string') return value.simpleText
+  if (typeof value.content === 'string') return value.content
+  if (Array.isArray(value.runs)) return value.runs.map((run: any) => run.text || '').join('')
+  return ''
+}
+
+// Channel-lockup avatars arrive in several raw view models depending on the
+// response batch. The decorated-avatar form is the one youtubei.js 18.3.0
+// rejects in `LockupView#content_image` (upstream PR #1329), so read it here
+// instead of losing the avatar.
+function rawLockupThumbnails(contentImage: any): any[] {
+  for (const image of [
+    contentImage?.thumbnailViewModel?.image,
+    contentImage?.decoratedAvatarViewModel?.avatar?.avatarViewModel?.image,
+    contentImage?.avatarViewModel?.image,
+  ]) {
+    const sources = image?.sources || image?.thumbnails
+    if (Array.isArray(sources) && sources.length) return sources
+  }
+  return []
+}
+
+// YouTube alternates channel-search rows between classic `channelRenderer`
+// items and `lockupViewModel` items with contentType
+// LOCKUP_CONTENT_TYPE_CHANNEL. youtubei.js parses the latter into `LockupView`,
+// whose `contentImage` typecheck rejects channel avatars; the item survives but
+// has no thumbnails and is absent from `results.channels`. Reading the raw
+// response keeps both variants (and their avatars). Other lockup types such as
+// videos and shorts are deliberately skipped.
+function channelFromSearchNode(node: any): SearchChannel | null {
+  if (node.lockupViewModel) {
+    const v = node.lockupViewModel
+    if (v.contentType !== 'LOCKUP_CONTENT_TYPE_CHANNEL') return null
+    const meta = v.metadata?.lockupMetadataViewModel
+    const rows = meta?.metadata?.contentMetadataViewModel?.metadataRows
+    const parts: string[] = Array.isArray(rows)
+      ? rows.flatMap((row: any) =>
+          Array.isArray(row.metadataParts)
+            ? row.metadataParts.map((part: any) => rawSearchText(part.text))
+            : [],
+        )
+      : []
+    // Rows carry the handle first and the subscriber label second; only the
+    // latter parses to a count.
+    const subscribers = parts.map(parseSubscriberCount).find((n) => n > 0) ?? 0
+    const id = v.contentId || ''
+    return {
+      id,
+      author: {
+        id,
+        name: rawSearchText(meta?.title),
+        thumbnails: rawLockupThumbnails(v.contentImage),
+      },
+      subscribers,
+    }
+  }
+  if (node.channelRenderer) {
+    const v = node.channelRenderer
+    const id = v.channelId || v.navigationEndpoint?.browseEndpoint?.browseId || ''
+    // YouTube puts the subscriber label in `videoCountText` and the handle in
+    // `subscriberCountText` — the inversion youtubei.js exposes as
+    // `video_count`/`subscriber_count`.
+    return {
+      id,
+      author: {
+        id,
+        name: rawSearchText(v.title),
+        thumbnails: v.thumbnail?.thumbnails || [],
+      },
+      subscribers: parseSubscriberCount(
+        rawSearchText(v.videoCountText) || rawSearchText(v.subscriberCountText),
+      ),
+    }
+  }
+  return null
+}
+
+function collectSearchChannels(node: any, out: Map<string, SearchChannel>): void {
+  if (!node || typeof node !== 'object') return
+  const channel = channelFromSearchNode(node)
+  if (channel && channel.id && !out.has(channel.id)) out.set(channel.id, channel)
+  for (const value of Object.values(node)) collectSearchChannels(value, out)
+}
+
 async function searchChannels(searchParams: URLSearchParams): Promise<Response> {
   const q = searchParams.get('q')
   if (!q) return json({ error: 'query parameter is required' }, 400)
   if (q.length > MAX_QUERY_LENGTH) return json({ error: 'query is too long' }, 400)
 
   const yt = await getYt()
-  const results = await yt.search(q, { type: 'channel' })
-  // Normalize to the same shape the frontend consumes: id, author, and a
-  // subscriber count. YouTube.js puts the handle in `subscriber_count` and the
-  // count in `video_count` (inverted), so both are read defensively.
-  const channels = (results.channels || []).map((ch: any) => {
-    const author = ch.author || {}
-    return {
-      id: ch.id || author.id || '',
-      author: {
-        id: author.id || ch.id || '',
-        name: author.name || ch.long_byline?.text || ch.short_byline?.text || '',
-        thumbnails: author.thumbnails || [],
-      },
-      subscribers: parseSubscriberCount(ch.video_count?.text || ch.subscriber_count?.text || ''),
-    }
+  const response: any = await yt.actions.execute('/search', {
+    query: q,
+    params: CHANNEL_SEARCH_PARAMS,
+    parse: false,
   })
-  return json(channels)
+  if (!response.success) throw new Error(`search failed: ${response.status_code}`)
+
+  const channels = new Map<string, SearchChannel>()
+  collectSearchChannels(response.data, channels)
+  return json([...channels.values()])
 }
 
 async function getChannel(channelId: string): Promise<Response> {
